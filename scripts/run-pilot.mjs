@@ -72,7 +72,7 @@ function commandFor(candidate, prompt) {
   if (candidate.agent === 'codex') {
     return { command: 'codex', args: ['exec', '--model', candidate.model, '--cd', cleanWorkspace, '--approve-for-me', prompt] };
   }
-  return { command: 'opencode', args: ['run', '--model', candidate.model, '--dir', cleanWorkspace, '--auto', prompt] };
+  return { command: 'opencode', args: ['run', '--model', candidate.model, '--dir', cleanWorkspace, '--dangerously-skip-permissions', '--format', 'json', prompt] };
 }
 
 async function installArchive(task) {
@@ -105,14 +105,18 @@ function runAsCandidate(command, args, options = {}) {
     XDG_DATA_HOME: path.join(agentHome, '.local', 'share')
   };
   const envArgs = Object.entries(env).map(([key, value]) => `${key}=${value}`);
-  return run('sudo', ['-u', candidateUser, '--', 'env', ...envArgs, command, ...args], options);
+  const targetCwd = options.cwd || cleanRoomHome;
+  const commandArgs = command === 'npm' && args[0] === 'test'
+    ? ['--prefix', targetCwd, ...args]
+    : args;
+  return run('sudo', ['-u', candidateUser, '--', 'env', ...envArgs, command, ...commandArgs], { ...options, cwd: repo });
 }
 
 async function resetRoom(task) {
   emit('reset_started', { task: task.id, workspace: cleanWorkspace });
   await installResetScript();
   await installArchive(task);
-  const reset = await runAsCandidate(process.execPath, [resetScript, '--archive-root', archiveRoot, '--fixture', task.fixture, '--prompt', task.prompt, '--workspace', cleanWorkspace, '--agent-home', agentHome, '--sandbox-root', cleanRoomHome], { timeoutMs: 30000 });
+  const reset = await runAsCandidate('/usr/bin/node', [resetScript, '--archive-root', archiveRoot, '--fixture', task.fixture, '--prompt', task.prompt, '--workspace', cleanWorkspace, '--agent-home', agentHome, '--sandbox-root', cleanRoomHome], { timeoutMs: 30000 });
   if (reset.status !== 0) throw new Error(`reset failed: ${reset.stderr}`);
   emit('reset_completed', { task: task.id });
 }
@@ -123,7 +127,7 @@ async function runCandidate(candidate, task) {
   await mkdir(candidateDir, { recursive: true });
   await mkdir(privateCandidateDir, { recursive: true, mode: 0o700 });
   await resetRoom(task);
-  const prompt = await readFile(path.join(cleanWorkspace, task.prompt), 'utf8');
+  const prompt = await readFile(path.join(modelsTest, task.prompt), 'utf8');
   const command = commandFor(candidate, prompt);
   emit('candidate_started', { candidate: candidate.id, agent: candidate.agent, model: candidate.model, task: task.id });
   const agent = await runAsCandidate(command.command, command.args, { cwd: cleanWorkspace, timeoutMs });
