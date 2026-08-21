@@ -157,6 +157,17 @@ async function runJudges(candidate, task, candidateResult) {
     const privateJudgeDir = path.join(privateDir, candidate.id, task.id, 'judges', judge.id);
     await mkdir(publicJudgeDir, { recursive: true });
     await mkdir(privateJudgeDir, { recursive: true, mode: 0o700 });
+    if (candidateResult.agent.status !== 0) {
+      await writeJson(path.join(publicJudgeDir, `${judge.id}.json`), {
+        schema_version: 1,
+        judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription },
+        status: 'skipped',
+        reason: 'candidate_execution_failed',
+        candidate: candidate.id,
+        task: task.id
+      });
+      continue;
+    }
     const judgeWorkspace = path.join(judgeRoot, `${candidate.id}-${judge.id}`);
     await runAsCandidate('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
     await runAsCandidate('mkdir', ['-p', judgeWorkspace], { timeoutMs: 30000 });
