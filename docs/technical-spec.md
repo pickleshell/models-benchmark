@@ -23,6 +23,8 @@ configuration, not architectural limits:
 - a configurable number of tasks is run sequentially for each candidate;
 - the pipeline-validation pilot uses the public `feature-implementation`
   task from `models-test`;
+- the pilot candidate set contains any three models already represented in the
+  published model comparison; the exact three are a manifest choice;
 - after the pilot succeeds, the benchmark expands to two or three tasks and
   can grow further;
 - each task includes the documentation and local context needed to solve it;
@@ -114,6 +116,11 @@ configuration without storing credentials.
    workspace, agent session files, caches, and other task history before
    restoring the original task state.
 14. Aggregate only comparable runs into a report with confidence notes.
+
+The runner writes sanitized results into a checkout of the public
+`models-test` repository (or an equivalent results directory). It prepares
+commits and files but never pushes or publishes automatically. Publication is
+a separate manual review and push operation.
 
 ## 5. Isolation and Security
 
@@ -239,8 +246,9 @@ A benchmark release is publishable only when:
 ## 11. Open Decisions
 
 Before implementation, decide the task revisions, candidate model list, judge
-model IDs, criterion set, clean-room reset mechanism, network policy, evaluator
-isolation technology, rubric calibration, cost accounting, report hosting, and
-whether a human review is required for disputes. Task, candidate, judge, and
+model IDs, criterion set, clean-room reset mechanism, evaluator isolation
+technology, rubric calibration, cost accounting, report hosting, and whether a
+human review is required for disputes. The pilot selects any three candidates
+already listed in the public model comparison. Task, candidate, judge, and
 criterion counts remain configurable per release. Retry policy is fixed for the
 current pilot: one pass and one chance, with no candidate retry.

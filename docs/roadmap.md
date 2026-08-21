@@ -5,7 +5,7 @@
 - review the technical specification;
 - settle security and isolation boundaries;
 - define the pilot `feature-implementation` task from `models-test`;
-- select three free candidate models across the OpenCode/Codex agents;
+- select any three already-tested candidate models from the public comparison;
 - define configurable candidate, task, judge, and rubric manifests;
 - agree on the pilot scoring criteria;
 - specify the clean-room reset procedure.
@@ -18,6 +18,7 @@
 - timeout and process cleanup;
 - artifact schema and validator.
 - runner-home private artifact directory with candidate-inaccessible permissions.
+- results checkout prepared for manual review and publication to `models-test`.
 
 ## Phase 2: Evaluation
 
@@ -29,10 +30,12 @@
 ## Phase 3: Pilot
 
 - provision one dedicated clean-room Linux account;
-- run `feature-implementation` once for each of three free models through the
+- run `feature-implementation` once for each of three selected models through the
   configured OpenCode or Codex agent;
 - create a new agent session for each run and execute the account reset as the
   candidate user before the next model;
+- write sanitized result artifacts to the `models-test` checkout without
+  automatic push;
 - judge every result independently with the configured judge models;
 - inspect artifacts and failure classifications;
 - calibrate scoring and reproducibility;
