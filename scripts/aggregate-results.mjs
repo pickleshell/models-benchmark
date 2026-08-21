@@ -21,6 +21,7 @@ function inferOutcome(run) {
 
 function combineOutcome(taskResults) {
   if (taskResults.some((task) => task.outcome === 'missing_artifacts')) return 'missing_artifacts';
+  if (taskResults.some((task) => task.outcome === 'unavailable')) return 'unavailable';
   if (taskResults.some((task) => task.outcome === 'agent_failure')) return 'agent_failure';
   if (taskResults.some((task) => task.outcome === 'forbidden_changes')) return 'forbidden_changes';
   if (taskResults.some((task) => task.outcome === 'tests_failed')) return 'tests_failed';
@@ -47,7 +48,7 @@ for (const candidate of config.candidates) {
     }
     const outcome = inferOutcome(run);
     let taskJudgeCount = 0;
-    if (outcome !== 'agent_failure' && outcome !== 'forbidden_changes') {
+    if (!['agent_failure', 'unavailable', 'forbidden_changes'].includes(outcome)) {
       try {
         for (const file of await readdir(path.join(taskDir, 'judges'))) {
           if (!file.endsWith('.json')) continue;

@@ -99,24 +99,27 @@ configuration without storing credentials.
 3. Prepare the configured task workspace and task documentation in that
    account. The next hardened pilot uses `feature-implementation` and
    `refactoring`; later releases may configure more tasks.
-4. Validate the candidate configuration and create a run ID.
-5. Start the candidate through its configured agent (OpenCode or Codex) and
+4. Probe every required judge before creating a release; stop if a required
+   judge is unavailable.
+5. Probe each candidate model with a harmless request and mark an unavailable
+   model before it receives any benchmark task.
+6. Start every available candidate through its configured agent (OpenCode or Codex) and
    execute the configured tasks sequentially.
-6. Enforce timeout, per-stream output limits, process-group cleanup, and
+7. Enforce timeout, per-stream output limits, process-group cleanup, and
    cancellation.
-7. Freeze the complete configured result before judging.
-8. Run the published tests and checks in a separate evaluator environment.
-9. Send the resulting code and evidence to each configured judge independently
+8. Freeze the complete configured result before judging.
+9. Run the published tests and checks in a separate evaluator environment.
+10. Send the resulting code and evidence to each configured judge independently
    for each configured criterion.
-10. Record every judge response and score; do not ask a judge to reconcile
+11. Record every judge response and score; do not ask a judge to reconcile
     another judge's score.
-11. Enforce allowed paths and classify forbidden modifications before judging.
-12. Persist schema-versioned artifacts and classify every outcome.
-13. Reset the clean room completely before the next candidate. The reset is
+12. Enforce allowed paths and classify forbidden modifications before judging.
+13. Persist schema-versioned artifacts and classify every outcome.
+14. Reset the clean room completely before the next candidate. The reset is
    run by the benchmark runner as the candidate account and removes the
    workspace, agent session files, caches, and other task history before
    restoring the original task state.
-14. Aggregate only comparable runs into a report with confidence notes.
+15. Aggregate only comparable runs into a report with confidence notes.
 
 The runner writes sanitized results into a checkout of the public
 `models-test` repository (or an equivalent results directory). It prepares
@@ -126,8 +129,11 @@ a separate manual review and push operation.
 ## 5. Isolation and Security
 
 - Every candidate, test, judge, and candidate-workspace Git operation runs in
-  a transient systemd mount namespace with private `/tmp`, a read-only runtime,
-  and writable binds only for the disposable workspace and agent home.
+  a fresh transient systemd mount namespace. It cannot access the host home,
+  host temporary files, another run's workspace, agent state, or artifacts.
+  Its only writable state is the disposable workspace, fresh agent home, and
+  a private temporary filesystem that disappears with the sandbox. The agent
+  runtime is mounted read-only.
 - Every task starts a new agent session. Session files, history, caches, and
   previous candidate work are removed before the next candidate.
 - Candidate processes may read the published task and tests, but cannot read
@@ -140,7 +146,8 @@ a separate manual review and push operation.
 - The current OpenCode harness retains outbound network access for model
   providers. It must not receive host-home, runner-artifact, or runtime-write
   access.
-- File writes are limited to the candidate workspace.
+- File writes are limited to the disposable workspace, fresh agent home, and
+  private per-sandbox temporary filesystem; none survives into another run.
 - Timeouts terminate the complete process group and are recorded as outcomes,
   not silently converted to failures of code quality.
 - Logs are scrubbed for tokens and credentials before persistence.
@@ -186,6 +193,15 @@ Each run must produce JSON containing at least:
 
 Provider, infrastructure, evaluator, and candidate outcomes must remain
 machine-distinguishable. Missing evidence is not a zero-quality score.
+
+Before the task matrix, every candidate receives one harmless availability
+probe. For OpenCode JSON mode, a process exit is insufficient: a recognised
+model text event is required. An unavailable model receives a public,
+sanitized `preflight.json` and `unavailable` task records; it receives no task,
+tests, patch capture, or judge invocation. Raw probe output remains private.
+Every required judge receives the same probe before a release directory is
+created. An unavailable judge aborts the planned run rather than consuming
+candidate attempts without scoring evidence.
 
 ## 7. Evaluation Model
 

@@ -66,16 +66,18 @@ checkout.
 ## Candidate sandbox
 
 Every candidate, public test command, judge, and Git inspection of a
-candidate-owned workspace runs in a transient `systemd-run` unit. The sandbox
-uses private `/tmp`, `ProtectHome=tmpfs`, a read-only bind of
-`clean_room.opencode_root`, and writable binds only for the selected workspace
-and disposable agent home. The OpenCode runtime under `/home/test/.opencode`
-is therefore not writable or visible to candidate code.
+candidate-owned workspace runs in a fresh transient `systemd-run` unit. The
+sandbox cannot see the host home, host temporary files, runner artifacts, or
+another run's workspace or agent state. It has only the selected disposable
+workspace, a fresh agent home, a read-only bind of
+`clean_room.opencode_root`, and a private temporary filesystem that is removed
+when the unit exits. The OpenCode runtime under `/home/test/.opencode` is not
+writable to candidate code.
 
 The runner's reset/archive operations are trusted maintenance actions and run
 as `test` outside that sandbox. Do not run candidate-controlled commands with
-plain `sudo -u test`; doing so would reintroduce cross-run state through the
-host home or `/tmp`.
+plain `sudo -u test`; doing so would reintroduce access to persistent host
+state and break the clean-room guarantee.
 
 The runner captures at most `BENCHMARK_MAX_OUTPUT_BYTES` per stdout and stderr
 stream (default: 2 MiB). Reaching the cap terminates the process group and is
@@ -114,6 +116,17 @@ run performs the same `rsync --version` preflight before creating a release
 directory or invoking a candidate. Review
 `config/pilot.json` carefully before the first real run: it defines tasks,
 candidates, judges, subscriptions, and the release identifier.
+
+Before any task is started, each configured candidate receives a harmless
+availability probe (`Reply with exactly: hi.`) in a clean room. The runner
+requires an actual model response, not merely a zero exit code. Provider or
+model failures are recorded as `unavailable`, all tasks for that candidate are
+skipped, and the runner continues with the next candidate. The probe timing and
+safe process status are recorded; raw probe output remains private.
+
+Required judges are probed before the runner creates a release directory or
+assigns any candidate task. A missing judge stops the planned run immediately:
+there is no partial benchmark release to discard or publish.
 
 Run the pilot only after that review:
 

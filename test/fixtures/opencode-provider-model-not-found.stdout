@@ -1,0 +1,10 @@
+[23:02:00.034] ERROR (#10954): failed {
+  ref: "err_82003ca0",
+  error: {
+    providerID: "opencode",
+    modelID: "deepseek-v4-flash-free",
+    _tag: "ProviderModelNotFoundError",
+  },
+}
+{"type":"error","timestamp":1787346120035,"sessionID":"ses_example","error":{"name":"UnknownError","data":{"message":"Unexpected server error. Check server logs for details."}}}
+{"type":"error","timestamp":1787346120203,"sessionID":"ses_example","error":{"name":"UnknownError","data":{"message":"Model not found: opencode/deepseek-v4-flash-free."}}}

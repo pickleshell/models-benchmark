@@ -44,3 +44,25 @@ test('aggregate includes every configured task and averages valid judge scores',
   assert.equal(aggregate.candidates[0].overall_average, 8.5);
   assert.equal(aggregate.candidates[0].duration_ms, 30);
 });
+
+test('aggregate preserves unavailable candidates without inventing scores', async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), 'models-benchmark-unavailable-'));
+  const modelsTest = path.join(temp, 'models-test');
+  const configPath = path.join(temp, 'pilot.json');
+  const config = {
+    release: 'availability', models_test: modelsTest, results_dir: 'results',
+    candidates: [{ id: 'offline', agent: 'opencode', runtime: 'opencode', model: 'missing', subscription: 'free' }],
+    tasks: [{ id: 'first' }, { id: 'second' }], criteria: ['correctness']
+  };
+  await writeJson(configPath, config);
+  for (const task of config.tasks) {
+    await writeJson(path.join(modelsTest, 'results', 'availability', 'offline', task.id, 'run.json'), {
+      candidate: config.candidates[0], task: task.id, outcome: 'unavailable', agent: null, tests: null, duration_ms: 0
+    });
+  }
+  await run(process.execPath, [aggregateScript, 'availability'], { env: { ...process.env, BENCHMARK_CONFIG: configPath } });
+  const aggregate = JSON.parse(await readFile(path.join(modelsTest, 'results', 'availability', 'aggregate.json'), 'utf8'));
+  assert.equal(aggregate.candidates[0].outcome, 'unavailable');
+  assert.equal(aggregate.candidates[0].judge_count, 0);
+  assert.equal(aggregate.candidates[0].overall_average, null);
+});

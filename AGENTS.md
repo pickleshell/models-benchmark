@@ -25,11 +25,19 @@ uses the public tasks and three candidates in `config/pilot.json`. It runs
 candidates sequentially and starts a new agent session for every candidate/task
 pair.
 
+The runner probes each configured model before assigning any task. A model is
+available only after a harmless request produces a recognised model response;
+a provider diagnostic or zero exit code alone is not evidence of availability.
+An unavailable model receives `preflight.json` and `unavailable` task records,
+then the runner proceeds to the next model without starting its task matrix.
+Probe required judges before creating a release directory or assigning a
+candidate task. If any judge is unavailable, stop with no release created.
+
 The runner resets the clean-room workspace and isolated agent home by invoking
 `/home/test/.models-benchmark/reset-room.mjs` as the candidate account `test`
 before each run. Raw model output is written under the private artifact
-directory; only sanitized `run.json`, `candidate.diff`, and test results are
-written to `models-test`.
+directory; only sanitized availability records, `run.json`, `candidate.diff`,
+and public test results are written to `models-test`.
 
 Never push or publish results automatically. Inspect the generated public
 artifacts and use a separate manual review before committing to `models-test`.
@@ -40,9 +48,11 @@ attempt to reconstruct missing timing for older releases.
 
 Candidate commands, public tests, judges, and Git inspection of candidate
 workspaces run through the required transient `systemd-run` sandbox. Do not
-replace it with direct `sudo -u test` execution. The sandbox supplies private
-`/tmp`, a read-only OpenCode runtime, and writable binds only for the selected
-workspace and disposable agent home.
+replace it with direct `sudo -u test` execution. Each sandbox is a fresh mount
+namespace: model processes cannot see the host home, host temporary files,
+another run's workspace, session history, or artifacts. They receive only the
+selected disposable workspace, a fresh agent home, read-only OpenCode runtime,
+and a private temporary filesystem that is destroyed with the sandbox.
 
 Treat `allowed_changes` as a release policy, not reporting metadata. A changed
 path outside it is a `forbidden_changes` outcome and must never be judged or

@@ -8,6 +8,7 @@ import {
   classifyOutcome,
   createBoundedCollector,
   findForbiddenChanges,
+  hasModelResponse,
   parsePorcelainPaths,
   validateJudgePayload
 } from './lib/runner-utils.mjs';
@@ -263,7 +264,7 @@ async function runJudges(candidate, task, candidateResult) {
     const privateJudgeDir = path.join(privateDir, candidate.id, task.id, 'judges', judge.id);
     await mkdir(publicJudgeDir, { recursive: true });
     await mkdir(privateJudgeDir, { recursive: true, mode: 0o700 });
-    if (candidateResult.outcome === 'agent_failure' || candidateResult.outcome === 'forbidden_changes') {
+    if (['agent_failure', 'unavailable', 'forbidden_changes'].includes(candidateResult.outcome)) {
       await writeJson(path.join(publicJudgeDir, `${judge.id}.json`), {
         schema_version: 1,
         judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription },
@@ -324,6 +325,68 @@ async function runJudges(candidate, task, candidateResult) {
     });
     await runAsCleanRoomHost('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
   }
+}
+
+async function probeModel(model, task, role) {
+  await resetRoom(task);
+  const command = commandFor(model, 'Reply with exactly: hi. Do not modify files.');
+  emit('model_preflight_started', { role, id: model.id, agent: model.agent, model: model.model });
+  const result = await runAsCandidate(command.command, command.args, { cwd: cleanWorkspace, timeoutMs: Math.min(timeoutMs, 60000) });
+  const available = result.status === 0 && !result.timed_out && !result.output_limited && hasModelResponse(result.stdout, model.agent);
+  const reason = available ? null : result.timed_out ? 'timeout' : result.output_limited ? 'output_limited' : result.status !== 0 ? 'process_failure' : 'no_model_response';
+  emit('model_preflight_completed', { role, id: model.id, status: available ? 'available' : 'unavailable', reason });
+  return { available, reason, result };
+}
+
+async function preflightCandidate(candidate, task) {
+  const probe = await probeModel(candidate, task, 'candidate');
+  const candidateRoot = path.join(resultsDir, config.release, candidate.id);
+  await writeJson(path.join(candidateRoot, 'preflight.json'), {
+    schema_version: 1,
+    candidate,
+    status: probe.available ? 'available' : 'unavailable',
+    reason: probe.reason,
+    started_at: probe.result.started_at,
+    completed_at: probe.result.completed_at,
+    duration_ms: probe.result.duration_ms,
+    process_status: probe.result.status,
+    timed_out: probe.result.timed_out,
+    output_limited: probe.result.output_limited
+  });
+  const privateRoot = path.join(privateDir, candidate.id);
+  await mkdir(privateRoot, { recursive: true, mode: 0o700 });
+  await writeFile(path.join(privateRoot, 'preflight.stdout.txt'), probe.result.stdout);
+  await writeFile(path.join(privateRoot, 'preflight.stderr.txt'), probe.result.stderr);
+  return probe;
+}
+
+async function recordUnavailableCandidate(candidate, task, preflight) {
+  const candidateDir = path.join(resultsDir, config.release, candidate.id, task.id);
+  await mkdir(candidateDir, { recursive: true });
+  const startedAt = new Date().toISOString();
+  await writeJson(path.join(candidateDir, 'run.json'), {
+    schema_version: 1,
+    release: config.release,
+    task: task.id,
+    candidate,
+    started_at: startedAt,
+    completed_at: startedAt,
+    duration_ms: 0,
+    agent: null,
+    tests: null,
+    outcome: 'unavailable',
+    availability: {
+      reason: preflight.reason,
+      preflight: 'model_preflight',
+      started_at: preflight.result.started_at,
+      completed_at: preflight.result.completed_at,
+      duration_ms: preflight.result.duration_ms
+    },
+    changed_files: [],
+    forbidden_changes: [],
+    artifacts: { public_dir: path.relative(modelsTest, candidateDir) }
+  });
+  emit('candidate_skipped', { candidate: candidate.id, task: task.id, outcome: 'unavailable', reason: preflight.reason });
 }
 
 async function runCandidate(candidate, task) {
@@ -409,8 +472,21 @@ const opencode = await runAsCandidate('opencode', ['--version'], { timeoutMs: 10
 if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
 emit('preflight_ok', { candidate_user: candidateUser, opencode_version: opencode.stdout.trim() });
 
+for (const judge of config.judges) {
+  const probe = await probeModel(judge, config.tasks[0], 'judge');
+  if (!probe.available) {
+    await resetRoom(config.tasks[0]);
+    throw new Error(`required judge model is unavailable: ${judge.id}; no release directory was created`);
+  }
+}
+
 await mkdir(resultsDir, { recursive: true });
 for (const candidate of config.candidates) {
+  const preflight = await preflightCandidate(candidate, config.tasks[0]);
+  if (!preflight.available) {
+    for (const task of config.tasks) await recordUnavailableCandidate(candidate, task, preflight);
+    continue;
+  }
   for (const task of config.tasks) await runCandidate(candidate, task);
 }
 await resetRoom(config.tasks[config.tasks.length - 1]);

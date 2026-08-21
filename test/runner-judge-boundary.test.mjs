@@ -79,7 +79,7 @@ spawnSync('git', ['-C', directory, 'commit', '-qm', 'candidate commit'], { stdio
 console.log(JSON.stringify({ type: 'text', part: { text: 'done' } }));
 `;
 
-test('judge process boundary is identity-blind and has no candidate workspace bind', async () => {
+test('candidate and judge process boundaries prevent cross-run workspace access', async () => {
   const temp = await mkdtemp(path.join(os.tmpdir(), 'models-benchmark-judge-boundary-'));
   try {
     const fakeBin = path.join(temp, 'bin');
@@ -131,6 +131,20 @@ test('judge process boundary is identity-blind and has no candidate workspace bi
       `--property=BindPaths=${judgeWorkspace}`
     ].sort());
     assert.equal(input.includes(path.join(cleanHome, 'workspace')), false);
+
+    const candidateInvocations = invocations.filter(({ args }) => args.some((value) => value === `--property=WorkingDirectory=${path.join(cleanHome, 'workspace')}`));
+    assert.ok(candidateInvocations.length >= 2, 'expected model and public-test candidate invocations');
+    for (const invocation of candidateInvocations) {
+      const candidateInput = JSON.stringify(invocation.args);
+      const candidateWritable = invocation.args.filter((value) => value.startsWith('--property=BindPaths=')).sort();
+      assert.deepEqual(candidateWritable, [
+        `--property=BindPaths=${path.join(cleanHome, 'agent-home')}`,
+        `--property=BindPaths=${path.join(cleanHome, 'workspace')}`
+      ].sort());
+      assert.equal(candidateInput.includes(privateArtifacts), false);
+      assert.equal(candidateInput.includes(path.join(modelsTest, 'results')), false);
+      assert.ok(invocation.args.includes('--property=ProtectHome=tmpfs'));
+    }
     const artifact = JSON.parse(await readFile(path.join(modelsTest, 'results', 'boundary-release', candidate.id, 'task', 'judges', 'judge.json'), 'utf8'));
     assert.equal(artifact.candidate, candidate.id);
     assert.equal(artifact.status, 'completed');

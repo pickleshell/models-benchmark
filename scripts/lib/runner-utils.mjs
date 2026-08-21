@@ -35,6 +35,29 @@ export function classifyOutcome({ agent, tests, forbiddenChanges }) {
   return 'completed';
 }
 
+// A successful process exit is not enough: OpenCode can print a human-readable
+// provider diagnostic before its JSON error events. Candidates are invoked in
+// JSON mode, so availability requires a recognised JSON response event.
+export function hasModelResponse(output, agent = 'opencode') {
+  let hasText = false;
+  let hasError = false;
+  for (const line of String(output || '').split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const event = JSON.parse(line);
+      if (event.type === 'error') hasError = true;
+      if (event.type === 'text' && typeof event.part?.text === 'string' && event.part.text.trim()) hasText = true;
+      if (event.type === 'agent_message' && typeof event.text === 'string' && event.text.trim()) hasText = true;
+      if (event.type === 'response.output_text' && typeof event.text === 'string' && event.text.trim()) hasText = true;
+      if (event.type === 'message' && typeof event.text === 'string' && event.text.trim()) hasText = true;
+    } catch {}
+  }
+  if (agent === 'opencode') return hasText && !hasError;
+  // Codex does not use OpenCode's JSON protocol in this runner. Its process
+  // status remains authoritative, but a structured error still fails closed.
+  return !hasError && (hasText || String(output || '').trim().length > 0);
+}
+
 export function createBoundedCollector(limitBytes) {
   const chunks = [];
   let size = 0;

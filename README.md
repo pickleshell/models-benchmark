@@ -1,21 +1,26 @@
 # Models Benchmark
 
-Private research repository for a reproducible, auditable benchmark of coding
-models and agent runtimes. It executes the same real software task in a clean
-Linux account for every candidate, then preserves code, test evidence, and
-independent model reviews as structured data.
+Private benchmark runner for comparing coding models and agent runtimes on the
+same real software tasks. Every model gets one clean starting point, one new
+agent session, the same public documentation and tests, and one chance to
+produce a solution. The runner preserves the resulting patch, public test
+evidence, elapsed time, and independent model reviews as structured data.
 
-The project is being redesigned from the original `models-test` experiment into
-a professional benchmark pipeline. The goal is to measure not only whether a
-model produces a passing patch, but also correctness, regression safety,
-scope discipline, reproducibility, latency, and operational failures.
+The benchmark answers a practical question: given the same task and normal
+coding-agent tools, what did each model actually deliver? It keeps code quality
+separate from availability, provider failures, and infrastructure problems.
+Public tasks and reviewed results live in `models-test`; this private repository
+contains the orchestration needed to make the comparison fair.
 
 ## Current Status
 
-The clean-room pilot runner, isolated judge workflow, sanitized result format,
-and first historical one-task pilot are implemented. The next hardened
-two-task release is configured but has not yet invoked models. The pipeline is
-still in pilot validation, not a claim of a definitive model ranking.
+The clean-room runner, isolated blind-judging workflow, and sanitized result
+format are implemented. `pilot-2-tasks-r4` was an operational diagnostic run:
+it found unavailable candidate and judge models and is not a publishable model
+comparison. The next immutable run is `pilot-2-tasks-r5`.
+
+The project remains in pilot validation. Two tasks and one run per model are
+useful evidence, not a definitive general ranking.
 
 The current pilot configuration is data-driven: candidate models, judges,
 tasks, criteria, subscription labels, and release ID live in
@@ -24,7 +29,7 @@ releases without changing the runner's core workflow.
 
 ### Next Pilot Matrix
 
-Release `pilot-2-tasks-r4` contains two tasks, three candidate models, and two
+Release `pilot-2-tasks-r5` contains two tasks, three candidate models, and two
 independent judges. Candidate models are invoked through OpenCode with the
 subscription label `free`; the judges are GPT and Gemini models, also invoked
 through OpenCode:
@@ -34,8 +39,8 @@ through OpenCode:
 | Candidate | `big-pickle` | `opencode/big-pickle` |
 | Candidate | `deepseek-v4-flash-free` | `opencode/deepseek-v4-flash-free` |
 | Candidate | `mimo-v2-5-free` | `opencode/mimo-v2.5-free` |
-| Judge | `gpt-5-4-pro` | `opencode/gpt-5.4-pro` |
-| Judge | `gemini-3-1-pro` | `opencode/gemini-3.1-pro` |
+| Judge | `gpt-5-4-pro` | `gpt-5.4-pro` |
+| Judge | `gemini-3-1-pro` | `gemini-3.1-pro` |
 
 The task, candidate list, judge list, and criteria are release inputs, not
 constants. Future releases may add tasks, models, judges, subscription tiers,
@@ -107,10 +112,10 @@ the submitted code.
 | Judge | Independently inspects the resulting workspace and runs public tests | GPT-5.4 Pro and Gemini 3.1 Pro through OpenCode |
 | Orchestrator | Starts/reset runs, captures evidence, and reports progress | Codex plus the private runner |
 
-Candidates never see judge prompts, raw judge output from another candidate,
-reference solutions, private runner artifacts, or provider credentials. Judges
-receive an isolated copy of the completed candidate workspace and start with a
-fresh agent home.
+Candidates never see another candidate's workspace, patch, session history,
+agent home, judge prompt, judge output, reference solution, runner artifacts,
+or provider credentials. Judges receive an anonymous copy of one completed
+submission and a fresh agent home of their own.
 
 ## How The Pilot Works
 
@@ -138,10 +143,18 @@ The next hardened pilot uses two public tasks and three models already present
 in the published comparison. Each model receives one pass and one chance per
 task. There is no retry and no reuse of a previous agent session.
 
-The pilot clean room is the dedicated Linux account `test`. Its reset script
-runs as `test`, removes the workspace and isolated OpenCode/Codex home, then
-restores the public task archive owned by that account. The runner invokes the
-script before every candidate so a model cannot inherit another model's files
+Before creating a release, the runner also probes every required judge. If a
+judge model is unavailable, the run stops before any candidate is given a task
+and before any release directory is created. This prevents a costly candidate
+matrix with no usable scoring evidence.
+
+The pilot clean room is the dedicated Linux account `test`. Before every
+candidate, the runner removes the previous workspace and agent state and
+restores the public task from a trusted archive. Candidate commands then run
+inside a new transient systemd sandbox. The sandbox exposes only that
+candidate's workspace, a fresh agent home, the read-only agent runtime, and a
+private disposable temporary filesystem. It cannot see the host home, host
+temporary files, the runner's artifacts, or any previous candidate's workspace
 or session history.
 
 The clean room is also reset once after the complete configured matrix. This
@@ -168,7 +181,8 @@ Code quality and operational availability are deliberately different facts.
 | --- | --- | --- |
 | `completed` | Candidate exited successfully and public tests were evaluated | Included when a judge returns valid structured scores |
 | `tests_failed` | Candidate completed but public tests failed | Retained and may be judged |
-| `agent_failure` | Provider, process, timeout, or candidate execution failed | Judges are skipped; aggregate score is `N/A` |
+| `agent_failure` | A started candidate process, timeout, or infrastructure step failed | Judges are skipped; aggregate score is `N/A` |
+| `unavailable` | A harmless preflight request received no model response | Tasks are not started; judges are skipped and quality is `N/A` |
 | `forbidden_changes` | Candidate changed a path outside the task's `allowed_changes` policy | Patch and test evidence are retained; judges are skipped |
 
 Timeout is additionally recorded as `agent.timed_out: true` in `run.json`. An
@@ -198,8 +212,9 @@ After a pilot, build the local summary without publishing it:
 npm run aggregate -- pilot-1-task-r6
 ```
 
-The aggregate ignores judge scores for candidates whose agent execution
-failed. Such candidates remain visible with an explicit failure outcome.
+The aggregate ignores judge scores for unavailable, failed, or policy-violating
+candidates. They remain visible with an explicit outcome rather than receiving
+a zero-quality score.
 
 Each future `run.json` records `started_at`, `completed_at`, and `duration_ms`
 for the candidate execution, agent phase, and public-test phase. Judge
@@ -209,16 +224,32 @@ timing.
 
 ## Result Layout
 
-For each candidate and task, the public results directory contains:
+The complete public release tree looks like this:
 
 ```text
-run.json
-candidate.diff
-test-result.json
-judges/<judge-id>.json
-aggregate.json
-aggregate.md
+<release>/
+  aggregate.json
+  aggregate.md
+  <candidate>/
+    preflight.json
+    <task>/
+      run.json
+      candidate.diff
+      test-result.json
+      judges/<judge-id>.json
 ```
+
+An unavailable candidate has a deliberately smaller artifact set:
+
+```text
+<candidate>/preflight.json
+<candidate>/<task>/run.json
+```
+
+`preflight.json` records the safe availability result and timing. The skipped
+task records contain `outcome: "unavailable"`; there is no patch, test output,
+or judge result because the model never received the task. `aggregate.json` and
+`aggregate.md` are written once at the release root, never inside a task.
 
 The pipeline publishes data only. A separate site or reporting repository may
 render it. `run.json` includes candidate, test, and overall execution timing;
@@ -233,6 +264,7 @@ agent stdout/stderr remains under the private runner artifact directory.
 
 | File | Contents | Publication rule |
 | --- | --- | --- |
+| `<candidate>/preflight.json` | Availability-probe status and timing, without raw output | Sanitized and reviewable |
 | `run.json` | Candidate identity, selected agent/runtime, statuses, timestamps, durations, changed files | Sanitized and reviewable |
 | `candidate.diff` | Final Git patch against the baseline | Sanitized and reviewable |
 | `test-result.json` | Public test exit status, timing, stdout, stderr | Sanitized and reviewable |
@@ -267,14 +299,18 @@ sanitized evidence.
 - Results require manual review before publication; a successful local run is
   not automatically a public benchmark release.
 
-## Security Boundary
+## Clean-Room Guarantee
 
-Candidate models run in transient systemd mount namespaces with private `/tmp`,
-a read-only OpenCode runtime, and writable binds only for the disposable
-workspace and agent home. Tasks and public tests are intentionally available to
-the candidate. Reference solutions, judge prompts, scoring data, secrets,
-provider tokens, and private repository contents must never be available to the
-candidate process or published in the public results repository.
+Models are deliberately isolated from one another. A model can see only the
+public task it has been assigned and the files it creates during that one run.
+It cannot read answers, patches, logs, sessions, or temporary files from an
+earlier or later model. The same separation applies to judges: each judge sees
+one anonymous submission, never the original candidate workspace or another
+judge's work.
+
+Tasks and public tests are intentionally visible. Reference solutions, judge
+prompts, scoring data, secrets, provider tokens, private runner files, and all
+cross-run artifacts are outside the sandbox and unavailable to model processes.
 
 Candidate, test, and judge stdout/stderr are capped at 2 MiB per stream by
 default. Exceeding the cap terminates the process and records an execution

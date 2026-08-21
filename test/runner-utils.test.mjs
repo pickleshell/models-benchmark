@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import {
   classifyOutcome,
   createBoundedCollector,
   findForbiddenChanges,
+  hasModelResponse,
   parsePorcelainPaths,
   validateJudgePayload
 } from '../scripts/lib/runner-utils.mjs';
@@ -30,6 +32,20 @@ test('outcome keeps execution, policy, and test failures distinct', () => {
   assert.equal(classifyOutcome({ agent: ok, tests: ok, forbiddenChanges: ['package.json'] }), 'forbidden_changes');
   assert.equal(classifyOutcome({ agent: ok, tests: { ...ok, status: 1 }, forbiddenChanges: [] }), 'tests_failed');
   assert.equal(classifyOutcome({ agent: { ...ok, timed_out: true }, tests: ok, forbiddenChanges: [] }), 'agent_failure');
+});
+
+test('model availability requires a response event, not only exit success', () => {
+  assert.equal(hasModelResponse('{"type":"error","message":"Model not found"}'), false);
+  assert.equal(hasModelResponse('{"type":"text","part":{"text":"hi"}}'), true);
+  assert.equal(hasModelResponse('{"type":"text","part":{"text":"hi"}}\n{"type":"error","message":"Provider failed"}'), false);
+  assert.equal(hasModelResponse('hi'), false);
+  assert.equal(hasModelResponse('hi', 'codex'), true);
+  assert.equal(hasModelResponse(''), false);
+});
+
+test('OpenCode ProviderModelNotFoundError diagnostics never pass availability', async () => {
+  const output = await readFile(new URL('./fixtures/opencode-provider-model-not-found.stdout', import.meta.url), 'utf8');
+  assert.equal(hasModelResponse(output), false);
 });
 
 test('bounded collector truncates instead of retaining unlimited output', () => {
