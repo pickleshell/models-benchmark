@@ -30,7 +30,7 @@ accounts change.
 
 ## Prerequisites
 
-- Linux with Node.js 20 or newer, Git, sudo, `systemd-run`, and network access
+- Linux with Node.js 20 or newer, Git, `rsync`, sudo, `systemd-run`, and network access
   for the selected OpenCode models.
 - The private `models-benchmark` repository and a checkout of `models-test`.
 - A dedicated clean-room user with no sudo group membership.
@@ -103,12 +103,15 @@ From the private runner checkout:
 
 ```sh
 npm run pilot:dry-run
+rsync --version
 sudo -u test env HOME=/home/test/.models-benchmark \
   PATH=/home/test/.opencode/bin:/usr/local/bin:/usr/bin:/bin \
   opencode --version
 ```
 
-The dry run validates the configured matrix without invoking models. Review
+The dry run validates the configured matrix without invoking models. A real
+run performs the same `rsync --version` preflight before creating a release
+directory or invoking a candidate. Review
 `config/pilot.json` carefully before the first real run: it defines tasks,
 candidates, judges, subscriptions, and the release identifier.
 

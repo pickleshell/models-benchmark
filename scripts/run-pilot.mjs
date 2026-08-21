@@ -400,6 +400,8 @@ if (existsSync(publicReleaseDir) || existsSync(privateDir)) {
   throw new Error(`benchmark release already exists: ${config.release}; choose a new immutable release identifier`);
 }
 
+const rsync = await run('rsync', ['--version'], { timeoutMs: 5000 });
+if (rsync.status !== 0) throw new Error(`rsync is required for trusted baseline comparison: ${rsync.stderr}`);
 const account = await run('getent', ['passwd', candidateUser], { timeoutMs: 5000 });
 if (account.status !== 0) throw new Error(`clean-room account not found: ${candidateUser}`);
 if (!existsSync(opencodeRoot)) throw new Error(`OpenCode runtime root not found: ${opencodeRoot}`);
