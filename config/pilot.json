@@ -53,8 +53,8 @@
     }
   ],
   "judges": [
-    {"id": "gpt-5-4-pro", "agent": "opencode", "provider": "opencode", "model": "gpt-5.4-pro", "subscription": "paid"},
-    {"id": "gemini-3-1-pro", "agent": "opencode", "provider": "opencode", "model": "gemini-3.1-pro", "subscription": "paid"}
+    {"id": "hy3-free", "agent": "opencode", "provider": "opencode", "model": "opencode/hy3-free", "subscription": "free"},
+    {"id": "nemotron-3-5-lightning-free", "agent": "opencode", "provider": "opencode", "model": "opencode/nemotron-3.5-lightning-free", "subscription": "free"}
   ],
   "criteria": [
     "functional_correctness",
