@@ -220,6 +220,10 @@ following controls are part of the implemented contract:
     boundary. It acquires the same host-wide lock as a pilot and requires an
     idle clean-room account, so it cannot overlap a release. This check is
     required after installing or changing the sandbox configuration.
+14. **Non-mutating runtime preflight.** The OpenCode version check runs with
+    only the read-only runtime and private sandbox storage. It does not bind
+    the clean workspace or agent home, so an early runtime-preflight failure
+    cannot dirty candidate state.
 
 These controls protect against accidental state carry-over and ordinary
 candidate-controlled writes. They are process and mount-namespace isolation,

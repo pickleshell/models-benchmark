@@ -140,6 +140,8 @@ OpenCode runtime can start inside the hardened boundary. It uses no model and
 does not create a release directory or consume provider quota.
 It acquires the same clean-room lock as `npm run pilot` and refuses to run if
 the clean-room account is active, so do not run it alongside a pilot.
+It releases that lock only after its temporary same-UID sentinel has exited;
+failed verifier cleanup leaves a marked stale lock for manual recovery.
 
 ## Required sudo boundary
 

@@ -148,6 +148,10 @@ test('candidate and judge process boundaries prevent cross-run workspace access'
       assert.ok(invocation.args.includes('--property=TemporaryFileSystem=/dev/shm:rw,nosuid,nodev,noexec,mode=1777'));
       assert.ok(invocation.args.includes('--property=ProtectProc=invisible'));
     }
+    const versionProbe = invocations.find(({ args }) => args.includes('opencode') && args.includes('--version'));
+    assert.ok(versionProbe, `expected a runtime version probe: ${JSON.stringify(invocations)}`);
+    assert.ok(versionProbe.args.includes('--property=WorkingDirectory=/tmp'));
+    assert.deepEqual(versionProbe.args.filter((value) => value.startsWith('--property=BindPaths=')), []);
     const artifact = JSON.parse(await readFile(path.join(modelsTest, 'results', 'boundary-release', candidate.id, 'task', 'judges', 'judge.json'), 'utf8'));
     assert.equal(artifact.candidate, candidate.id);
     assert.equal(artifact.status, 'completed');

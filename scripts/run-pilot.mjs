@@ -172,6 +172,16 @@ function cleanRoomEnv() {
   return buildJudgeEnvironment({ agentHome, opencodeRoot });
 }
 
+function runtimeProbeEnv() {
+  return {
+    HOME: '/tmp',
+    PATH: `${opencodeRoot}/bin:/usr/local/bin:/usr/bin:/bin`,
+    XDG_CONFIG_HOME: '/tmp/.config',
+    XDG_DATA_HOME: '/tmp/.local/share',
+    TMPDIR: '/tmp'
+  };
+}
+
 function runAsCleanRoomHost(command, args, options = {}) {
   const envArgs = Object.entries(cleanRoomEnv()).map(([key, value]) => `${key}=${value}`);
   return run('sudo', ['-u', candidateUser, '--', 'env', ...envArgs, command, ...args], { ...options, cwd: '/tmp' });
@@ -188,13 +198,14 @@ async function assertCleanRoomUserIsIdle() {
 }
 
 function runAsCandidate(command, args, options = {}) {
-  const env = cleanRoomEnv();
+  const env = options.sandboxEnv || cleanRoomEnv();
+  const { sandboxEnv, ...runOptions } = options;
   const envArgs = Object.entries(env).map(([key, value]) => `${key}=${value}`);
   const targetCwd = options.cwd || cleanWorkspace;
   const unit = `models-benchmark-${process.pid}-${Date.now()}-${sandboxSequence++}`;
   const writablePaths = [...new Set([
     ...(options.includeCleanWorkspace === false ? [] : [cleanWorkspace]),
-    agentHome,
+    ...(options.includeAgentHome === false ? [] : [agentHome]),
     ...(options.writablePaths || [])
   ])];
   const properties = [
@@ -224,7 +235,7 @@ function runAsCandidate(command, args, options = {}) {
     'systemd-run', '--quiet', '--pipe', '--wait', '--collect', `--unit=${unit}`, `--uid=${candidateUser}`,
     ...properties, '--', '/usr/bin/env', ...envArgs, command, ...args
   ], {
-    ...options,
+    ...runOptions,
     timeoutMs: (options.timeoutMs ?? timeoutMs) + 5000,
     onOutputLimit: () => {
       const killer = spawn('sudo', ['systemctl', 'kill', '--kill-whom=all', unit], { stdio: 'ignore' });
@@ -494,7 +505,13 @@ try {
   if (account.status !== 0) throw new Error(`clean-room account not found: ${candidateUser}`);
   await assertCleanRoomUserIsIdle();
   if (!existsSync(opencodeRoot)) throw new Error(`OpenCode runtime root not found: ${opencodeRoot}`);
-  const opencode = await runAsCandidate('opencode', ['--version'], { timeoutMs: 10000 });
+  const opencode = await runAsCandidate('opencode', ['--version'], {
+    cwd: '/tmp',
+    sandboxEnv: runtimeProbeEnv(),
+    includeCleanWorkspace: false,
+    includeAgentHome: false,
+    timeoutMs: 10000
+  });
   if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
   emit('preflight_ok', { candidate_user: candidateUser, opencode_version: opencode.stdout.trim() });
 

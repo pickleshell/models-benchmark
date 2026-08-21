@@ -28,6 +28,14 @@ records the relevant same-UID process limitation described below. The check
 uses no model quota and creates no benchmark release.
 It acquires the same host-wide clean-room lock as a pilot and requires the
 `test` account to be idle, so it cannot overlap a benchmark run.
+Its temporary same-UID sentinel is terminated and confirmed absent before that
+lock is released; a cleanup failure leaves a marked stale lock for operator
+recovery.
+
+The initial OpenCode version preflight is intentionally narrower than a model
+run: it receives only the read-only runtime and private sandbox storage, never
+the clean workspace or persistent agent home. A failed version check therefore
+cannot leave candidate state behind.
 
 The project remains in pilot validation. Two tasks and one run per model are
 useful evidence, not a definitive general ranking.

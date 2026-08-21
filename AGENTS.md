@@ -97,7 +97,12 @@ active process.
 
 `npm run verify:sandbox` is a clean-room operation too: it must acquire the
 same lock and require the account to be idle before creating its verification
-units. Never run it concurrently with `npm run pilot`.
+units. It may release the lock only after its temporary same-UID sentinel is
+confirmed stopped. Never run it concurrently with `npm run pilot`.
+
+Keep the initial runtime version preflight non-mutating: it may bind the
+read-only runtime and private sandbox storage only, never the clean workspace
+or agent home.
 
 ## Required checks
 

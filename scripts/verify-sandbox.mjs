@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
-import { acquireCleanRoomLock, releaseCleanRoomLock } from './lib/clean-room-lock.mjs';
+import { acquireCleanRoomLock, releaseCleanRoomLock, retainCleanRoomLock } from './lib/clean-room-lock.mjs';
 
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
 const configPath = process.env.BENCHMARK_CONFIG
@@ -106,6 +106,18 @@ async function assertCleanRoomUserIsIdle() {
   throw new Error(`clean-room account ${candidateUser} is active; stop its processes before verifying the sandbox:\n${listed.stdout.trim()}`);
 }
 
+const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function waitForProcessExit(pid) {
+  for (let attempt = 0; attempt < 40; attempt += 1) {
+    const check = await run('sudo', ['-u', candidateUser, '--', 'kill', '-0', pid]);
+    if (check.status === 1) return true;
+    if (check.status !== 0) throw new Error(`cannot verify sentinel shutdown: ${check.stderr || check.stdout}`);
+    await wait(50);
+  }
+  return false;
+}
+
 const probeCommand = (expectMarkerAbsent) => [
   expectMarkerAbsent ? `test ! -e /dev/shm/${marker}` : `printf isolated > /dev/shm/${marker}`,
   'ipcns=$(readlink /proc/self/ns/ipc)',
@@ -156,6 +168,17 @@ process.stdout.write(`${JSON.stringify({
   opencode_version: opencode.stdout.trim()
 })}\n`);
 } finally {
-  if (sentinelPid) await run('sudo', ['-u', candidateUser, '--', 'kill', sentinelPid]);
-  await releaseCleanRoomLock(cleanRoomLock);
+  let cleanupError = null;
+  try {
+    if (sentinelPid) {
+      const killed = await run('sudo', ['-u', candidateUser, '--', 'kill', sentinelPid]);
+      if (killed.status !== 0 && killed.status !== 1) throw new Error(`cannot stop same-user process sentinel: ${killed.stderr || killed.stdout}`);
+      if (!(await waitForProcessExit(sentinelPid))) throw new Error(`same-user process sentinel ${sentinelPid} did not exit`);
+    }
+  } catch (error) {
+    cleanupError = error;
+    await retainCleanRoomLock(cleanRoomLock, error);
+  }
+  if (!cleanupError) await releaseCleanRoomLock(cleanRoomLock);
+  if (cleanupError) throw cleanupError;
 }
