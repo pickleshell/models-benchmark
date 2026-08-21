@@ -146,6 +146,19 @@ that modifies tests, manifests, or another unapproved path is classified as
 `forbidden_changes`; its patch and test evidence are retained, but judges are
 skipped and no quality score is aggregated.
 
+### Blind-judging verification
+
+Before a release, verify that judging remains identity-blind. Each invocation
+must use a fresh `submission-<UUID>` workspace and a fresh judge agent home.
+The judge prompt and process inputs may contain only the task ID, rubric, the
+submitted workspace, and explicitly allowlisted public-test status fields.
+They must not contain candidate ID, model, agent/runtime, provider,
+subscription, candidate logs, private artifacts, or candidate-derived paths,
+environment values, or temporary names. The runner adds the real candidate
+association to the judge artifact only after the process exits. Run the blind
+judging regression tests and `npm run pilot:dry-run`; do not use a real pilot
+run as a privacy check.
+
 Before manually committing results, verify that they contain no raw model logs,
 credentials, private paths, judge prompts, or hidden evaluation material:
 
