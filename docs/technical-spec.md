@@ -21,8 +21,8 @@ than a collection of isolated micro-prompts. Counts below are release
 configuration, not architectural limits:
 
 - a configurable number of tasks is run sequentially for each candidate;
-- the pipeline-validation pilot uses the public `feature-implementation`
-  task from `models-test`;
+- the initial hardened pilot uses the public `feature-implementation` and
+  `refactoring` tasks from `models-test`;
 - the pilot candidate set contains any three models already represented in the
   published model comparison; the exact three are a manifest choice;
 - after the pilot succeeds, the benchmark expands to two or three tasks and
@@ -97,8 +97,8 @@ configuration without storing credentials.
    manifest.
 2. Provision or reset the dedicated clean-room Linux account.
 3. Prepare the configured task workspace and task documentation in that
-   account. The pipeline pilot uses `feature-implementation`; later releases
-   may configure more tasks.
+   account. The next hardened pilot uses `feature-implementation` and
+   `refactoring`; later releases may configure more tasks.
 4. Validate the candidate configuration and create a run ID.
 5. Start the candidate through its configured agent (OpenCode or Codex) and
    execute the configured tasks sequentially.

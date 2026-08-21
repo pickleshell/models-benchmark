@@ -13,17 +13,18 @@ scope discipline, reproducibility, latency, and operational failures.
 ## Current Status
 
 The clean-room pilot runner, isolated judge workflow, sanitized result format,
-and first one-task pilot are implemented. The pipeline is still in pilot
-validation, not a claim of a definitive model ranking.
+and first historical one-task pilot are implemented. The next hardened
+two-task release is configured but has not yet invoked models. The pipeline is
+still in pilot validation, not a claim of a definitive model ranking.
 
 The current pilot configuration is data-driven: candidate models, judges,
 tasks, criteria, subscription labels, and release ID live in
 [`config/pilot.json`](config/pilot.json). Their counts can change in later
 releases without changing the runner's core workflow.
 
-### Current Pilot Matrix
+### Next Pilot Matrix
 
-Release `pilot-1-task-r6` contains one task, three candidate models, and two
+Release `pilot-2-tasks-r1` contains two tasks, three candidate models, and two
 judges. All are invoked through OpenCode with the subscription label `free`:
 
 | Role | ID | Model |
@@ -37,6 +38,10 @@ judges. All are invoked through OpenCode with the subscription label `free`:
 The task, candidate list, judge list, and criteria are release inputs, not
 constants. Future releases may add tasks, models, judges, subscription tiers,
 or a Codex candidate runtime.
+
+The current tasks are `feature-implementation` and `refactoring`. The former
+adds a feature-flag resolution behavior; the latter removes duplicated event
+filtering while preserving the public API and malformed-input behavior.
 
 ## Design Goals
 
@@ -61,7 +66,7 @@ describes the implemented pilot and how its evidence is stored.
 This is a coding-agent benchmark, not a generic question-answering benchmark.
 Each candidate receives the same public task fixture, task instructions,
 documentation, starting Git baseline, and public tests. The current pilot runs
-the public `feature-implementation` task from `models-test`.
+the public `feature-implementation` and `refactoring` tasks from `models-test`.
 
 For every candidate/task pair, the pipeline records:
 
@@ -107,7 +112,7 @@ room through their configured OpenCode or Codex agent.
 flowchart TD
     A[User gives Codex the benchmark command] --> B[Private models-benchmark runner]
     B --> C[Reset clean-room account as candidate user]
-    C --> D[Restore public feature-implementation task]
+    C --> D[Restore the next public task]
     D --> E[Start a new OpenCode or Codex session]
     E --> F[Candidate model works once]
     F --> G[Run public tests and collect diff]
@@ -118,9 +123,9 @@ flowchart TD
     K --> C
 ```
 
-The first pilot uses one public task and three models already present in the
-published comparison. Each model receives one pass and one chance. There is
-no retry and no reuse of a previous agent session.
+The next hardened pilot uses two public tasks and three models already present
+in the published comparison. Each model receives one pass and one chance per
+task. There is no retry and no reuse of a previous agent session.
 
 The pilot clean room is the dedicated Linux account `test`. Its reset script
 runs as `test`, removes the workspace and isolated OpenCode/Codex home, then
@@ -242,7 +247,7 @@ sanitized evidence.
 
 ## Pilot Limits
 
-- One public task cannot establish a general model ranking.
+- Two public tasks cannot establish a general model ranking.
 - A candidate gets one attempt; provider availability is measured separately
   from patch quality.
 - Tasks and public tests are visible to candidates by design. Private prompts,

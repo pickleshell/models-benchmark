@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "pilot-1-task-r6",
+  "release": "pilot-2-tasks-r1",
   "models_test": "/home/gpt/models-test",
   "results_dir": "results/benchmark-pilot",
   "private_artifacts_dir": "~/.models-benchmark/runs",
@@ -19,6 +19,13 @@
       "prompt": "benchmarks/phase2/prompts/feature-implementation.md",
       "test_command": ["npm", "test"],
       "allowed_changes": ["fixtures/phase2/feature-implementation/src/featureFlags.js"]
+    },
+    {
+      "id": "refactoring",
+      "fixture": "fixtures/phase2/refactoring",
+      "prompt": "benchmarks/phase2/prompts/refactoring.md",
+      "test_command": ["npm", "test"],
+      "allowed_changes": ["fixtures/phase2/refactoring/src/events.js"]
     }
   ],
   "candidates": [

@@ -21,9 +21,9 @@ the end of a completed matrix.
 ## Pilot workflow
 
 Run `npm run pilot:dry-run` before any real model invocation. The pilot runner
-uses one public `feature-implementation` task and the three candidates in
-`config/pilot.json`. It runs candidates sequentially and starts a new agent
-session for every candidate.
+uses the public tasks and three candidates in `config/pilot.json`. It runs
+candidates sequentially and starts a new agent session for every candidate/task
+pair.
 
 The runner resets the clean-room workspace and isolated agent home by invoking
 `/home/test/.models-benchmark/reset-room.mjs` as the candidate account `test`
