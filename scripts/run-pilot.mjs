@@ -82,8 +82,10 @@ async function installArchive(task) {
   const targetPrompt = path.join(archiveRoot, task.prompt);
   const directory = await run('sudo', ['install', '-d', '-o', candidateUser, '-g', candidateUser, '-m', '0755', path.dirname(targetFixture), path.dirname(targetPrompt)], { timeoutMs: 30000 });
   if (directory.status !== 0) throw new Error(`cannot prepare task archive: ${directory.stderr}`);
-  const fixture = await run('sudo', ['cp', '-a', sourceFixture, targetFixture], { timeoutMs: 30000 });
-  if (fixture.status !== 0) throw new Error(`cannot copy task fixture: ${fixture.stderr}`);
+  const fixture = await run('sudo', ['rm', '-rf', targetFixture], { timeoutMs: 30000 });
+  if (fixture.status !== 0) throw new Error(`cannot clear task archive: ${fixture.stderr}`);
+  const copiedFixture = await run('sudo', ['cp', '-a', sourceFixture, targetFixture], { timeoutMs: 30000 });
+  if (copiedFixture.status !== 0) throw new Error(`cannot copy task fixture: ${copiedFixture.stderr}`);
   const prompt = await run('sudo', ['cp', sourcePrompt, targetPrompt], { timeoutMs: 30000 });
   if (prompt.status !== 0) throw new Error(`cannot copy task prompt: ${prompt.stderr}`);
   const owner = await run('sudo', ['chown', '-R', `${candidateUser}:${candidateUser}`, cleanRoomHome], { timeoutMs: 30000 });

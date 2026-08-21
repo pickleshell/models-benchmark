@@ -26,7 +26,10 @@ await rm(workspace, { recursive: true, force: true });
 await rm(agentHome, { recursive: true, force: true });
 await mkdir(path.dirname(workspace), { recursive: true });
 await mkdir(agentHome, { recursive: true, mode: 0o700 });
-await cp(path.join(archiveRoot, fixture), path.join(workspace, fixture), { recursive: true });
+const fixtureTarget = path.join(workspace, fixture);
+await rm(fixtureTarget, { recursive: true, force: true });
+await mkdir(fixtureTarget, { recursive: true });
+await cp(path.join(archiveRoot, fixture), fixtureTarget, { recursive: true });
 await mkdir(path.dirname(path.join(workspace, prompt)), { recursive: true });
 await cp(path.join(archiveRoot, prompt), path.join(workspace, prompt));
 
