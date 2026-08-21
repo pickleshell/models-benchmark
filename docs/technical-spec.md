@@ -102,14 +102,15 @@ configuration without storing credentials.
 4. Validate the candidate configuration and create a run ID.
 5. Start the candidate through its configured agent (OpenCode or Codex) and
    execute the configured tasks sequentially.
-6. Enforce timeout, output limits, process-group cleanup, and cancellation.
+6. Enforce timeout, per-stream output limits, process-group cleanup, and
+   cancellation.
 7. Freeze the complete configured result before judging.
 8. Run the published tests and checks in a separate evaluator environment.
 9. Send the resulting code and evidence to each configured judge independently
    for each configured criterion.
 10. Record every judge response and score; do not ask a judge to reconcile
     another judge's score.
-11. Check allowed paths, patch size, and forbidden modifications.
+11. Enforce allowed paths and classify forbidden modifications before judging.
 12. Persist schema-versioned artifacts and classify every outcome.
 13. Reset the clean room completely before the next candidate. The reset is
    run by the benchmark runner as the candidate account and removes the
@@ -124,7 +125,9 @@ a separate manual review and push operation.
 
 ## 5. Isolation and Security
 
-- Every run gets a disposable workspace and unique process group.
+- Every candidate, test, judge, and candidate-workspace Git operation runs in
+  a transient systemd mount namespace with private `/tmp`, a read-only runtime,
+  and writable binds only for the disposable workspace and agent home.
 - Every task starts a new agent session. Session files, history, caches, and
   previous candidate work are removed before the next candidate.
 - Candidate processes may read the published task and tests, but cannot read
@@ -134,7 +137,9 @@ a separate manual review and push operation.
   are stored under a private directory in the runner account's home, outside
   the candidate workspace. Permissions and process isolation must prevent the
   candidate account from reading that directory.
-- Network access is denied by default and explicitly documented per harness.
+- The current OpenCode harness retains outbound network access for model
+  providers. It must not receive host-home, runner-artifact, or runtime-write
+  access.
 - File writes are limited to the candidate workspace.
 - Timeouts terminate the complete process group and are recorded as outcomes,
   not silently converted to failures of code quality.

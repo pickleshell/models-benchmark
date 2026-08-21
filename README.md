@@ -153,6 +153,7 @@ Code quality and operational availability are deliberately different facts.
 | `completed` | Candidate exited successfully and public tests were evaluated | Included when a judge returns valid structured scores |
 | `tests_failed` | Candidate completed but public tests failed | Retained and may be judged |
 | `agent_failure` | Provider, process, timeout, or candidate execution failed | Judges are skipped; aggregate score is `N/A` |
+| `forbidden_changes` | Candidate changed a path outside the task's `allowed_changes` policy | Patch and test evidence are retained; judges are skipped |
 
 Timeout is additionally recorded as `agent.timed_out: true` in `run.json`. An
 unavailable provider must not become a zero-quality row or silently vanish from
@@ -252,8 +253,15 @@ sanitized evidence.
 
 ## Security Boundary
 
-Candidate models run against disposable workspaces with least-privilege
-credentials. Tasks and public tests are intentionally available to the
-candidate. Reference solutions, judge prompts, scoring data, secrets, provider
-tokens, and private repository contents must never be available to the
+Candidate models run in transient systemd mount namespaces with private `/tmp`,
+a read-only OpenCode runtime, and writable binds only for the disposable
+workspace and agent home. Tasks and public tests are intentionally available to
+the candidate. Reference solutions, judge prompts, scoring data, secrets,
+provider tokens, and private repository contents must never be available to the
 candidate process or published in the public results repository.
+
+Candidate, test, and judge stdout/stderr are capped at 2 MiB per stream by
+default. Exceeding the cap terminates the process and records an execution
+failure, preventing unbounded runner-memory use. The task's `allowed_changes`
+policy is enforced before judging, so a model cannot obtain a completed result
+by changing tests or package metadata.

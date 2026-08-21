@@ -4,12 +4,22 @@ import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
+import {
+  classifyOutcome,
+  createBoundedCollector,
+  findForbiddenChanges,
+  parsePorcelainPaths,
+  validateJudgePayload
+} from './lib/runner-utils.mjs';
 
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
-const configPath = path.join(repo, 'config', 'pilot.json');
+const configPath = process.env.BENCHMARK_CONFIG
+  ? path.resolve(process.env.BENCHMARK_CONFIG)
+  : path.join(repo, 'config', 'pilot.json');
 const config = JSON.parse(await readFile(configPath, 'utf8'));
 const dryRun = process.argv.includes('--dry-run');
 const timeoutMs = Number(process.env.BENCHMARK_TIMEOUT_MS || 15 * 60 * 1000);
+const maxOutputBytes = Number(process.env.BENCHMARK_MAX_OUTPUT_BYTES || 2 * 1024 * 1024);
 const modelsTest = path.resolve(config.models_test);
 const expandHome = (value) => value.replace(/^~(?=$|\/)/, os.homedir());
 const cleanWorkspace = path.resolve(expandHome(config.clean_room.workspace));
@@ -21,6 +31,9 @@ const archiveRoot = path.join(cleanRoomHome, 'task-archive');
 const judgeRoot = path.join(cleanRoomHome, 'judge');
 const resultsDir = path.resolve(modelsTest, config.results_dir);
 const privateDir = path.resolve(expandHome(config.private_artifacts_dir), config.release);
+const publicReleaseDir = path.join(resultsDir, config.release);
+const opencodeRoot = path.resolve(config.clean_room.opencode_root);
+let sandboxSequence = 0;
 
 function emit(event, data = {}) {
   process.stdout.write(`${JSON.stringify({ timestamp: new Date().toISOString(), event, ...data })}\n`);
@@ -44,9 +57,18 @@ function run(command, args, options = {}) {
       stdio: ['ignore', 'pipe', 'pipe'],
       detached: true
     });
-    const stdout = [], stderr = [];
-    child.stdout.on('data', (chunk) => stdout.push(chunk));
-    child.stderr.on('data', (chunk) => stderr.push(chunk));
+    const stdout = createBoundedCollector(maxOutputBytes);
+    const stderr = createBoundedCollector(maxOutputBytes);
+    let outputLimited = false;
+    const terminateForOutputLimit = () => {
+      if (outputLimited) return;
+      outputLimited = true;
+      try { options.onOutputLimit?.(); } catch {}
+      try { process.kill(-child.pid, 'SIGTERM'); } catch {}
+      setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL'); } catch {} }, 2000).unref();
+    };
+    child.stdout.on('data', (chunk) => { if (!stdout.append(chunk)) terminateForOutputLimit(); });
+    child.stderr.on('data', (chunk) => { if (!stderr.append(chunk)) terminateForOutputLimit(); });
     let settled = false;
     const finish = (result) => {
       if (settled) return;
@@ -58,9 +80,10 @@ function run(command, args, options = {}) {
         duration_ms: Date.now() - startedAt.getTime(),
         status: result.status ?? null,
         signal: result.signal ?? null,
-        stdout: Buffer.concat(stdout).toString(),
-        stderr: Buffer.concat(stderr).toString(),
-        timed_out: Boolean(options.timedOut)
+        stdout: stdout.text(),
+        stderr: stderr.text(),
+        timed_out: Boolean(options.timedOut),
+        output_limited: outputLimited
       });
     };
     const timer = setTimeout(() => {
@@ -99,9 +122,11 @@ function parseJudgeJson(text) {
   try {
     const value = JSON.parse(candidate);
     if (!value || typeof value !== 'object') return null;
-    if (value.scores && typeof value.scores === 'object') return value;
+    if (value.scores && typeof value.scores === 'object') return validateJudgePayload(value, config.criteria);
     const scores = Object.fromEntries(config.criteria.filter((criterion) => Object.hasOwn(value, criterion)).map((criterion) => [criterion, value[criterion]]));
-    return Object.keys(scores).length === config.criteria.length ? { ...value, scores } : null;
+    return Object.keys(scores).length === config.criteria.length
+      ? validateJudgePayload({ ...value, scores }, config.criteria)
+      : null;
   } catch {
     return null;
   }
@@ -131,26 +156,66 @@ async function installResetScript() {
   if (installed.status !== 0) throw new Error(`cannot install reset script: ${installed.stderr}`);
 }
 
-function runAsCandidate(command, args, options = {}) {
-  const env = {
+function cleanRoomEnv() {
+  return {
     HOME: agentHome,
-    PATH: `/home/test/.opencode/bin:/usr/local/bin:/usr/bin:/bin`,
+    PATH: `${opencodeRoot}/bin:/usr/local/bin:/usr/bin:/bin`,
     XDG_CONFIG_HOME: path.join(agentHome, '.config'),
-    XDG_DATA_HOME: path.join(agentHome, '.local', 'share')
+    XDG_DATA_HOME: path.join(agentHome, '.local', 'share'),
+    TMPDIR: '/tmp'
   };
+}
+
+function runAsCleanRoomHost(command, args, options = {}) {
+  const envArgs = Object.entries(cleanRoomEnv()).map(([key, value]) => `${key}=${value}`);
+  return run('sudo', ['-u', candidateUser, '--', 'env', ...envArgs, command, ...args], { ...options, cwd: '/tmp' });
+}
+
+function runAsCandidate(command, args, options = {}) {
+  const env = cleanRoomEnv();
   const envArgs = Object.entries(env).map(([key, value]) => `${key}=${value}`);
-  const targetCwd = options.cwd || cleanRoomHome;
-  const commandArgs = command === 'npm' && args[0] === 'test'
-    ? ['--prefix', targetCwd, ...args]
-    : args;
-  return run('sudo', ['-u', candidateUser, '--', 'env', ...envArgs, command, ...commandArgs], { ...options, cwd: '/tmp' });
+  const targetCwd = options.cwd || cleanWorkspace;
+  const unit = `models-benchmark-${process.pid}-${Date.now()}-${sandboxSequence++}`;
+  const writablePaths = [...new Set([cleanWorkspace, agentHome, ...(options.writablePaths || [])])];
+  const properties = [
+    '--property=ProtectHome=tmpfs',
+    '--property=PrivateTmp=yes',
+    '--property=ProtectSystem=strict',
+    '--property=NoNewPrivileges=yes',
+    '--property=PrivateDevices=yes',
+    '--property=ProtectKernelTunables=yes',
+    '--property=ProtectKernelModules=yes',
+    '--property=ProtectControlGroups=yes',
+    '--property=RestrictSUIDSGID=yes',
+    '--property=LockPersonality=yes',
+    '--property=RestrictNamespaces=yes',
+    '--property=KillMode=control-group',
+    '--property=TimeoutStopSec=2s',
+    '--property=SendSIGKILL=yes',
+    `--property=BindReadOnlyPaths=${opencodeRoot}`,
+    `--property=WorkingDirectory=${targetCwd}`,
+    `--property=TimeoutStartSec=${Math.ceil((options.timeoutMs ?? timeoutMs) / 1000)}s`,
+    ...writablePaths.map((item) => `--property=BindPaths=${item}`)
+  ];
+  return run('sudo', [
+    'systemd-run', '--quiet', '--pipe', '--wait', '--collect', `--unit=${unit}`, `--uid=${candidateUser}`,
+    ...properties, '--', '/usr/bin/env', ...envArgs, command, ...args
+  ], {
+    ...options,
+    timeoutMs: (options.timeoutMs ?? timeoutMs) + 5000,
+    onOutputLimit: () => {
+      const killer = spawn('sudo', ['systemctl', 'kill', '--kill-whom=all', unit], { stdio: 'ignore' });
+      killer.unref();
+    },
+    cwd: '/tmp'
+  });
 }
 
 async function resetRoom(task) {
   emit('reset_started', { task: task.id, workspace: cleanWorkspace });
   await installResetScript();
   await installArchive(task);
-  const reset = await runAsCandidate('/usr/bin/node', [resetScript, '--archive-root', archiveRoot, '--fixture', task.fixture, '--prompt', task.prompt, '--workspace', cleanWorkspace, '--agent-home', agentHome, '--sandbox-root', cleanRoomHome], { timeoutMs: 30000 });
+  const reset = await runAsCleanRoomHost('/usr/bin/node', [resetScript, '--archive-root', archiveRoot, '--fixture', task.fixture, '--prompt', task.prompt, '--workspace', cleanWorkspace, '--agent-home', agentHome, '--sandbox-root', cleanRoomHome], { timeoutMs: 30000 });
   if (reset.status !== 0) throw new Error(`reset failed: ${reset.stderr}`);
   emit('reset_completed', { task: task.id });
 }
@@ -161,24 +226,24 @@ async function runJudges(candidate, task, candidateResult) {
     const privateJudgeDir = path.join(privateDir, candidate.id, task.id, 'judges', judge.id);
     await mkdir(publicJudgeDir, { recursive: true });
     await mkdir(privateJudgeDir, { recursive: true, mode: 0o700 });
-    if (candidateResult.agent.status !== 0) {
+    if (candidateResult.outcome === 'agent_failure' || candidateResult.outcome === 'forbidden_changes') {
       await writeJson(path.join(publicJudgeDir, `${judge.id}.json`), {
         schema_version: 1,
         judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription },
         status: 'skipped',
-        reason: 'candidate_execution_failed',
+        reason: candidateResult.outcome,
         candidate: candidate.id,
         task: task.id
       });
       continue;
     }
     const judgeWorkspace = path.join(judgeRoot, `${candidate.id}-${judge.id}`);
-    await runAsCandidate('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
-    await runAsCandidate('mkdir', ['-p', judgeWorkspace], { timeoutMs: 30000 });
-    const copied = await runAsCandidate('cp', ['-a', `${cleanWorkspace}/.`, judgeWorkspace], { timeoutMs: 30000 });
+    await runAsCleanRoomHost('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
+    await runAsCleanRoomHost('mkdir', ['-p', judgeWorkspace], { timeoutMs: 30000 });
+    const copied = await runAsCleanRoomHost('cp', ['-a', `${cleanWorkspace}/.`, judgeWorkspace], { timeoutMs: 30000 });
     if (copied.status !== 0) throw new Error(`cannot prepare judge workspace: ${copied.stderr}`);
-    await runAsCandidate('rm', ['-rf', agentHome], { timeoutMs: 30000 });
-    await runAsCandidate('mkdir', ['-p', agentHome], { timeoutMs: 30000 });
+    await runAsCleanRoomHost('rm', ['-rf', agentHome], { timeoutMs: 30000 });
+    await runAsCleanRoomHost('mkdir', ['-p', agentHome], { timeoutMs: 30000 });
     const prompt = [
       'You are an independent code judge. Do not modify files.',
       `Review candidate ${candidate.id} for task ${task.id}.`,
@@ -188,7 +253,7 @@ async function runJudges(candidate, task, candidateResult) {
       'Inspect the changed files in the workspace and run the public tests before judging.'
     ].join('\n');
     const command = { command: 'opencode', args: ['run', '--model', judge.model, '--dir', judgeWorkspace, '--dangerously-skip-permissions', '--format', 'json', prompt] };
-    const result = await runAsCandidate(command.command, command.args, { timeoutMs });
+    const result = await runAsCandidate(command.command, command.args, { cwd: judgeWorkspace, writablePaths: [judgeWorkspace], timeoutMs });
     await writeFile(path.join(privateJudgeDir, 'judge.stdout.txt'), result.stdout);
     await writeFile(path.join(privateJudgeDir, 'judge.stderr.txt'), result.stderr);
     const response = extractJudgeText(result.stdout);
@@ -213,7 +278,7 @@ async function runJudges(candidate, task, candidateResult) {
       candidate: candidate.id,
       task: task.id
     });
-    await runAsCandidate('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
+    await runAsCleanRoomHost('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
   }
 }
 
@@ -233,14 +298,20 @@ async function runCandidate(candidate, task) {
   await writeJson(path.join(candidateDir, 'test-result.json'), {
     status: tests.status,
     timed_out: tests.timed_out,
+    output_limited: tests.output_limited,
     started_at: tests.started_at,
     completed_at: tests.completed_at,
     duration_ms: tests.duration_ms,
     stdout: tests.stdout,
     stderr: tests.stderr
   });
-  const diff = await git(['diff', '--binary'], cleanWorkspace);
-  const status = await git(['status', '--porcelain'], cleanWorkspace);
+  const intentToAdd = await git(['add', '--intent-to-add', '--', '.'], cleanWorkspace);
+  if (intentToAdd.status !== 0) throw new Error(`cannot include untracked files in diff: ${intentToAdd.stderr}`);
+  const diff = await git(['diff', '--binary', 'HEAD', '--'], cleanWorkspace);
+  const status = await git(['status', '--porcelain=v1', '-z'], cleanWorkspace);
+  const changedFiles = parsePorcelainPaths(status.stdout);
+  const forbiddenChanges = findForbiddenChanges(changedFiles, task.allowed_changes);
+  const outcome = classifyOutcome({ agent, tests, forbiddenChanges });
   await writeFile(path.join(candidateDir, 'candidate.diff'), diff.stdout);
   const record = {
     schema_version: 1,
@@ -254,6 +325,7 @@ async function runCandidate(candidate, task) {
       status: agent.status,
       signal: agent.signal,
       timed_out: agent.timed_out,
+      output_limited: agent.output_limited,
       started_at: agent.started_at,
       completed_at: agent.completed_at,
       duration_ms: agent.duration_ms
@@ -261,17 +333,19 @@ async function runCandidate(candidate, task) {
     tests: {
       status: tests.status,
       timed_out: tests.timed_out,
+      output_limited: tests.output_limited,
       started_at: tests.started_at,
       completed_at: tests.completed_at,
       duration_ms: tests.duration_ms
     },
-    changed_files: status.stdout.split('\n').filter(Boolean).map((line) => line.slice(3)),
-    artifacts: { public_dir: path.relative(modelsTest, candidateDir), private_dir: privateCandidateDir },
-    completed_at: new Date().toISOString()
+    outcome,
+    changed_files: changedFiles,
+    forbidden_changes: forbiddenChanges,
+    artifacts: { public_dir: path.relative(modelsTest, candidateDir) },
   };
   await writeJson(path.join(candidateDir, 'run.json'), record);
   await runJudges(candidate, task, record);
-  emit('candidate_completed', { candidate: candidate.id, task: task.id, agent_status: agent.status, test_status: tests.status, result_dir: candidateDir });
+  emit('candidate_completed', { candidate: candidate.id, task: task.id, outcome, agent_status: agent.status, test_status: tests.status, result_dir: candidateDir });
 }
 
 if (!existsSync(modelsTest)) throw new Error(`models-test checkout not found: ${modelsTest}`);
@@ -280,8 +354,13 @@ if (dryRun) {
   process.exit(0);
 }
 
+if (existsSync(publicReleaseDir) || existsSync(privateDir)) {
+  throw new Error(`benchmark release already exists: ${config.release}; choose a new immutable release identifier`);
+}
+
 const account = await run('getent', ['passwd', candidateUser], { timeoutMs: 5000 });
 if (account.status !== 0) throw new Error(`clean-room account not found: ${candidateUser}`);
+if (!existsSync(opencodeRoot)) throw new Error(`OpenCode runtime root not found: ${opencodeRoot}`);
 const opencode = await runAsCandidate('opencode', ['--version'], { timeoutMs: 10000 });
 if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
 emit('preflight_ok', { candidate_user: candidateUser, opencode_version: opencode.stdout.trim() });

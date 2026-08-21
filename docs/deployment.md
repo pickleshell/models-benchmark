@@ -30,8 +30,8 @@ accounts change.
 
 ## Prerequisites
 
-- Linux with Node.js 20 or newer, Git, sudo, and network access for the
-  selected OpenCode models.
+- Linux with Node.js 20 or newer, Git, sudo, `systemd-run`, and network access
+  for the selected OpenCode models.
 - The private `models-benchmark` repository and a checkout of `models-test`.
 - A dedicated clean-room user with no sudo group membership.
 - OpenCode installed for the clean-room user. Free OpenCode models may be used
@@ -62,6 +62,25 @@ The runner installs its reset script and copies the configured public task into
 the test account automatically at the start of each run. The test account must
 not be able to read `/home/gpt/.models-benchmark/runs` or the private runner
 checkout.
+
+## Candidate sandbox
+
+Every candidate, public test command, judge, and Git inspection of a
+candidate-owned workspace runs in a transient `systemd-run` unit. The sandbox
+uses private `/tmp`, `ProtectHome=tmpfs`, a read-only bind of
+`clean_room.opencode_root`, and writable binds only for the selected workspace
+and disposable agent home. The OpenCode runtime under `/home/test/.opencode`
+is therefore not writable or visible to candidate code.
+
+The runner's reset/archive operations are trusted maintenance actions and run
+as `test` outside that sandbox. Do not run candidate-controlled commands with
+plain `sudo -u test`; doing so would reintroduce cross-run state through the
+host home or `/tmp`.
+
+The runner captures at most `BENCHMARK_MAX_OUTPUT_BYTES` per stdout and stderr
+stream (default: 2 MiB). Reaching the cap terminates the process group and is
+recorded as an execution failure. Adjust the limit only deliberately for a new
+release.
 
 ## Required sudo boundary
 
@@ -105,6 +124,10 @@ and judge sessions, and performs one final reset at completion. A real run
 spends provider quota and may take several minutes; it must not be retried in
 place. Give a rerun a new release identifier.
 
+Release IDs are immutable. The runner refuses to start if either its private
+artifact directory or sanitized public result directory for the requested ID
+already exists. It never overwrites a partial or prior result.
+
 ## Verification and publication
 
 Inspect the generated artifacts under:
@@ -117,6 +140,11 @@ Each `run.json` records `started_at`, `completed_at`, and `duration_ms` for the
 candidate execution plus agent and public-test phases. Judge files record their
 own execution durations. `aggregate.json` carries comparable result data only;
 site rendering is intentionally outside the private pipeline.
+
+`allowed_changes` in the task manifest is enforced before judging. A candidate
+that modifies tests, manifests, or another unapproved path is classified as
+`forbidden_changes`; its patch and test evidence are retained, but judges are
+skipped and no quality score is aggregated.
 
 Before manually committing results, verify that they contain no raw model logs,
 credentials, private paths, judge prompts, or hidden evaluation material:

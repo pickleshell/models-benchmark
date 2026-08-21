@@ -38,10 +38,25 @@ Preserve timing data in sanitized artifacts: `started_at`, `completed_at`, and
 `duration_ms` are required for new candidate, test, and judge results. Do not
 attempt to reconstruct missing timing for older releases.
 
+Candidate commands, public tests, judges, and Git inspection of candidate
+workspaces run through the required transient `systemd-run` sandbox. Do not
+replace it with direct `sudo -u test` execution. The sandbox supplies private
+`/tmp`, a read-only OpenCode runtime, and writable binds only for the selected
+workspace and disposable agent home.
+
+Treat `allowed_changes` as a release policy, not reporting metadata. A changed
+path outside it is a `forbidden_changes` outcome and must never be judged or
+aggregated as a completed candidate.
+
+Benchmark release directories are immutable. A real run must stop before any
+work if either the private or sanitized public directory for its release ID
+already exists. Use a new release ID for every rerun.
+
 ## Required checks
 
 ```sh
 npm run pilot:dry-run
+npm test
 git diff --check
 ```
 

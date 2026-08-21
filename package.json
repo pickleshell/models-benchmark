@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node --test test/*.test.mjs",
     "pilot": "node scripts/run-pilot.mjs",
     "pilot:dry-run": "node scripts/run-pilot.mjs --dry-run",
     "aggregate": "node scripts/aggregate-results.mjs"

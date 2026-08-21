@@ -7,6 +7,7 @@
   "clean_room": {
     "user": "test",
     "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
     "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
     "workspace": "/home/test/.models-benchmark/workspace",
     "agent_home": "/home/test/.models-benchmark/agent-home"
