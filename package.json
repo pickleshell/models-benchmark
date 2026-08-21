@@ -1,0 +1,9 @@
+{
+  "name": "models-benchmark",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pilot": "node scripts/run-pilot.mjs",
+    "pilot:dry-run": "node scripts/run-pilot.mjs --dry-run"
+  }
+}

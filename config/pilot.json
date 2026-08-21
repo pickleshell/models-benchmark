@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "release": "pilot-1-task",
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/benchmark-pilot",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "clean_room": {
+    "home": "~/.models-benchmark/clean-room",
+    "workspace": "~/.models-benchmark/clean-room/workspace",
+    "agent_home": "~/.models-benchmark/clean-room/agent-home"
+  },
+  "tasks": [
+    {
+      "id": "feature-implementation",
+      "fixture": "fixtures/phase2/feature-implementation",
+      "prompt": "benchmarks/phase2/prompts/feature-implementation.md",
+      "test_command": ["npm", "test"],
+      "allowed_changes": ["fixtures/phase2/feature-implementation/src/featureFlags.js"]
+    }
+  ],
+  "candidates": [
+    {
+      "id": "gpt-5-6-luna-go",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "model": "opencode-go/gpt-5.6-luna",
+      "subscription": "free"
+    },
+    {
+      "id": "big-pickle",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "model": "opencode/big-pickle",
+      "subscription": "free"
+    },
+    {
+      "id": "deepseek-v4-flash-free",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "model": "opencode/deepseek-v4-flash-free",
+      "subscription": "free"
+    }
+  ],
+  "judges": [
+    {"id": "chatgpt", "provider": "openai", "model": "configured-later"},
+    {"id": "gemini", "provider": "google", "model": "configured-later"}
+  ],
+  "criteria": [
+    "functional_correctness",
+    "reliability_edge_cases",
+    "maintainability_clarity",
+    "scope_discipline"
+  ]
+}
