@@ -1,7 +1,9 @@
 # Models Benchmark
 
 Private research repository for a reproducible, auditable benchmark of coding
-models and agent runtimes.
+models and agent runtimes. It executes the same real software task in a clean
+Linux account for every candidate, then preserves code, test evidence, and
+independent model reviews as structured data.
 
 The project is being redesigned from the original `models-test` experiment into
 a professional benchmark pipeline. The goal is to measure not only whether a
@@ -13,6 +15,11 @@ scope discipline, reproducibility, latency, and operational failures.
 The clean-room pilot runner, isolated judge workflow, sanitized result format,
 and first one-task pilot are implemented. The pipeline is still in pilot
 validation, not a claim of a definitive model ranking.
+
+The current pilot configuration is data-driven: candidate models, judges,
+tasks, criteria, subscription labels, and release ID live in
+[`config/pilot.json`](config/pilot.json). Their counts can change in later
+releases without changing the runner's core workflow.
 
 ## Design Goals
 
@@ -29,7 +36,40 @@ validation, not a claim of a definitive model ranking.
 - [Roadmap](docs/roadmap.md)
 - [Deployment guide](docs/deployment.md)
 
-The specification is intentionally open for review before implementation.
+The technical specification defines the broader benchmark contract; this README
+describes the implemented pilot and how its evidence is stored.
+
+## What Is Tested
+
+This is a coding-agent benchmark, not a generic question-answering benchmark.
+Each candidate receives the same public task fixture, task instructions,
+documentation, starting Git baseline, and public tests. The current pilot runs
+the public `feature-implementation` task from `models-test`.
+
+For every candidate/task pair, the pipeline records:
+
+- whether the agent process completed, timed out, or failed;
+- the resulting Git diff and changed-file list;
+- the public test result and output;
+- agent, test, and combined candidate-execution timings;
+- each independent judge's scores, confidence, explanation, and concerns.
+
+The current rubric has four dimensions: functional correctness, reliability
+and edge cases, maintainability and clarity, and scope discipline. A passing
+public test suite is evidence, not an automatic perfect score.
+
+## Roles
+
+| Role | Responsibility | Current pilot |
+| --- | --- | --- |
+| Candidate | Performs the task once in the clean room | Three configured OpenCode models |
+| Judge | Independently inspects the resulting workspace and runs public tests | Two configured OpenCode models |
+| Orchestrator | Starts/reset runs, captures evidence, and reports progress | Codex plus the private runner |
+
+Candidates never see judge prompts, raw judge output from another candidate,
+reference solutions, private runner artifacts, or provider credentials. Judges
+receive an isolated copy of the completed candidate workspace and start with a
+fresh agent home.
 
 ## How The Pilot Works
 
@@ -63,6 +103,11 @@ restores the public task archive owned by that account. The runner invokes the
 script before every candidate so a model cannot inherit another model's files
 or session history.
 
+The clean room is also reset once after the complete configured matrix. This
+means a candidate gets one attempt, a new agent session, and no files or
+history from a previous candidate. A rerun is a new benchmark release, never a
+retry hidden under the same result directory.
+
 ## Repository Boundaries
 
 `models-benchmark` is private and contains the runner, manifests, reset
@@ -73,6 +118,20 @@ The candidate account can read the published task and tests, but cannot read
 runner-owned raw logs, judge prompts, reference solutions, credentials, or
 other candidates' results. The runner writes only sanitized result files to
 the `models-test` checkout. It never pushes them automatically.
+
+## Outcome Rules
+
+Code quality and operational availability are deliberately different facts.
+
+| Outcome | Meaning | Judge scores |
+| --- | --- | --- |
+| `completed` | Candidate exited successfully and public tests were evaluated | Included when a judge returns valid structured scores |
+| `tests_failed` | Candidate completed but public tests failed | Retained and may be judged |
+| `agent_failure` | Provider, process, timeout, or candidate execution failed | Judges are skipped; aggregate score is `N/A` |
+
+Timeout is additionally recorded as `agent.timed_out: true` in `run.json`. An
+unavailable provider must not become a zero-quality row or silently vanish from
+a report. It remains visible as an availability result with `N/A` quality data.
 
 ## Pilot Commands
 
@@ -127,6 +186,33 @@ availability failures as `N/A`, not as zero-quality scores.
 `run.json` records the benchmark release, task, agent, runtime, model,
 subscription, execution status, changed files, and artifact locations. Raw
 agent stdout/stderr remains under the private runner artifact directory.
+
+### Public Artifact Fields
+
+| File | Contents | Publication rule |
+| --- | --- | --- |
+| `run.json` | Candidate identity, selected agent/runtime, statuses, timestamps, durations, changed files | Sanitized and reviewable |
+| `candidate.diff` | Final Git patch against the baseline | Sanitized and reviewable |
+| `test-result.json` | Public test exit status, timing, stdout, stderr | Sanitized and reviewable |
+| `judges/<id>.json` | Judge identity, scores, confidence, explanation, concerns, timing | Sanitized and reviewable |
+| `aggregate.json` / `aggregate.md` | Comparable rows and score averages | Generated locally, manually reviewed |
+
+The runner's own raw stdout/stderr and operational diagnostics stay under
+`~/.models-benchmark/runs` owned by the runner account. They are never copied
+to the results checkout by the normal workflow.
+
+## Publication Sequence
+
+1. Run the matrix once for a new release identifier.
+2. Generate the aggregate data.
+3. Inspect the sanitized result directory and verify that no private paths,
+   prompts, logs, hidden data, or secrets entered it.
+4. Commit and push the results only in a separate manual action.
+5. Let a site or other reporting layer consume the published JSON/Markdown.
+
+The private pipeline generates data only. It does not build HTML and does not
+publish a website. Presentation must not alter, replace, or conceal the raw
+sanitized evidence.
 
 ## Security Boundary
 
