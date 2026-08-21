@@ -255,4 +255,6 @@ await mkdir(resultsDir, { recursive: true });
 for (const candidate of config.candidates) {
   for (const task of config.tasks) await runCandidate(candidate, task);
 }
+await resetRoom(config.tasks[config.tasks.length - 1]);
+emit('clean_room_final_reset', { workspace: cleanWorkspace, agent_home: agentHome });
 emit('pilot_completed', { results_dir: resultsDir, publication: 'manual' });
