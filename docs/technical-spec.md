@@ -10,8 +10,8 @@ provider availability, execution failure, timeout, and evaluator failure.
 
 - A generic leaderboard for language understanding.
 - Measuring raw token or API cost before a reliable usage source exists.
-- Allowing candidates to inspect hidden tests, reference patches, or scoring
-  implementation.
+- Requiring the benchmark pipeline itself to be public; task data and tests are
+  public, while orchestration and judging implementation remain private.
 - Ranking models from a single task or a single provider outage.
 
 ## 2.1 First Benchmark Shape
@@ -21,13 +21,15 @@ than a collection of isolated micro-prompts. Counts below are release
 configuration, not architectural limits:
 
 - a configurable number of tasks is run sequentially for each candidate;
-- the pipeline-validation pilot uses one task;
+- the pipeline-validation pilot uses the public `feature-implementation`
+  task from `models-test`;
 - after the pilot succeeds, the benchmark expands to two or three tasks and
   can grow further;
 - each task includes the documentation and local context needed to solve it;
 - the candidate receives one pass and one chance per task; retries are not
   allowed;
-- every candidate in this benchmark is invoked through OpenCode;
+- candidates may use OpenCode or Codex, and every run records the selected
+  agent/runtime explicitly;
 - task results are preserved before any judging begins.
 
 The benchmark must measure practical end-to-end work, not only the ability to
@@ -37,8 +39,8 @@ solve a small isolated function.
 
 - **Benchmark release**: immutable version containing task fixtures, prompts,
   rubric, runner, evaluator contract, and model manifest.
-- **Task**: a versioned repository state plus public instructions and a hidden
-  evaluation contract.
+- **Task**: a versioned repository state, public instructions, documentation,
+  and public tests.
 - **Run**: one candidate execution on one task in one isolated workspace.
 - **Candidate**: model, runtime, provider, and invocation configuration.
 - **Harness**: adapter that starts a candidate and streams normalized events.
@@ -61,7 +63,13 @@ first version should use a versioned manifest such as:
 ```json
 {
   "candidates": [
-    {"id": "example-free", "runtime": "opencode", "model": "..."}
+    {
+      "id": "example-free",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "model": "...",
+      "subscription": "free"
+    }
   ],
   "tasks": ["phase1-ledger", "phase2-feature-implementation"],
   "judges": [
@@ -86,29 +94,35 @@ configuration without storing credentials.
 1. Resolve an immutable benchmark release, candidate manifest, and judge
    manifest.
 2. Provision or reset the dedicated clean-room Linux account.
-3. Prepare the configured task workspaces and task documentation in that
-   account. The pipeline pilot uses one task; later releases may configure
-   more.
+3. Prepare the configured task workspace and task documentation in that
+   account. The pipeline pilot uses `feature-implementation`; later releases
+   may configure more tasks.
 4. Validate the candidate configuration and create a run ID.
-5. Start the candidate through OpenCode and execute the configured tasks
-   sequentially.
+5. Start the candidate through its configured agent (OpenCode or Codex) and
+   execute the configured tasks sequentially.
 6. Enforce timeout, output limits, process-group cleanup, and cancellation.
 7. Freeze the complete configured result before judging.
-8. Run public and hidden evaluators in separate environments.
+8. Run the published tests and checks in a separate evaluator environment.
 9. Send the resulting code and evidence to each configured judge independently
    for each configured criterion.
 10. Record every judge response and score; do not ask a judge to reconcile
     another judge's score.
 11. Check allowed paths, patch size, and forbidden modifications.
 12. Persist schema-versioned artifacts and classify every outcome.
-13. Reset the clean room completely before the next candidate.
+13. Reset the clean room completely before the next candidate. The reset is
+   run by the benchmark runner as the candidate account and removes the
+   workspace, agent session files, caches, and other task history before
+   restoring the original task state.
 14. Aggregate only comparable runs into a report with confidence notes.
 
 ## 5. Isolation and Security
 
 - Every run gets a disposable workspace and unique process group.
-- Candidate processes cannot read hidden fixtures, evaluator code, reference
-  solutions, provider credentials, or other runs.
+- Every task starts a new agent session. Session files, history, caches, and
+  previous candidate work are removed before the next candidate.
+- Candidate processes may read the published task and tests, but cannot read
+  reference solutions, provider credentials, private orchestration data, or
+  other runs.
 - Runner-owned artifacts, judge prompts, raw model output, and aggregate data
   are stored under a private directory in the runner account's home, outside
   the candidate workspace. Permissions and process isolation must prevent the
@@ -133,8 +147,10 @@ Each run must produce JSON containing at least:
   "task_id": "...",
   "candidate": {
     "model": "...",
+    "agent": "opencode",
     "runtime": "...",
-    "provider": "..."
+    "provider": "...",
+    "subscription": "free"
   },
   "status": "passed",
   "execution": {
@@ -146,7 +162,6 @@ Each run must produce JSON containing at least:
   },
   "evaluation": {
     "public": {"passed": 0, "total": 0},
-    "hidden": {"passed": 0, "total": 0},
     "forbidden_changes": 0,
     "rubric": {}
   },
@@ -173,7 +188,6 @@ release rubric. The current pilot uses four criteria:
 The first release should report separate dimensions:
 
 - public correctness;
-- hidden correctness;
 - regression safety;
 - scope and forbidden-change compliance;
 - code-quality rubric with anchored criteria;
