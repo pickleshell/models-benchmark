@@ -94,8 +94,10 @@ function parseJudgeJson(text) {
   const candidate = start >= 0 && end > start ? fenced.slice(start, end + 1) : fenced;
   try {
     const value = JSON.parse(candidate);
-    if (!value || typeof value !== 'object' || !value.scores || typeof value.scores !== 'object') return null;
-    return value;
+    if (!value || typeof value !== 'object') return null;
+    if (value.scores && typeof value.scores === 'object') return value;
+    const scores = Object.fromEntries(config.criteria.filter((criterion) => Object.hasOwn(value, criterion)).map((criterion) => [criterion, value[criterion]]));
+    return Object.keys(scores).length === config.criteria.length ? { ...value, scores } : null;
   } catch {
     return null;
   }
