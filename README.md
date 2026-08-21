@@ -162,6 +162,33 @@ means a candidate gets one attempt, a new agent session, and no files or
 history from a previous candidate. A rerun is a new benchmark release, never a
 retry hidden under the same result directory.
 
+## What Keeps A Run Fair
+
+The benchmark does not rely on models behaving politely. It makes the starting
+point, execution environment, evidence, and review process explicit.
+
+| Control | What it protects |
+| --- | --- |
+| Same public baseline | Every candidate receives the same fixture, instructions, documentation, and public tests. |
+| One attempt | A candidate gets one new agent session per task. There is no retry or reuse of a previous session. |
+| Clean-room reset | Before every candidate, the prior workspace and agent state are removed and the trusted task archive is restored. |
+| Separate sandbox | Every candidate, test, and judge runs in a new systemd mount namespace, not in the host account's normal environment. |
+| No cross-run files | A sandbox cannot see the host home, host temporary files, runner artifacts, or another model's workspace, session, or agent home. |
+| Private temporary storage | A model may use temporary files during its own run, but that storage is private to its sandbox and disappears when the process ends. Another model cannot find it. |
+| Read-only runtime | The OpenCode installation is mounted read-only, so a candidate cannot alter the agent runtime used by later runs. |
+| Limited writes | Candidate-controlled processes can write only their disposable workspace, fresh agent home, and private temporary storage. |
+| Trusted comparison | The runner compares the final file tree with a trusted baseline, including untracked files and changes hidden by a candidate commit. |
+| Change policy | Changes outside a task's `allowed_changes` are classified as `forbidden_changes` and never receive a quality score. |
+| Private raw evidence | Raw model output and operational diagnostics stay in the runner account's private directory; only sanitized artifacts enter `models-test`. |
+| Blind judging | Each judge receives a fresh anonymous workspace rebuilt from the trusted baseline plus one patch. It never receives candidate identity, logs, original workspace, or another judge's work. |
+| Availability gate | Required judges are checked before a release exists; candidates are checked before receiving a task. Provider availability is never confused with code quality. |
+| Immutable releases | A release ID cannot be reused. A rerun always has a new identifier and cannot overwrite or mix prior evidence. |
+
+In particular, a model cannot leave a solution in a shared temporary directory
+for the next model to discover. The runner gives each transient sandbox its own
+temporary filesystem. It is not the host temporary filesystem, is not shared
+with another sandbox, and is discarded at teardown.
+
 ## Repository Boundaries
 
 `models-benchmark` is private and contains the runner, manifests, reset

@@ -154,6 +154,58 @@ a separate manual review and push operation.
 - The evaluator runs after candidate teardown, with a separate environment and
   read-only access to benchmark metadata where possible.
 
+### 5.1 Experimental Cleanliness Controls
+
+The benchmark treats every candidate run as an isolated experiment. The
+following controls are part of the implemented contract:
+
+1. **Identical starting state.** The runner restores each public fixture from a
+   trusted archive before a candidate receives it. Tasks, instructions,
+   documentation, baseline Git state, and public tests are release inputs.
+2. **Fresh agent state.** The workspace and disposable agent home are removed
+   before every candidate and again after the matrix. This removes sessions,
+   histories, caches, and files created by the preceding run.
+3. **Mount-namespace isolation.** Candidate, test, judge, and Git-inspection
+   processes run in separate transient systemd mount namespaces with
+   `ProtectHome=tmpfs`, `PrivateTmp=yes`, and `ProtectSystem=strict`. A process
+   cannot access the host home, host temporary filesystem, runner artifacts,
+   or a previous sandbox's workspace or agent state.
+4. **No shared temporary channel.** Each sandbox has a private temporary
+   filesystem for its own tools. It is distinct from the host temporary
+   filesystem, is never mounted into another sandbox, and disappears when that
+   sandbox exits. A model cannot leave a result there for a later model.
+5. **Least writable state.** The only writable binds are the selected
+   disposable workspace and fresh agent home. The configured agent runtime is
+   read-only. `NoNewPrivileges`, `PrivateDevices`, `RestrictSUIDSGID`,
+   `RestrictNamespaces`, and related systemd restrictions prevent candidate
+   code from widening this boundary through normal privilege mechanisms.
+6. **Sequential execution and teardown.** Candidate attempts do not overlap.
+   Process groups are terminated on timeout or output-limit failure, and the
+   sandbox is collected before the next run begins.
+7. **Trusted result capture.** The runner compares the final candidate file
+   tree against an independently captured baseline rather than trusting the
+   candidate's Git HEAD. This captures untracked files and changes committed by
+   the candidate.
+8. **Policy enforcement.** `allowed_changes` is enforced before judging. A
+   patch that changes tests, package metadata, or another unapproved path is a
+   `forbidden_changes` result, not a successful solution.
+9. **Evidence separation.** Raw stdout, stderr, and diagnostics stay in a
+   runner-owned private directory. Public results contain only sanitized,
+   reviewable artifacts.
+10. **Independent blind judging.** Each judge receives a unique anonymous
+    workspace rebuilt from the trusted baseline plus one recorded patch, plus a
+    fresh agent home. Candidate identity, runtime, provider, subscription,
+    logs, original workspace, and private artifacts are excluded from judge
+    inputs.
+11. **Availability and immutability gates.** Required judges are probed before
+    release creation; candidates are probed before task assignment. Release
+    directories are immutable, preventing retries from replacing or mixing
+    evidence under the same release ID.
+
+These controls protect against accidental state carry-over and ordinary
+candidate-controlled writes. They are process and mount-namespace isolation,
+not a claim to defend against a compromised kernel or a host administrator.
+
 ## 6. Canonical Run Result
 
 Each run must produce JSON containing at least:

@@ -84,6 +84,29 @@ stream (default: 2 MiB). Reaching the cap terminates the process group and is
 recorded as an execution failure. Adjust the limit only deliberately for a new
 release.
 
+### Clean-room invariants
+
+Do not weaken these controls for a convenience test. They make the result a
+comparison of models rather than a comparison of what one model left behind for
+the next:
+
+- Run candidates sequentially through `npm run pilot`; never invoke a
+  candidate command directly as `test`.
+- Keep `ProtectHome=tmpfs`, `PrivateTmp=yes`, `ProtectSystem=strict`,
+  `NoNewPrivileges=yes`, `PrivateDevices=yes`, `RestrictSUIDSGID=yes`, and
+  `RestrictNamespaces=yes` in the transient sandbox configuration.
+- Bind only the current disposable workspace and fresh agent home as writable.
+  Keep the agent runtime read-only.
+- Keep raw artifacts in the runner-owned directory and do not bind it into a
+  candidate or judge sandbox.
+- Reset workspace and agent home before every candidate and after the matrix.
+- Never reuse a release ID. Do not rerun or append to a partial release.
+
+Temporary files are allowed only inside a sandbox's own disposable temporary
+filesystem. That filesystem is private to the transient unit, cannot be read
+by a later model, and is removed with the unit. Models never receive the host
+temporary filesystem.
+
 ## Required sudo boundary
 
 The runner calls `sudo` to prepare the clean-room archive and then launches

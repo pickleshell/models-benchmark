@@ -71,6 +71,22 @@ Benchmark release directories are immutable. A real run must stop before any
 work if either the private or sanitized public directory for its release ID
 already exists. Use a new release ID for every rerun.
 
+## Experimental Cleanliness Invariants
+
+Do not relax the clean-room boundary for debugging or convenience. Every model
+must receive the same trusted baseline and a new agent session, with no access
+to another model's workspace, patch, session, agent home, temporary files, raw
+logs, or judge material. Preserve `ProtectHome=tmpfs`, `PrivateTmp=yes`,
+`ProtectSystem=strict`, read-only agent runtime, and the limited writable-bind
+set. A sandbox's temporary filesystem belongs only to that sandbox and is
+discarded at teardown; it is not the host temporary filesystem.
+
+Keep candidate execution sequential. Reset the workspace and agent home before
+every candidate and after the matrix. Compare against the runner-trusted
+baseline, not candidate-controlled Git state; enforce `allowed_changes` before
+judging. Rebuild every judge submission from that baseline plus its recorded
+patch, never from the candidate workspace or `.git` directory.
+
 ## Required checks
 
 ```sh
