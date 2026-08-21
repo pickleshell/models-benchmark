@@ -16,6 +16,7 @@ import {
   buildJudgeEnvironment,
   buildJudgePrompt,
   buildJudgeWritablePaths,
+  buildBaselineComparisonPlan,
   createAnonymousJudgeWorkspace
 } from './lib/blind-judging.mjs';
 
@@ -36,6 +37,8 @@ const cleanRoomHome = path.resolve(config.clean_room.home);
 const resetScript = path.resolve(config.clean_room.reset_script);
 const archiveRoot = path.join(cleanRoomHome, 'task-archive');
 const judgeRoot = path.join(cleanRoomHome, 'judge');
+const baselineRoot = path.join(cleanRoomHome, 'baseline');
+const comparisonRoot = path.join(cleanRoomHome, 'comparison');
 const resultsDir = path.resolve(modelsTest, config.results_dir);
 const privateDir = path.resolve(expandHome(config.private_artifacts_dir), config.release);
 const publicReleaseDir = path.join(resultsDir, config.release);
@@ -49,10 +52,6 @@ function emit(event, data = {}) {
 async function writeJson(file, value) {
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
-}
-
-async function git(args, cwd) {
-  return runAsCandidate('git', ['-C', cwd, ...args], { cwd });
 }
 
 function run(command, args, options = {}) {
@@ -229,6 +228,35 @@ async function resetRoom(task) {
   emit('reset_completed', { task: task.id });
 }
 
+async function snapshotBaseline(task) {
+  const baselineWorkspace = path.join(baselineRoot, task.id);
+  await runAsCleanRoomHost('rm', ['-rf', baselineWorkspace], { timeoutMs: 30000 });
+  await runAsCleanRoomHost('mkdir', ['-p', baselineWorkspace], { timeoutMs: 30000 });
+  const copied = await runAsCleanRoomHost('cp', ['-a', `${cleanWorkspace}/.`, baselineWorkspace], { timeoutMs: 30000 });
+  if (copied.status !== 0) throw new Error(`cannot snapshot trusted baseline: ${copied.stderr}`);
+}
+
+async function compareAgainstBaseline(task) {
+  const baselineWorkspace = path.join(baselineRoot, task.id);
+  const comparisonWorkspace = path.join(comparisonRoot, task.id);
+  const plan = buildBaselineComparisonPlan({ baselineWorkspace, candidateWorkspace: cleanWorkspace, comparisonWorkspace });
+  await runAsCleanRoomHost('rm', ['-rf', comparisonWorkspace], { timeoutMs: 30000 });
+  await runAsCleanRoomHost('mkdir', ['-p', comparisonWorkspace], { timeoutMs: 30000 });
+  const baseline = await runAsCleanRoomHost(plan.copyBaseline[0], plan.copyBaseline.slice(1), { timeoutMs: 30000 });
+  if (baseline.status !== 0) throw new Error(`cannot prepare comparison baseline: ${baseline.stderr}`);
+  // Mirror only the candidate's working tree. The candidate-controlled .git is
+  // deliberately excluded, so candidate commits cannot hide file changes.
+  const mirrored = await runAsCleanRoomHost(plan.mirrorCandidateTree[0], plan.mirrorCandidateTree.slice(1), { timeoutMs: 30000 });
+  if (mirrored.status !== 0) throw new Error(`cannot mirror candidate tree: ${mirrored.stderr}`);
+  const intentToAdd = await runAsCleanRoomHost(plan.addIntent[0], plan.addIntent.slice(1), { timeoutMs: 30000 });
+  if (intentToAdd.status !== 0) throw new Error(`cannot include untracked files in diff: ${intentToAdd.stderr}`);
+  const diff = await runAsCleanRoomHost(plan.diff[0], plan.diff.slice(1), { timeoutMs: 30000 });
+  const status = await runAsCleanRoomHost(plan.status[0], plan.status.slice(1), { timeoutMs: 30000 });
+  if (diff.status !== 0 || status.status !== 0) throw new Error(`cannot inspect candidate tree: ${diff.stderr || status.stderr}`);
+  await runAsCleanRoomHost('rm', ['-rf', comparisonWorkspace], { timeoutMs: 30000 });
+  return { diff: diff.stdout, changedFiles: parsePorcelainPaths(status.stdout) };
+}
+
 async function runJudges(candidate, task, candidateResult) {
   for (const judge of config.judges) {
     const publicJudgeDir = path.join(resultsDir, config.release, candidate.id, task.id, 'judges');
@@ -304,6 +332,7 @@ async function runCandidate(candidate, task) {
   await mkdir(candidateDir, { recursive: true });
   await mkdir(privateCandidateDir, { recursive: true, mode: 0o700 });
   await resetRoom(task);
+  await snapshotBaseline(task);
   const prompt = await readFile(path.join(modelsTest, task.prompt), 'utf8');
   const command = commandFor(candidate, prompt);
   emit('candidate_started', { candidate: candidate.id, agent: candidate.agent, model: candidate.model, task: task.id });
@@ -321,14 +350,11 @@ async function runCandidate(candidate, task) {
     stdout: tests.stdout,
     stderr: tests.stderr
   });
-  const intentToAdd = await git(['add', '--intent-to-add', '--', '.'], cleanWorkspace);
-  if (intentToAdd.status !== 0) throw new Error(`cannot include untracked files in diff: ${intentToAdd.stderr}`);
-  const diff = await git(['diff', '--binary', 'HEAD', '--'], cleanWorkspace);
-  const status = await git(['status', '--porcelain=v1', '-z'], cleanWorkspace);
-  const changedFiles = parsePorcelainPaths(status.stdout);
+  const compared = await compareAgainstBaseline(task);
+  const changedFiles = compared.changedFiles;
   const forbiddenChanges = findForbiddenChanges(changedFiles, task.allowed_changes);
   const outcome = classifyOutcome({ agent, tests, forbiddenChanges });
-  await writeFile(path.join(candidateDir, 'candidate.diff'), diff.stdout);
+  await writeFile(path.join(candidateDir, 'candidate.diff'), compared.diff);
   const record = {
     schema_version: 1,
     release: config.release,
@@ -386,5 +412,6 @@ for (const candidate of config.candidates) {
   for (const task of config.tasks) await runCandidate(candidate, task);
 }
 await resetRoom(config.tasks[config.tasks.length - 1]);
+await runAsCleanRoomHost('rm', ['-rf', baselineRoot, comparisonRoot], { timeoutMs: 30000 });
 emit('clean_room_final_reset', { workspace: cleanWorkspace, agent_home: agentHome });
 emit('pilot_completed', { results_dir: resultsDir, publication: 'manual' });

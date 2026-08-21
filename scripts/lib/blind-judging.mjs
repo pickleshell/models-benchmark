@@ -51,3 +51,13 @@ export function buildJudgeEnvironment({ agentHome, opencodeRoot }) {
 export function buildJudgeWritablePaths({ agentHome, judgeWorkspace }) {
   return [agentHome, judgeWorkspace];
 }
+
+export function buildBaselineComparisonPlan({ baselineWorkspace, candidateWorkspace, comparisonWorkspace }) {
+  return {
+    copyBaseline: ['cp', '-a', `${baselineWorkspace}/.`, comparisonWorkspace],
+    mirrorCandidateTree: ['rsync', '-a', '--checksum', '--delete', '--exclude=.git', `${candidateWorkspace}/`, `${comparisonWorkspace}/`],
+    addIntent: ['git', '-C', comparisonWorkspace, 'add', '--intent-to-add', '--', '.'],
+    diff: ['git', '-C', comparisonWorkspace, 'diff', '--binary', 'HEAD', '--'],
+    status: ['git', '-C', comparisonWorkspace, 'status', '--porcelain=v1', '-z']
+  };
+}

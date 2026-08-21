@@ -157,7 +157,8 @@ The judge prompt and process inputs may contain only the task ID, rubric, the
 submitted workspace, and explicitly allowlisted public-test status fields.
 They must not contain candidate ID, model, agent/runtime, provider,
 subscription, candidate logs, private artifacts, or candidate-derived paths,
-environment values, or temporary names. The runner adds the real candidate
+environment values, or temporary names. Only the anonymous workspace and fresh
+agent home are writable. The runner adds the real candidate
 association to the judge artifact only after the process exits. Run the blind
 judging regression tests and `npm run pilot:dry-run`; do not use a real pilot
 run as a privacy check.
