@@ -26,6 +26,8 @@ host and the next unit, that the units use distinct IPC namespaces, and that
 the read-only OpenCode runtime can still start inside the same sandbox. It also
 records the relevant same-UID process limitation described below. The check
 uses no model quota and creates no benchmark release.
+It acquires the same host-wide clean-room lock as a pilot and requires the
+`test` account to be idle, so it cannot overlap a benchmark run.
 
 The project remains in pilot validation. Two tasks and one run per model are
 useful evidence, not a definitive general ranking.

@@ -95,6 +95,10 @@ root. `ProtectProc=invisible` does not hide processes owned by the same
 clean-room UID, so the runner must refuse to start while that account has any
 active process.
 
+`npm run verify:sandbox` is a clean-room operation too: it must acquire the
+same lock and require the account to be idle before creating its verification
+units. Never run it concurrently with `npm run pilot`.
+
 ## Required checks
 
 ```sh

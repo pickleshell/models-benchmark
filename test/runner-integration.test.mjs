@@ -88,6 +88,7 @@ test('runner refuses to start while the clean-room account has a process', async
   );
   assert.equal(existsSync(touched), false);
   assert.equal(existsSync(path.join(modelsTest, 'results', 'active-user')), false);
+  assert.equal(existsSync(path.join(privateArtifacts, 'clean-room.lock')), false);
 });
 
 test('intent-to-add makes an untracked solution file part of the binary diff', async () => {

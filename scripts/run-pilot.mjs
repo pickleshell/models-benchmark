@@ -530,8 +530,8 @@ try {
     emit('clean_room_lock_retained', { lock_path: cleanRoomLock.path, reason: String(cleanupError.message || cleanupError) });
     throw cleanupError;
   } finally {
-    if (cleanRoomSafe) {
-    await releaseCleanRoomLock(cleanRoomLock);
+    if (cleanRoomSafe || !cleanRoomTouched) {
+      await releaseCleanRoomLock(cleanRoomLock);
     }
   }
 }

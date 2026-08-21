@@ -138,6 +138,8 @@ the shared clean-room account. The runner therefore refuses to start while any
 `test`-owned process exists. Finally, the check confirms that the read-only
 OpenCode runtime can start inside the hardened boundary. It uses no model and
 does not create a release directory or consume provider quota.
+It acquires the same clean-room lock as `npm run pilot` and refuses to run if
+the clean-room account is active, so do not run it alongside a pilot.
 
 ## Required sudo boundary
 

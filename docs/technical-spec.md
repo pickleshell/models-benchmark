@@ -217,8 +217,9 @@ following controls are part of the implemented contract:
     not processes owned by the same clean-room UID; the runner therefore checks
     that the clean-room account is idle before it starts. The check also confirms
     that the read-only OpenCode runtime remains usable inside the hardened
-    boundary. This check is required after installing or changing the sandbox
-    configuration.
+    boundary. It acquires the same host-wide lock as a pilot and requires an
+    idle clean-room account, so it cannot overlap a release. This check is
+    required after installing or changing the sandbox configuration.
 
 These controls protect against accidental state carry-over and ordinary
 candidate-controlled writes. They are process and mount-namespace isolation,

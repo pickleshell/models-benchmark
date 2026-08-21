@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
+import { acquireCleanRoomLock, releaseCleanRoomLock } from './lib/clean-room-lock.mjs';
 
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
 const configPath = process.env.BENCHMARK_CONFIG
@@ -12,6 +13,11 @@ const configPath = process.env.BENCHMARK_CONFIG
 const config = JSON.parse(await readFile(configPath, 'utf8'));
 const candidateUser = config.clean_room.user;
 const opencodeRoot = path.resolve(config.clean_room.opencode_root);
+const expandHome = (value) => value.replace(/^~(?=$|\/)/, os.homedir());
+const privateDir = path.resolve(expandHome(config.private_artifacts_dir), config.release);
+const cleanRoomLockPath = config.clean_room.lock_path
+  ? path.resolve(expandHome(config.clean_room.lock_path))
+  : path.join(path.dirname(privateDir), 'clean-room.lock');
 const marker = `models-benchmark-ipc-${randomUUID()}`;
 
 function run(command, args) {
@@ -93,9 +99,13 @@ function probeValue(output, label) {
   return match?.[1]?.trim() || null;
 }
 
-const sameUserSentinel = await run('sudo', ['-u', candidateUser, '--', '/bin/sh', '-c', 'sleep 30 >/dev/null 2>&1 & echo $!']);
-if (sameUserSentinel.status !== 0) throw new Error(`cannot start same-user process sentinel: ${sameUserSentinel.stderr || sameUserSentinel.stdout}`);
-const sentinelPid = sameUserSentinel.stdout.trim();
+async function assertCleanRoomUserIsIdle() {
+  const listed = await run('pgrep', ['-u', candidateUser, '-a']);
+  if (listed.status === 1) return;
+  if (listed.status !== 0) throw new Error(`cannot inspect clean-room account processes for ${candidateUser}: ${listed.stderr || listed.stdout}`);
+  throw new Error(`clean-room account ${candidateUser} is active; stop its processes before verifying the sandbox:\n${listed.stdout.trim()}`);
+}
+
 const probeCommand = (expectMarkerAbsent) => [
   expectMarkerAbsent ? `test ! -e /dev/shm/${marker}` : `printf isolated > /dev/shm/${marker}`,
   'ipcns=$(readlink /proc/self/ns/ipc)',
@@ -107,7 +117,13 @@ const probeCommand = (expectMarkerAbsent) => [
 ].join('; ');
 let first;
 let second;
+let sentinelPid = '';
+const cleanRoomLock = await acquireCleanRoomLock(cleanRoomLockPath, { purpose: 'verify-sandbox' });
 try {
+  await assertCleanRoomUserIsIdle();
+  const sameUserSentinel = await run('sudo', ['-u', candidateUser, '--', '/bin/sh', '-c', 'sleep 30 >/dev/null 2>&1 & echo $!']);
+  if (sameUserSentinel.status !== 0) throw new Error(`cannot start same-user process sentinel: ${sameUserSentinel.stderr || sameUserSentinel.stdout}`);
+  sentinelPid = sameUserSentinel.stdout.trim();
   // Keep the first unit alive while the second starts. Namespace inode numbers
   // can be reused after teardown, so sequential probes cannot prove separation.
   const firstRun = startSandbox(`${probeCommand(false)}; sleep 3`);
@@ -124,7 +140,9 @@ if (hostMarker.status === 0) throw new Error('sandbox marker leaked into the hos
   const firstNamespace = probeValue(first.stdout, 'IPC_NS');
   const secondNamespace = probeValue(second.stdout, 'IPC_NS');
   if (!firstNamespace || !secondNamespace || hostNamespace.status !== 0) throw new Error('cannot read IPC namespace identifiers');
-  if (firstNamespace === secondNamespace || firstNamespace === hostNamespace.stdout.trim()) throw new Error('IPC namespace is shared across sandbox boundaries');
+  if (firstNamespace === secondNamespace || firstNamespace === hostNamespace.stdout.trim() || secondNamespace === hostNamespace.stdout.trim()) {
+    throw new Error('IPC namespace is shared across sandbox boundaries');
+  }
   if (probeValue(first.stdout, 'SAME_UID_VISIBLE') !== 'true' || probeValue(second.stdout, 'SAME_UID_VISIBLE') !== 'true') {
     throw new Error('same-user process sentinel was unexpectedly hidden; verify clean-room idle guard assumptions');
   }
@@ -139,4 +157,5 @@ process.stdout.write(`${JSON.stringify({
 })}\n`);
 } finally {
   if (sentinelPid) await run('sudo', ['-u', candidateUser, '--', 'kill', sentinelPid]);
+  await releaseCleanRoomLock(cleanRoomLock);
 }
