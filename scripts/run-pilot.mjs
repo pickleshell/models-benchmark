@@ -109,7 +109,7 @@ function runAsCandidate(command, args, options = {}) {
   const commandArgs = command === 'npm' && args[0] === 'test'
     ? ['--prefix', targetCwd, ...args]
     : args;
-  return run('sudo', ['-u', candidateUser, '--', 'env', ...envArgs, command, ...commandArgs], { ...options, cwd: repo });
+  return run('sudo', ['-u', candidateUser, '--', 'env', ...envArgs, command, ...commandArgs], { ...options, cwd: '/tmp' });
 }
 
 async function resetRoom(task) {

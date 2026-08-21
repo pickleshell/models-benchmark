@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "pilot-1-task-r2",
+  "release": "pilot-1-task-r3",
   "models_test": "/home/gpt/models-test",
   "results_dir": "results/benchmark-pilot",
   "private_artifacts_dir": "~/.models-benchmark/runs",
