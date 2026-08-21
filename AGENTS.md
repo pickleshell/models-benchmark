@@ -52,7 +52,9 @@ Judging must remain identity-blind. Never add candidate ID, model, agent/runtime
 provider, subscription, candidate logs, private artifacts, or candidate-derived
 paths, prompt text, environment values, or temporary names to judge inputs. Use
 an explicit allowlist for safe execution evidence and an opaque random workspace
-name. Candidate association belongs only in runner-side artifacts after judging;
+name. Rebuild each judge workspace from the trusted baseline plus the recorded
+candidate patch; never copy candidate `.git` metadata and never give the judge
+a writable bind for the original candidate workspace. Candidate association belongs only in runner-side artifacts after judging;
 stylistic inference by a judge is an acknowledged residual risk.
 
 Benchmark release directories are immutable. A real run must stop before any

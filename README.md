@@ -86,7 +86,10 @@ Judging is identity-blind. Each judge examines an anonymous isolated copy of the
 submitted workspace, runs the public tests, and is asked to return structured
 scores from 1 to 10 with confidence, explanation, and concerns. The judge
 process receives no candidate ID, model, agent/runtime, provider, subscription,
-candidate logs, private artifacts, or candidate-derived path. For a completed candidate,
+candidate logs, private artifacts, or candidate-derived path. The workspace is
+rebuilt from the trusted task baseline and the recorded candidate patch; the
+candidate's `.git` directory is never copied, and the judge sandbox can write
+only to that anonymous workspace and its fresh agent home. For a completed candidate,
 the aggregate averages each criterion across valid judge responses. Its
 `overall_average` is the arithmetic mean of all four criterion averages.
 Invalid judge output is retained as evidence but excluded from score math;

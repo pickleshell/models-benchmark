@@ -47,3 +47,7 @@ export function buildJudgeEnvironment({ agentHome, opencodeRoot }) {
     TMPDIR: '/tmp'
   };
 }
+
+export function buildJudgeWritablePaths({ agentHome, judgeWorkspace }) {
+  return [agentHome, judgeWorkspace];
+}

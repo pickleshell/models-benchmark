@@ -217,7 +217,10 @@ but must not receive candidate ID, model, agent/runtime, provider, subscription,
 candidate stdout/stderr, private artifacts, or candidate-derived paths, prompts,
 environment values, or temporary file names. The runner uses an opaque,
 cryptographically random workspace name and adds the real candidate association
-to the judge artifact only after the judge process exits. Blind judging hides
+to the judge artifact only after the judge process exits. The submitted
+workspace must be rebuilt from the trusted baseline plus the candidate patch;
+candidate `.git` metadata must never be copied, and the judge sandbox must not
+have a writable bind for the original candidate workspace. Blind judging hides
 declared identity but cannot prevent inference from code style.
 
 An aggregate score is optional and must show its formula, denominator, excluded

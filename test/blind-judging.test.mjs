@@ -4,6 +4,7 @@ import {
   buildJudgeInvocation,
   buildJudgeEnvironment,
   buildJudgePrompt,
+  buildJudgeWritablePaths,
   createAnonymousJudgeWorkspace,
   safeJudgeEvidence
 } from '../scripts/lib/blind-judging.mjs';
@@ -41,6 +42,10 @@ test('judge prompt and invocation contain no candidate identity', () => {
   });
   assert.match(workspace, /^\/tmp\/judge\/submission-[0-9a-f-]{36}$/);
   assert.equal(invocation.cwd, workspace);
+  assert.deepEqual(buildJudgeWritablePaths({ agentHome: '/room/agent-home', judgeWorkspace: workspace }), [
+    '/room/agent-home', workspace
+  ]);
+  assert.equal(buildJudgeWritablePaths({ agentHome: '/room/agent-home', judgeWorkspace: workspace }).includes('/room/workspace'), false);
 });
 
 test('anonymous judge workspaces are unique per invocation', () => {

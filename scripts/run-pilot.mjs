@@ -15,6 +15,7 @@ import {
   buildJudgeInvocation,
   buildJudgeEnvironment,
   buildJudgePrompt,
+  buildJudgeWritablePaths,
   createAnonymousJudgeWorkspace
 } from './lib/blind-judging.mjs';
 
@@ -176,7 +177,11 @@ function runAsCandidate(command, args, options = {}) {
   const envArgs = Object.entries(env).map(([key, value]) => `${key}=${value}`);
   const targetCwd = options.cwd || cleanWorkspace;
   const unit = `models-benchmark-${process.pid}-${Date.now()}-${sandboxSequence++}`;
-  const writablePaths = [...new Set([cleanWorkspace, agentHome, ...(options.writablePaths || [])])];
+  const writablePaths = [...new Set([
+    ...(options.includeCleanWorkspace === false ? [] : [cleanWorkspace]),
+    agentHome,
+    ...(options.writablePaths || [])
+  ])];
   const properties = [
     '--property=ProtectHome=tmpfs',
     '--property=PrivateTmp=yes',
@@ -211,6 +216,10 @@ function runAsCandidate(command, args, options = {}) {
   });
 }
 
+function runAsJudge(command, args, options = {}) {
+  return runAsCandidate(command, args, { ...options, includeCleanWorkspace: false });
+}
+
 async function resetRoom(task) {
   emit('reset_started', { task: task.id, workspace: cleanWorkspace });
   await installResetScript();
@@ -238,15 +247,29 @@ async function runJudges(candidate, task, candidateResult) {
       continue;
     }
     const judgeWorkspace = createAnonymousJudgeWorkspace(judgeRoot);
+    // Rebuild from the trusted archive for every judge. Never copy the
+    // candidate's .git or any candidate-controlled metadata into judging.
+    await resetRoom(task);
     await runAsCleanRoomHost('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
     await runAsCleanRoomHost('mkdir', ['-p', judgeWorkspace], { timeoutMs: 30000 });
     const copied = await runAsCleanRoomHost('cp', ['-a', `${cleanWorkspace}/.`, judgeWorkspace], { timeoutMs: 30000 });
     if (copied.status !== 0) throw new Error(`cannot prepare judge workspace: ${copied.stderr}`);
+    const candidateDiff = path.join(resultsDir, config.release, candidate.id, task.id, 'candidate.diff');
+    const judgePatch = path.join(judgeRoot, `.${path.basename(judgeWorkspace)}.diff`);
+    const installedPatch = await run('sudo', ['install', '-o', candidateUser, '-g', candidateUser, '-m', '0600', candidateDiff, judgePatch], { timeoutMs: 30000 });
+    if (installedPatch.status !== 0) throw new Error(`cannot stage candidate submission: ${installedPatch.stderr}`);
+    const applied = await runAsCleanRoomHost('git', ['-C', judgeWorkspace, 'apply', judgePatch], { timeoutMs: 30000 });
+    await runAsCleanRoomHost('rm', ['-f', judgePatch], { timeoutMs: 30000 });
+    if (applied.status !== 0) throw new Error(`cannot apply candidate submission: ${applied.stderr}`);
     await runAsCleanRoomHost('rm', ['-rf', agentHome], { timeoutMs: 30000 });
     await runAsCleanRoomHost('mkdir', ['-p', agentHome], { timeoutMs: 30000 });
     const prompt = buildJudgePrompt({ taskId: task.id, criteria: config.criteria, candidateResult });
     const command = buildJudgeInvocation({ judge, judgeWorkspace, prompt });
-    const result = await runAsCandidate(command.command, command.args, { cwd: command.cwd, writablePaths: [judgeWorkspace], timeoutMs });
+    const result = await runAsJudge(command.command, command.args, {
+      cwd: command.cwd,
+      writablePaths: buildJudgeWritablePaths({ agentHome, judgeWorkspace }),
+      timeoutMs
+    });
     await writeFile(path.join(privateJudgeDir, 'judge.stdout.txt'), result.stdout);
     await writeFile(path.join(privateJudgeDir, 'judge.stderr.txt'), result.stderr);
     const response = extractJudgeText(result.stdout);
