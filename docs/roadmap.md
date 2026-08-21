@@ -4,7 +4,10 @@
 
 - review the technical specification;
 - settle security and isolation boundaries;
-- define the first benchmark release and candidate matrix.
+- define the six-task set from `models-test`;
+- define candidate and judge manifests;
+- agree on the three/four scoring criteria;
+- specify the clean-room reset procedure.
 
 ## Phase 1: Core pipeline
 
@@ -23,7 +26,9 @@
 
 ## Phase 3: Pilot
 
-- run a small candidate matrix;
+- provision one dedicated clean-room Linux account;
+- run the six tasks sequentially for free OpenCode models;
+- judge every result independently with ChatGPT and Gemini;
 - inspect artifacts and failure classifications;
 - calibrate scoring and reproducibility;
 - publish an internal report.

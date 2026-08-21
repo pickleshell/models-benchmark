@@ -14,6 +14,23 @@ provider availability, execution failure, timeout, and evaluator failure.
   implementation.
 - Ranking models from a single task or a single provider outage.
 
+## 2.1 First Benchmark Shape
+
+The first benchmark release is intentionally close to normal use of a coding
+agent rather than a collection of isolated micro-prompts:
+
+- six tasks are run sequentially for each candidate model;
+- the initial six-task set is taken from the maintained `models-test` task
+  suite (the ledger task plus the five Phase 2 tasks);
+- each task includes the documentation and local context needed to solve it;
+- the candidate receives one pass and one chance per task; retries are not
+  allowed;
+- the candidate is configured in OpenCode and runs as a normal agent would;
+- task results are preserved before any judging begins.
+
+The benchmark must measure practical end-to-end work, not only the ability to
+solve a small isolated function.
+
 ## 3. Core Concepts
 
 - **Benchmark release**: immutable version containing task fixtures, prompts,
@@ -27,19 +44,49 @@ provider availability, execution failure, timeout, and evaluator failure.
   checks forbidden changes.
 - **Artifact**: structured metadata, patch, logs, test output, and evaluator
   result produced by a run.
+- **Clean room**: a dedicated Linux account and workspace used for exactly one
+  candidate run. It is reset completely before the next candidate.
+- **Judge**: an independent model that reviews the resulting code and evidence
+  against the published criteria.
+
+## 3.1 Candidate and Judge Manifests
+
+Candidates and judges are data, not hard-coded runner logic. The first version
+should use a versioned manifest such as:
+
+```json
+{
+  "candidates": [
+    {"id": "opencode-go/example-free", "runtime": "opencode", "model": "..."}
+  ],
+  "judges": [
+    {"id": "chatgpt", "provider": "openai", "model": "..."},
+    {"id": "gemini", "provider": "google", "model": "..."}
+  ]
+}
+```
+
+Claude is intentionally excluded from the initial judge matrix. The manifest
+must record model IDs and provider configuration without storing credentials.
 
 ## 4. Pipeline
 
-1. Resolve an immutable benchmark release and model manifest.
-2. Prepare a clean detached worktree from the task baseline.
-3. Validate the candidate configuration and create a run ID.
-4. Start the candidate through a runtime-specific harness.
-5. Enforce timeout, output limits, process-group cleanup, and cancellation.
-6. Freeze the workspace after the candidate exits.
-7. Run public and hidden evaluators in separate environments.
-8. Check allowed paths, patch size, and forbidden modifications.
-9. Persist a schema-versioned artifact and classify the outcome.
-10. Aggregate only comparable runs into a report with confidence notes.
+1. Resolve an immutable benchmark release, candidate manifest, and judge
+   manifest.
+2. Provision or reset the dedicated clean-room Linux account.
+3. Prepare the six task workspaces and task documentation in that account.
+4. Validate the candidate configuration and create a run ID.
+5. Start the candidate through OpenCode and execute the six tasks sequentially.
+6. Enforce timeout, output limits, process-group cleanup, and cancellation.
+7. Freeze the complete six-task result before judging.
+8. Run public and hidden evaluators in separate environments.
+9. Send the resulting code and evidence to each configured judge independently.
+10. Record every judge response and score; do not ask a judge to reconcile
+    another judge's score.
+11. Check allowed paths, patch size, and forbidden modifications.
+12. Persist schema-versioned artifacts and classify every outcome.
+13. Reset the clean room completely before the next candidate.
+14. Aggregate only comparable runs into a report with confidence notes.
 
 ## 5. Isolation and Security
 
@@ -95,6 +142,14 @@ machine-distinguishable. Missing evidence is not a zero-quality score.
 
 ## 7. Evaluation Model
 
+Each judge scores the resulting code independently on the same three or four
+criteria. The initial rubric should use four criteria:
+
+- functional correctness;
+- reliability and edge-case handling;
+- maintainability and clarity;
+- scope discipline and fit to the task.
+
 The first release should report separate dimensions:
 
 - public correctness;
@@ -104,6 +159,11 @@ The first release should report separate dimensions:
 - code-quality rubric with anchored criteria;
 - latency and timeout rate;
 - provider/infrastructure availability.
+
+Judge scores, explanations, model ID, prompt version, and timestamp are logged
+as immutable artifacts. The aggregate must show each judge separately before
+calculating any mean or consensus score. A judge failure is missing evidence,
+not an automatic zero.
 
 An aggregate score is optional and must show its formula, denominator, excluded
 runs, and uncertainty. A model with unavailable runs must not silently outrank
@@ -144,7 +204,8 @@ A benchmark release is publishable only when:
 
 ## 11. Open Decisions
 
-Before implementation, decide task count and domains, candidate matrix,
-network policy, evaluator isolation technology, rubric calibration, retry
-policy, cost accounting, report hosting, and whether human review is required
-for code-quality scores.
+Before implementation, decide the exact six task revisions, candidate model
+list, judge model IDs, clean-room reset mechanism, network policy, evaluator
+isolation technology, rubric calibration, cost accounting, report hosting, and
+whether a human review is required for disputes. Retry policy is fixed for the
+first release: one pass and one chance, with no candidate retry.
