@@ -83,7 +83,7 @@ test('an unavailable required judge stops before any release directory is create
     await writeFile(configPath, JSON.stringify({
       release: 'judge-missing', models_test: modelsTest, results_dir: 'results', private_artifacts_dir: privateArtifacts,
       clean_room: {
-        user: process.env.USER || 'gpt', home: cleanHome, opencode_root: opencodeRoot,
+        user: 'nobody', home: cleanHome, opencode_root: opencodeRoot,
         workspace: path.join(cleanHome, 'workspace'), agent_home: path.join(cleanHome, 'agent-home'),
         reset_script: path.join(cleanHome, 'reset-room.mjs')
       },

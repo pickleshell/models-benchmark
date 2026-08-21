@@ -78,7 +78,7 @@ test('unavailable candidate is recorded and skipped while the next candidate run
     ];
     await writeFile(configPath, JSON.stringify({
       release: 'candidate-preflight', models_test: modelsTest, results_dir: 'results', private_artifacts_dir: privateArtifacts,
-      clean_room: { user: process.env.USER || 'gpt', home: cleanHome, opencode_root: opencodeRoot, workspace: path.join(cleanHome, 'workspace'), agent_home: path.join(cleanHome, 'agent-home'), reset_script: path.join(cleanHome, 'reset-room.mjs') },
+      clean_room: { user: 'nobody', home: cleanHome, opencode_root: opencodeRoot, workspace: path.join(cleanHome, 'workspace'), agent_home: path.join(cleanHome, 'agent-home'), reset_script: path.join(cleanHome, 'reset-room.mjs') },
       tasks: [{ id: 'task', fixture: 'fixture', prompt: 'prompts/task.md', test_command: ['node', '-e', ''], allowed_changes: ['fixture/value.txt'] }],
       candidates, judges: [{ id: 'judge', agent: 'opencode', model: 'judge/available' }], criteria: ['correctness']
     }));

@@ -88,8 +88,12 @@ judging. Rebuild every judge submission from that baseline plus its recorded
 patch, never from the candidate workspace or `.git` directory.
 
 The runner must acquire the configured host-wide clean-room lock before any
-preflight, reset, or sandbox start, and hold it until final cleanup. Do not
-start a second release against the same clean-room root.
+preflight, reset, or sandbox start, and hold it until final cleanup. It may
+release the lock only after successful cleanup; retain it with a reason if the
+final reset fails. Do not start a second release against the same clean-room
+root. `ProtectProc=invisible` does not hide processes owned by the same
+clean-room UID, so the runner must refuse to start while that account has any
+active process.
 
 ## Required checks
 

@@ -20,7 +20,7 @@ import {
   buildBaselineComparisonPlan,
   createAnonymousJudgeWorkspace
 } from './lib/blind-judging.mjs';
-import { acquireCleanRoomLock, releaseCleanRoomLock } from './lib/clean-room-lock.mjs';
+import { acquireCleanRoomLock, releaseCleanRoomLock, retainCleanRoomLock } from './lib/clean-room-lock.mjs';
 
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
 const configPath = process.env.BENCHMARK_CONFIG
@@ -175,6 +175,16 @@ function cleanRoomEnv() {
 function runAsCleanRoomHost(command, args, options = {}) {
   const envArgs = Object.entries(cleanRoomEnv()).map(([key, value]) => `${key}=${value}`);
   return run('sudo', ['-u', candidateUser, '--', 'env', ...envArgs, command, ...args], { ...options, cwd: '/tmp' });
+}
+
+async function assertCleanRoomUserIsIdle() {
+  const listed = await run('pgrep', ['-u', candidateUser, '-a'], { timeoutMs: 5000 });
+  if (listed.status === 1) return;
+  if (listed.status !== 0) {
+    throw new Error(`cannot inspect clean-room account processes for ${candidateUser}: ${listed.stderr || listed.stdout}`);
+  }
+  const processes = listed.stdout.trim();
+  throw new Error(`clean-room account ${candidateUser} is active; stop its processes before starting a benchmark:\n${processes}`);
 }
 
 function runAsCandidate(command, args, options = {}) {
@@ -476,12 +486,13 @@ const cleanRoomLock = await acquireCleanRoomLock(cleanRoomLockPath, {
   release: config.release,
   workspace: cleanWorkspace
 });
-let matrixCompleted = false;
+let cleanRoomSafe = false;
 try {
   const rsync = await run('rsync', ['--version'], { timeoutMs: 5000 });
   if (rsync.status !== 0) throw new Error(`rsync is required for trusted baseline comparison: ${rsync.stderr}`);
   const account = await run('getent', ['passwd', candidateUser], { timeoutMs: 5000 });
   if (account.status !== 0) throw new Error(`clean-room account not found: ${candidateUser}`);
+  await assertCleanRoomUserIsIdle();
   if (!existsSync(opencodeRoot)) throw new Error(`OpenCode runtime root not found: ${opencodeRoot}`);
   const opencode = await runAsCandidate('opencode', ['--version'], { timeoutMs: 10000 });
   if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
@@ -503,17 +514,24 @@ try {
   }
   await resetRoom(config.tasks[config.tasks.length - 1]);
   await runAsCleanRoomHost('rm', ['-rf', baselineRoot, comparisonRoot], { timeoutMs: 30000 });
-  matrixCompleted = true;
+  cleanRoomSafe = true;
   emit('clean_room_final_reset', { workspace: cleanWorkspace, agent_home: agentHome });
   emit('pilot_completed', { results_dir: resultsDir, publication: 'manual' });
 } finally {
   try {
-    if (cleanRoomTouched && !matrixCompleted) {
+    if (cleanRoomTouched && !cleanRoomSafe) {
       await resetRoom(config.tasks[config.tasks.length - 1]);
       await runAsCleanRoomHost('rm', ['-rf', baselineRoot, comparisonRoot], { timeoutMs: 30000 });
+      cleanRoomSafe = true;
       emit('clean_room_final_reset', { workspace: cleanWorkspace, agent_home: agentHome, after_failure: true });
     }
+  } catch (cleanupError) {
+    await retainCleanRoomLock(cleanRoomLock, cleanupError);
+    emit('clean_room_lock_retained', { lock_path: cleanRoomLock.path, reason: String(cleanupError.message || cleanupError) });
+    throw cleanupError;
   } finally {
+    if (cleanRoomSafe) {
     await releaseCleanRoomLock(cleanRoomLock);
+    }
   }
 }

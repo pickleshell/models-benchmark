@@ -22,10 +22,10 @@ comparison. The next immutable run is `pilot-2-tasks-r5`.
 The clean-room boundary is verified on the benchmark host with
 `npm run verify:sandbox`. This non-model smoke check starts two real transient
 systemd units and confirms that private shared memory is absent from both the
-host and the next unit, host process metadata is hidden, and the read-only
-OpenCode runtime can still start inside the same sandbox. It checks the
-isolation mechanism without spending model quota or creating a benchmark
-release.
+host and the next unit, that the units use distinct IPC namespaces, and that
+the read-only OpenCode runtime can still start inside the same sandbox. It also
+records the relevant same-UID process limitation described below. The check
+uses no model quota and creates no benchmark release.
 
 The project remains in pilot validation. Two tasks and one run per model are
 useful evidence, not a definitive general ranking.
@@ -184,7 +184,7 @@ point, execution environment, evidence, and review process explicit.
 | No cross-run files | A sandbox cannot see the host home, host temporary files, runner artifacts, or another model's workspace, session, or agent home. |
 | Private temporary storage | A model may use temporary files during its own run, but that storage is private to its sandbox and disappears when the process ends. Another model cannot find it. |
 | Private IPC and shared memory | SysV/POSIX IPC and `/dev/shm` are isolated per transient unit, so they cannot carry data from one candidate or judge to the next. |
-| Hidden host processes | `ProtectProc=invisible` prevents the clean-room account from using `/proc` to inspect unrelated host processes and their command lines. |
+| Host-process guard | `ProtectProc=invisible` hides processes owned by other users. Before a run, the runner also refuses to start while *any* `test`-owned process exists, because same-UID processes remain mutually visible. |
 | Read-only runtime | The OpenCode installation is mounted read-only, so a candidate cannot alter the agent runtime used by later runs. |
 | Limited writes | Candidate-controlled processes can write only their disposable workspace, fresh agent home, and private temporary storage. |
 | Trusted comparison | The runner compares the final file tree with a trusted baseline, including untracked files and changes hidden by a candidate commit. |
@@ -206,10 +206,12 @@ carry-over and ordinary execution mistakes; it is not an adversarial-network
 containment system for a model deliberately trying to publish data to an
 external service. A proxy-based egress allowlist is a separate hardening stage.
 
-The lock is deliberately fail-closed. If a runner is killed before cleanup, the
+The lock is deliberately fail-closed. If a runner is killed before cleanup, or
+the final reset fails, the lock remains marked with the cleanup failure. The
 next release stops rather than guessing that the room is safe. An operator must
-inspect the lock owner and confirm that no benchmark process remains before
-removing that exact stale lock. This is preferable to risking a mixed run.
+inspect the lock owner, confirm that no benchmark process remains, restore the
+clean room if necessary, and only then remove that exact stale lock. This is
+preferable to risking a mixed run.
 
 ## Repository Boundaries
 

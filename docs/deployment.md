@@ -129,9 +129,13 @@ Run this non-model smoke check after installing or changing the sandbox:
 npm run verify:sandbox
 ```
 
-It starts two transient units and verifies that an IPC marker created by the
-first is absent from the host and the second unit, that host-owned process
-metadata is not visible to the clean-room user, and that the read-only
+It starts two transient units and verifies that a `/dev/shm` marker created by
+the first is absent from the host and the second unit, that their IPC namespace
+identifiers differ from each other and from the host, and that each can create
+a SysV message queue. It also demonstrates the same-UID `/proc` limitation:
+`ProtectProc=invisible` hides other users' processes, not processes owned by
+the shared clean-room account. The runner therefore refuses to start while any
+`test`-owned process exists. Finally, the check confirms that the read-only
 OpenCode runtime can start inside the hardened boundary. It uses no model and
 does not create a release directory or consume provider quota.
 

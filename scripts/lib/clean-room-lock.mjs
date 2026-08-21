@@ -28,3 +28,16 @@ export async function releaseCleanRoomLock(lock) {
   if (!lock?.path) return;
   await rm(lock.path, { recursive: true, force: true });
 }
+
+export async function retainCleanRoomLock(lock, reason) {
+  if (!lock?.path) return;
+  const ownerPath = `${lock.path}/${ownerFile}`;
+  let owner = {};
+  try { owner = JSON.parse(await readFile(ownerPath, 'utf8')); } catch {}
+  await writeFile(ownerPath, `${JSON.stringify({
+    ...owner,
+    stale: true,
+    cleanup_failed_at: new Date().toISOString(),
+    cleanup_failure: String(reason?.message || reason || 'unknown cleanup failure')
+  }, null, 2)}\n`, { mode: 0o600 });
+}

@@ -63,6 +63,33 @@ test('runner lock rejects a second release before it can touch the clean room', 
   assert.equal(existsSync(path.join(modelsTest, 'results', 'second')), false);
 });
 
+test('runner refuses to start while the clean-room account has a process', async () => {
+  const temp = await mkdtemp(path.join(os.tmpdir(), 'models-benchmark-active-user-'));
+  const modelsTest = path.join(temp, 'models-test');
+  const privateArtifacts = path.join(temp, 'private');
+  const fakeBin = path.join(temp, 'bin');
+  const touched = path.join(temp, 'sudo-was-called');
+  await mkdir(modelsTest, { recursive: true });
+  await mkdir(fakeBin, { recursive: true });
+  await writeFile(path.join(fakeBin, 'pgrep'), '#!/bin/sh\necho "4242 sleep 60"\nexit 0\n', { mode: 0o755 });
+  await writeFile(path.join(fakeBin, 'sudo'), `#!/bin/sh\ntouch ${touched}\nexit 99\n`, { mode: 0o755 });
+  const configPath = path.join(temp, 'pilot.json');
+  await writeFile(configPath, JSON.stringify({
+    release: 'active-user', models_test: modelsTest, results_dir: 'results', private_artifacts_dir: privateArtifacts,
+    clean_room: {
+      user: 'test', home: path.join(temp, 'home'), opencode_root: path.join(temp, 'runtime'),
+      workspace: path.join(temp, 'workspace'), agent_home: path.join(temp, 'agent-home'), reset_script: path.join(temp, 'reset.mjs')
+    },
+    tasks: [{ id: 'task' }], candidates: [], judges: [], criteria: []
+  }));
+  await assert.rejects(
+    run(process.execPath, [runnerScript], { env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BENCHMARK_CONFIG: configPath } }),
+    /clean-room account test is active/
+  );
+  assert.equal(existsSync(touched), false);
+  assert.equal(existsSync(path.join(modelsTest, 'results', 'active-user')), false);
+});
+
 test('intent-to-add makes an untracked solution file part of the binary diff', async () => {
   const repo = await mkdtemp(path.join(os.tmpdir(), 'models-benchmark-diff-'));
   const git = (...args) => execFileSync('git', ['-C', repo, ...args], { encoding: 'utf8' });

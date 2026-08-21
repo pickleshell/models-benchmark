@@ -107,7 +107,7 @@ test('candidate and judge process boundaries prevent cross-run workspace access'
     await writeFile(configPath, JSON.stringify({
       release: 'boundary-release', models_test: modelsTest, results_dir: 'results', private_artifacts_dir: privateArtifacts,
       clean_room: {
-        user: process.env.USER || 'gpt', home: cleanHome, opencode_root: opencodeRoot,
+        user: 'nobody', home: cleanHome, opencode_root: opencodeRoot,
         workspace: path.join(cleanHome, 'workspace'), agent_home: path.join(cleanHome, 'agent-home'),
         reset_script: path.join(cleanHome, 'reset-room.mjs')
       },

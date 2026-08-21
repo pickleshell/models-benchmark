@@ -206,13 +206,19 @@ following controls are part of the implemented contract:
 12. **Single-run ownership.** A host-wide clean-room lock is acquired before
     any probe or reset and is released only after final cleanup. A second runner
     stops before it can touch the shared clean-room workspace or agent home. The
-    lock path is stable across release manifests using that clean room.
+    lock path is stable across release manifests using that clean room. If final
+    cleanup fails, the lock is retained with the failure reason rather than
+    allowing a later release to assume a clean state.
 13. **Operational verification.** `npm run verify:sandbox` starts two actual
     transient units without invoking a model. It proves that one unit's shared
-    memory marker is invisible to the host and to the next unit, verifies that
-    unrelated host process metadata is hidden, and confirms that the read-only
-    OpenCode runtime remains usable inside the hardened boundary. This check is
-    required after installing or changing the sandbox configuration.
+    memory marker is invisible to the host and to the next unit, compares their
+    IPC namespace identifiers with the host, and verifies creation of a SysV
+    message queue. `ProtectProc=invisible` hides processes of other users, but
+    not processes owned by the same clean-room UID; the runner therefore checks
+    that the clean-room account is idle before it starts. The check also confirms
+    that the read-only OpenCode runtime remains usable inside the hardened
+    boundary. This check is required after installing or changing the sandbox
+    configuration.
 
 These controls protect against accidental state carry-over and ordinary
 candidate-controlled writes. They are process and mount-namespace isolation,
