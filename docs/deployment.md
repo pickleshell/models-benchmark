@@ -28,6 +28,16 @@ The default pilot manifest expects:
 Update `config/pilot.json` together with this document if these paths or
 accounts change.
 
+`clean_room.lock_path` is a runner-owned, host-wide lock path. Keep it stable
+across release manifests that use the same clean-room account; do not place it
+under a release-specific artifact directory.
+
+If a runner is force-killed, its lock is intentionally left behind rather than
+allowing a second runner to guess that the clean room is safe. Inspect the
+lock's `owner.json`, verify that its PID is no longer running and that no
+benchmark process remains, then remove that exact lock directory manually
+before recovery. Never delete it merely because a release appears slow.
+
 ## Prerequisites
 
 - Linux with Node.js 20 or newer, Git, `rsync`, sudo, `systemd-run`, and network access
@@ -93,8 +103,9 @@ the next:
 - Run candidates sequentially through `npm run pilot`; never invoke a
   candidate command directly as `test`.
 - Keep `ProtectHome=tmpfs`, `PrivateTmp=yes`, `ProtectSystem=strict`,
-  `NoNewPrivileges=yes`, `PrivateDevices=yes`, `RestrictSUIDSGID=yes`, and
-  `RestrictNamespaces=yes` in the transient sandbox configuration.
+  `PrivateIPC=yes`, private `/dev/shm`, `ProtectProc=invisible`, `NoNewPrivileges=yes`,
+  `PrivateDevices=yes`, `RestrictSUIDSGID=yes`, and `RestrictNamespaces=yes`
+  in the transient sandbox configuration.
 - Bind only the current disposable workspace and fresh agent home as writable.
   Keep the agent runtime read-only.
 - Keep raw artifacts in the runner-owned directory and do not bind it into a
@@ -106,6 +117,21 @@ Temporary files are allowed only inside a sandbox's own disposable temporary
 filesystem. That filesystem is private to the transient unit, cannot be read
 by a later model, and is removed with the unit. Models never receive the host
 temporary filesystem.
+
+The sandbox keeps outbound network access for OpenCode providers. Do not
+describe this deployment as an adversarial-network sandbox: blocking a model
+from deliberately using an external service as a covert channel requires a
+separate egress proxy and allowlist.
+
+Run this non-model smoke check after installing or changing the sandbox:
+
+```sh
+npm run verify:sandbox
+```
+
+It starts two transient units and verifies that an IPC marker created by the
+first is absent from the host and the second unit, and that host-owned process
+metadata is not visible to the clean-room user.
 
 ## Required sudo boundary
 

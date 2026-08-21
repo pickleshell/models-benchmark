@@ -20,6 +20,7 @@ import {
   buildBaselineComparisonPlan,
   createAnonymousJudgeWorkspace
 } from './lib/blind-judging.mjs';
+import { acquireCleanRoomLock, releaseCleanRoomLock } from './lib/clean-room-lock.mjs';
 
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
 const configPath = process.env.BENCHMARK_CONFIG
@@ -42,9 +43,13 @@ const baselineRoot = path.join(cleanRoomHome, 'baseline');
 const comparisonRoot = path.join(cleanRoomHome, 'comparison');
 const resultsDir = path.resolve(modelsTest, config.results_dir);
 const privateDir = path.resolve(expandHome(config.private_artifacts_dir), config.release);
+const cleanRoomLockPath = config.clean_room.lock_path
+  ? path.resolve(expandHome(config.clean_room.lock_path))
+  : path.join(path.dirname(privateDir), 'clean-room.lock');
 const publicReleaseDir = path.join(resultsDir, config.release);
 const opencodeRoot = path.resolve(config.clean_room.opencode_root);
 let sandboxSequence = 0;
+let cleanRoomTouched = false;
 
 function emit(event, data = {}) {
   process.stdout.write(`${JSON.stringify({ timestamp: new Date().toISOString(), event, ...data })}\n`);
@@ -185,6 +190,9 @@ function runAsCandidate(command, args, options = {}) {
   const properties = [
     '--property=ProtectHome=tmpfs',
     '--property=PrivateTmp=yes',
+    '--property=PrivateIPC=yes',
+    '--property=TemporaryFileSystem=/dev/shm:rw,nosuid,nodev,noexec,mode=1777',
+    '--property=ProtectProc=invisible',
     '--property=ProtectSystem=strict',
     '--property=NoNewPrivileges=yes',
     '--property=PrivateDevices=yes',
@@ -221,6 +229,7 @@ function runAsJudge(command, args, options = {}) {
 }
 
 async function resetRoom(task) {
+  cleanRoomTouched = true;
   emit('reset_started', { task: task.id, workspace: cleanWorkspace });
   await installResetScript();
   await installArchive(task);
@@ -463,33 +472,48 @@ if (existsSync(publicReleaseDir) || existsSync(privateDir)) {
   throw new Error(`benchmark release already exists: ${config.release}; choose a new immutable release identifier`);
 }
 
-const rsync = await run('rsync', ['--version'], { timeoutMs: 5000 });
-if (rsync.status !== 0) throw new Error(`rsync is required for trusted baseline comparison: ${rsync.stderr}`);
-const account = await run('getent', ['passwd', candidateUser], { timeoutMs: 5000 });
-if (account.status !== 0) throw new Error(`clean-room account not found: ${candidateUser}`);
-if (!existsSync(opencodeRoot)) throw new Error(`OpenCode runtime root not found: ${opencodeRoot}`);
-const opencode = await runAsCandidate('opencode', ['--version'], { timeoutMs: 10000 });
-if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
-emit('preflight_ok', { candidate_user: candidateUser, opencode_version: opencode.stdout.trim() });
+const cleanRoomLock = await acquireCleanRoomLock(cleanRoomLockPath, {
+  release: config.release,
+  workspace: cleanWorkspace
+});
+let matrixCompleted = false;
+try {
+  const rsync = await run('rsync', ['--version'], { timeoutMs: 5000 });
+  if (rsync.status !== 0) throw new Error(`rsync is required for trusted baseline comparison: ${rsync.stderr}`);
+  const account = await run('getent', ['passwd', candidateUser], { timeoutMs: 5000 });
+  if (account.status !== 0) throw new Error(`clean-room account not found: ${candidateUser}`);
+  if (!existsSync(opencodeRoot)) throw new Error(`OpenCode runtime root not found: ${opencodeRoot}`);
+  const opencode = await runAsCandidate('opencode', ['--version'], { timeoutMs: 10000 });
+  if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
+  emit('preflight_ok', { candidate_user: candidateUser, opencode_version: opencode.stdout.trim() });
 
-for (const judge of config.judges) {
-  const probe = await probeModel(judge, config.tasks[0], 'judge');
-  if (!probe.available) {
-    await resetRoom(config.tasks[0]);
-    throw new Error(`required judge model is unavailable: ${judge.id}; no release directory was created`);
+  for (const judge of config.judges) {
+    const probe = await probeModel(judge, config.tasks[0], 'judge');
+    if (!probe.available) throw new Error(`required judge model is unavailable: ${judge.id}; no release directory was created`);
+  }
+
+  await mkdir(resultsDir, { recursive: true });
+  for (const candidate of config.candidates) {
+    const preflight = await preflightCandidate(candidate, config.tasks[0]);
+    if (!preflight.available) {
+      for (const task of config.tasks) await recordUnavailableCandidate(candidate, task, preflight);
+      continue;
+    }
+    for (const task of config.tasks) await runCandidate(candidate, task);
+  }
+  await resetRoom(config.tasks[config.tasks.length - 1]);
+  await runAsCleanRoomHost('rm', ['-rf', baselineRoot, comparisonRoot], { timeoutMs: 30000 });
+  matrixCompleted = true;
+  emit('clean_room_final_reset', { workspace: cleanWorkspace, agent_home: agentHome });
+  emit('pilot_completed', { results_dir: resultsDir, publication: 'manual' });
+} finally {
+  try {
+    if (cleanRoomTouched && !matrixCompleted) {
+      await resetRoom(config.tasks[config.tasks.length - 1]);
+      await runAsCleanRoomHost('rm', ['-rf', baselineRoot, comparisonRoot], { timeoutMs: 30000 });
+      emit('clean_room_final_reset', { workspace: cleanWorkspace, agent_home: agentHome, after_failure: true });
+    }
+  } finally {
+    await releaseCleanRoomLock(cleanRoomLock);
   }
 }
-
-await mkdir(resultsDir, { recursive: true });
-for (const candidate of config.candidates) {
-  const preflight = await preflightCandidate(candidate, config.tasks[0]);
-  if (!preflight.available) {
-    for (const task of config.tasks) await recordUnavailableCandidate(candidate, task, preflight);
-    continue;
-  }
-  for (const task of config.tasks) await runCandidate(candidate, task);
-}
-await resetRoom(config.tasks[config.tasks.length - 1]);
-await runAsCleanRoomHost('rm', ['-rf', baselineRoot, comparisonRoot], { timeoutMs: 30000 });
-emit('clean_room_final_reset', { workspace: cleanWorkspace, agent_home: agentHome });
-emit('pilot_completed', { results_dir: resultsDir, publication: 'manual' });

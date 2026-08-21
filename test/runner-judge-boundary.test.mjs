@@ -144,6 +144,9 @@ test('candidate and judge process boundaries prevent cross-run workspace access'
       assert.equal(candidateInput.includes(privateArtifacts), false);
       assert.equal(candidateInput.includes(path.join(modelsTest, 'results')), false);
       assert.ok(invocation.args.includes('--property=ProtectHome=tmpfs'));
+      assert.ok(invocation.args.includes('--property=PrivateIPC=yes'));
+      assert.ok(invocation.args.includes('--property=TemporaryFileSystem=/dev/shm:rw,nosuid,nodev,noexec,mode=1777'));
+      assert.ok(invocation.args.includes('--property=ProtectProc=invisible'));
     }
     const artifact = JSON.parse(await readFile(path.join(modelsTest, 'results', 'boundary-release', candidate.id, 'task', 'judges', 'judge.json'), 'utf8'));
     assert.equal(artifact.candidate, candidate.id);

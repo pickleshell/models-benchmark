@@ -8,6 +8,7 @@
     "user": "test",
     "home": "/home/test/.models-benchmark",
     "opencode_root": "/home/test/.opencode",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
     "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
     "workspace": "/home/test/.models-benchmark/workspace",
     "agent_home": "/home/test/.models-benchmark/agent-home"

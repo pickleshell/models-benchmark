@@ -175,6 +175,7 @@ point, execution environment, evidence, and review process explicit.
 | Separate sandbox | Every candidate, test, and judge runs in a new systemd mount namespace, not in the host account's normal environment. |
 | No cross-run files | A sandbox cannot see the host home, host temporary files, runner artifacts, or another model's workspace, session, or agent home. |
 | Private temporary storage | A model may use temporary files during its own run, but that storage is private to its sandbox and disappears when the process ends. Another model cannot find it. |
+| Private IPC and shared memory | SysV/POSIX IPC and `/dev/shm` are isolated per transient unit, so they cannot carry data from one candidate or judge to the next. |
 | Read-only runtime | The OpenCode installation is mounted read-only, so a candidate cannot alter the agent runtime used by later runs. |
 | Limited writes | Candidate-controlled processes can write only their disposable workspace, fresh agent home, and private temporary storage. |
 | Trusted comparison | The runner compares the final file tree with a trusted baseline, including untracked files and changes hidden by a candidate commit. |
@@ -188,6 +189,12 @@ In particular, a model cannot leave a solution in a shared temporary directory
 for the next model to discover. The runner gives each transient sandbox its own
 temporary filesystem. It is not the host temporary filesystem, is not shared
 with another sandbox, and is discarded at teardown.
+
+The sandbox retains outbound network access because OpenCode must reach its
+model providers. This benchmark is designed to prevent accidental local state
+carry-over and ordinary execution mistakes; it is not an adversarial-network
+containment system for a model deliberately trying to publish data to an
+external service. A proxy-based egress allowlist is a separate hardening stage.
 
 ## Repository Boundaries
 

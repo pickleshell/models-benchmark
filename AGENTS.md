@@ -77,7 +77,7 @@ Do not relax the clean-room boundary for debugging or convenience. Every model
 must receive the same trusted baseline and a new agent session, with no access
 to another model's workspace, patch, session, agent home, temporary files, raw
 logs, or judge material. Preserve `ProtectHome=tmpfs`, `PrivateTmp=yes`,
-`ProtectSystem=strict`, read-only agent runtime, and the limited writable-bind
+`ProtectSystem=strict`, `PrivateIPC=yes`, a dedicated `/dev/shm`, `ProtectProc=invisible`, read-only agent runtime, and the limited writable-bind
 set. A sandbox's temporary filesystem belongs only to that sandbox and is
 discarded at teardown; it is not the host temporary filesystem.
 
@@ -86,6 +86,10 @@ every candidate and after the matrix. Compare against the runner-trusted
 baseline, not candidate-controlled Git state; enforce `allowed_changes` before
 judging. Rebuild every judge submission from that baseline plus its recorded
 patch, never from the candidate workspace or `.git` directory.
+
+The runner must acquire the configured host-wide clean-room lock before any
+preflight, reset, or sandbox start, and hold it until final cleanup. Do not
+start a second release against the same clean-room root.
 
 ## Required checks
 
@@ -97,7 +101,7 @@ git diff --check
 
 For a deployment or environment change, also verify the configured clean-room
 user and its OpenCode CLI with the exact preflight commands in
-`docs/deployment.md`. Do not invoke `npm run pilot` merely as a health check:
+`docs/deployment.md` and run `npm run verify:sandbox`. Do not invoke `npm run pilot` merely as a health check:
 it spends provider quota and creates a benchmark run.
 
 Do not place credentials, hidden evaluation data, judge prompts, or raw logs in

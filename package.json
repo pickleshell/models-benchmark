@@ -6,6 +6,7 @@
     "test": "node --test test/*.test.mjs",
     "pilot": "node scripts/run-pilot.mjs",
     "pilot:dry-run": "node scripts/run-pilot.mjs --dry-run",
+    "verify:sandbox": "node scripts/verify-sandbox.mjs",
     "aggregate": "node scripts/aggregate-results.mjs"
   }
 }

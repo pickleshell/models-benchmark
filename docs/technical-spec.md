@@ -167,11 +167,13 @@ following controls are part of the implemented contract:
    histories, caches, and files created by the preceding run.
 3. **Mount-namespace isolation.** Candidate, test, judge, and Git-inspection
    processes run in separate transient systemd mount namespaces with
-   `ProtectHome=tmpfs`, `PrivateTmp=yes`, and `ProtectSystem=strict`. A process
+   `ProtectHome=tmpfs`, `PrivateTmp=yes`, `PrivateIPC=yes`,
+   a dedicated `/dev/shm` mount, `ProtectProc=invisible`, and
+   `ProtectSystem=strict`. A process
    cannot access the host home, host temporary filesystem, runner artifacts,
    or a previous sandbox's workspace or agent state.
 4. **No shared temporary channel.** Each sandbox has a private temporary
-   filesystem for its own tools. It is distinct from the host temporary
+   filesystem and private IPC resources for its own tools. They are distinct from the host temporary
    filesystem, is never mounted into another sandbox, and disappears when that
    sandbox exits. A model cannot leave a result there for a later model.
 5. **Least writable state.** The only writable binds are the selected
@@ -201,10 +203,18 @@ following controls are part of the implemented contract:
     release creation; candidates are probed before task assignment. Release
     directories are immutable, preventing retries from replacing or mixing
     evidence under the same release ID.
+12. **Single-run ownership.** A host-wide clean-room lock is acquired before
+    any probe or reset and is released only after final cleanup. A second runner
+    stops before it can touch the shared clean-room workspace or agent home. The
+    lock path is stable across release manifests using that clean room.
 
 These controls protect against accidental state carry-over and ordinary
 candidate-controlled writes. They are process and mount-namespace isolation,
 not a claim to defend against a compromised kernel or a host administrator.
+Outbound network access remains available for model providers. Preventing a
+deliberately adversarial model from using an external service as a covert
+channel would require a separate proxy-based egress allowlist and is outside
+the current benchmark threat model.
 
 ## 6. Canonical Run Result
 
