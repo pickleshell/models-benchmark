@@ -22,13 +22,6 @@
   ],
   "candidates": [
     {
-      "id": "gpt-5-6-luna-go",
-      "agent": "opencode",
-      "runtime": "opencode",
-      "model": "opencode-go/gpt-5.6-luna",
-      "subscription": "free"
-    },
-    {
       "id": "big-pickle",
       "agent": "opencode",
       "runtime": "opencode",
@@ -40,6 +33,13 @@
       "agent": "opencode",
       "runtime": "opencode",
       "model": "opencode/deepseek-v4-flash-free",
+      "subscription": "free"
+    },
+    {
+      "id": "mimo-v2-5-free",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "model": "opencode/mimo-v2.5-free",
       "subscription": "free"
     }
   ],
