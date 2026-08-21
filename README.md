@@ -24,7 +24,7 @@ releases without changing the runner's core workflow.
 
 ### Next Pilot Matrix
 
-Release `pilot-2-tasks-r2` contains two tasks, three candidate models, and two
+Release `pilot-2-tasks-r3` contains two tasks, three candidate models, and two
 independent judges. Candidate models are invoked through OpenCode with the
 subscription label `free`; the judges are GPT and Gemini models, also invoked
 through OpenCode:

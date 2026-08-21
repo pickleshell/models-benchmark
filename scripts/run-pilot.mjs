@@ -286,7 +286,7 @@ async function runJudges(candidate, task, candidateResult) {
     const judgePatch = path.join(judgeRoot, `.${path.basename(judgeWorkspace)}.diff`);
     const installedPatch = await run('sudo', ['install', '-o', candidateUser, '-g', candidateUser, '-m', '0600', candidateDiff, judgePatch], { timeoutMs: 30000 });
     if (installedPatch.status !== 0) throw new Error(`cannot stage candidate submission: ${installedPatch.stderr}`);
-    const applied = await runAsCleanRoomHost('git', ['-C', judgeWorkspace, 'apply', judgePatch], { timeoutMs: 30000 });
+    const applied = await runAsCleanRoomHost('git', ['-C', judgeWorkspace, 'apply', '--allow-empty', judgePatch], { timeoutMs: 30000 });
     await runAsCleanRoomHost('rm', ['-f', judgePatch], { timeoutMs: 30000 });
     if (applied.status !== 0) throw new Error(`cannot apply candidate submission: ${applied.stderr}`);
     await runAsCleanRoomHost('rm', ['-rf', agentHome], { timeoutMs: 30000 });
