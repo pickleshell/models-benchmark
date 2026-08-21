@@ -16,12 +16,13 @@ provider availability, execution failure, timeout, and evaluator failure.
 
 ## 2.1 First Benchmark Shape
 
-The first benchmark release is intentionally close to normal use of a coding
-agent rather than a collection of isolated micro-prompts:
+The benchmark is intentionally close to normal use of a coding agent rather
+than a collection of isolated micro-prompts. Counts below are release
+configuration, not architectural limits:
 
-- six tasks are run sequentially for each candidate model;
-- the initial six-task set is taken from the maintained `models-test` task
-  suite (the ledger task plus the five Phase 2 tasks);
+- a configurable number of tasks is run sequentially for each candidate;
+- the current pilot uses six tasks from the maintained `models-test` task suite
+  (the ledger task plus the five Phase 2 tasks);
 - each task includes the documentation and local context needed to solve it;
 - the candidate receives one pass and one chance per task; retries are not
   allowed;
@@ -49,38 +50,51 @@ solve a small isolated function.
 - **Judge**: an independent model that reviews the resulting code and evidence
   against the published criteria.
 
-## 3.1 Candidate and Judge Manifests
+## 3.1 Candidate, Task, Judge, and Rubric Manifests
 
-Candidates and judges are data, not hard-coded runner logic. The first version
-should use a versioned manifest such as:
+Candidates, tasks, judges, and criteria are data, not hard-coded runner logic.
+Their counts may change between benchmark releases. The runner must validate
+and report the configured matrix rather than assume fixed cardinality. The
+first version should use a versioned manifest such as:
 
 ```json
 {
   "candidates": [
     {"id": "opencode-go/example-free", "runtime": "opencode", "model": "..."}
   ],
+  "tasks": ["phase1-ledger", "phase2-feature-implementation"],
   "judges": [
     {"id": "chatgpt", "provider": "openai", "model": "..."},
     {"id": "gemini", "provider": "google", "model": "..."}
+  ],
+  "criteria": [
+    "functional_correctness",
+    "reliability_edge_cases",
+    "maintainability_clarity",
+    "scope_discipline"
   ]
 }
 ```
 
-Claude is intentionally excluded from the initial judge matrix. The manifest
-must record model IDs and provider configuration without storing credentials.
+Claude is intentionally excluded from the current pilot judge matrix, not
+from the architecture. The manifest must record model IDs and provider
+configuration without storing credentials.
 
 ## 4. Pipeline
 
 1. Resolve an immutable benchmark release, candidate manifest, and judge
    manifest.
 2. Provision or reset the dedicated clean-room Linux account.
-3. Prepare the six task workspaces and task documentation in that account.
+3. Prepare the configured task workspaces and task documentation in that
+   account.
 4. Validate the candidate configuration and create a run ID.
-5. Start the candidate through OpenCode and execute the six tasks sequentially.
+5. Start the candidate through OpenCode and execute the configured tasks
+   sequentially.
 6. Enforce timeout, output limits, process-group cleanup, and cancellation.
 7. Freeze the complete six-task result before judging.
 8. Run public and hidden evaluators in separate environments.
-9. Send the resulting code and evidence to each configured judge independently.
+9. Send the resulting code and evidence to each configured judge independently
+   for each configured criterion.
 10. Record every judge response and score; do not ask a judge to reconcile
     another judge's score.
 11. Check allowed paths, patch size, and forbidden modifications.
@@ -142,8 +156,8 @@ machine-distinguishable. Missing evidence is not a zero-quality score.
 
 ## 7. Evaluation Model
 
-Each judge scores the resulting code independently on the same three or four
-criteria. The initial rubric should use four criteria:
+Each judge scores the resulting code independently on every criterion in the
+release rubric. The current pilot uses four criteria:
 
 - functional correctness;
 - reliability and edge-case handling;
@@ -204,8 +218,9 @@ A benchmark release is publishable only when:
 
 ## 11. Open Decisions
 
-Before implementation, decide the exact six task revisions, candidate model
-list, judge model IDs, clean-room reset mechanism, network policy, evaluator
+Before implementation, decide the task revisions, candidate model list, judge
+model IDs, criterion set, clean-room reset mechanism, network policy, evaluator
 isolation technology, rubric calibration, cost accounting, report hosting, and
-whether a human review is required for disputes. Retry policy is fixed for the
-first release: one pass and one chance, with no candidate retry.
+whether a human review is required for disputes. Task, candidate, judge, and
+criterion counts remain configurable per release. Retry policy is fixed for the
+current pilot: one pass and one chance, with no candidate retry.

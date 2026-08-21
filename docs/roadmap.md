@@ -4,9 +4,9 @@
 
 - review the technical specification;
 - settle security and isolation boundaries;
-- define the six-task set from `models-test`;
-- define candidate and judge manifests;
-- agree on the three/four scoring criteria;
+- define the pilot task set from `models-test`;
+- define configurable candidate, task, judge, and rubric manifests;
+- agree on the pilot scoring criteria;
 - specify the clean-room reset procedure.
 
 ## Phase 1: Core pipeline
@@ -27,8 +27,8 @@
 ## Phase 3: Pilot
 
 - provision one dedicated clean-room Linux account;
-- run the six tasks sequentially for free OpenCode models;
-- judge every result independently with ChatGPT and Gemini;
+- run the configured pilot task set sequentially for free OpenCode models;
+- judge every result independently with the configured judge models;
 - inspect artifacts and failure classifications;
 - calibrate scoring and reproducibility;
 - publish an internal report.
