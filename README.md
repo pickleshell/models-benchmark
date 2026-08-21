@@ -25,15 +25,17 @@ releases without changing the runner's core workflow.
 ### Next Pilot Matrix
 
 Release `pilot-2-tasks-r1` contains two tasks, three candidate models, and two
-judges. All are invoked through OpenCode with the subscription label `free`:
+independent judges. Candidate models are invoked through OpenCode with the
+subscription label `free`; the judges are GPT and Gemini models, also invoked
+through OpenCode:
 
 | Role | ID | Model |
 | --- | --- | --- |
 | Candidate | `big-pickle` | `opencode/big-pickle` |
 | Candidate | `deepseek-v4-flash-free` | `opencode/deepseek-v4-flash-free` |
 | Candidate | `mimo-v2-5-free` | `opencode/mimo-v2.5-free` |
-| Judge | `hy3-free` | `opencode/hy3-free` |
-| Judge | `muse-spark-1-2-contributor-free` | `opencode/muse-spark-1.2-contributor-free` |
+| Judge | `gpt-5-4` | `opencode/gpt-5.4` |
+| Judge | `gemini-3-pro` | `opencode/gemini-3-pro` |
 
 The task, candidate list, judge list, and criteria are release inputs, not
 constants. Future releases may add tasks, models, judges, subscription tiers,
@@ -93,7 +95,7 @@ missing evidence is never converted to zero.
 | Role | Responsibility | Current pilot |
 | --- | --- | --- |
 | Candidate | Performs the task once in the clean room | Three configured OpenCode models |
-| Judge | Independently inspects the resulting workspace and runs public tests | Two configured OpenCode models |
+| Judge | Independently inspects the resulting workspace and runs public tests | GPT-5.4 and Gemini 3 Pro through OpenCode |
 | Orchestrator | Starts/reset runs, captures evidence, and reports progress | Codex plus the private runner |
 
 Candidates never see judge prompts, raw judge output from another candidate,

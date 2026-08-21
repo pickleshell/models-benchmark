@@ -52,8 +52,8 @@
     }
   ],
   "judges": [
-    {"id": "hy3-free", "agent": "opencode", "provider": "opencode", "model": "opencode/hy3-free", "subscription": "free"},
-    {"id": "muse-spark-1-2-contributor-free", "agent": "opencode", "provider": "opencode", "model": "opencode/muse-spark-1.2-contributor-free", "subscription": "free"}
+    {"id": "gpt-5-4", "agent": "opencode", "provider": "opencode", "model": "opencode/gpt-5.4", "subscription": "paid"},
+    {"id": "gemini-3-pro", "agent": "opencode", "provider": "opencode", "model": "opencode/gemini-3-pro", "subscription": "paid"}
   ],
   "criteria": [
     "functional_correctness",
