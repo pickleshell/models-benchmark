@@ -21,6 +21,23 @@ tasks, criteria, subscription labels, and release ID live in
 [`config/pilot.json`](config/pilot.json). Their counts can change in later
 releases without changing the runner's core workflow.
 
+### Current Pilot Matrix
+
+Release `pilot-1-task-r6` contains one task, three candidate models, and two
+judges. All are invoked through OpenCode with the subscription label `free`:
+
+| Role | ID | Model |
+| --- | --- | --- |
+| Candidate | `big-pickle` | `opencode/big-pickle` |
+| Candidate | `deepseek-v4-flash-free` | `opencode/deepseek-v4-flash-free` |
+| Candidate | `mimo-v2-5-free` | `opencode/mimo-v2.5-free` |
+| Judge | `hy3-free` | `opencode/hy3-free` |
+| Judge | `muse-spark-1-2-contributor-free` | `opencode/muse-spark-1.2-contributor-free` |
+
+The task, candidate list, judge list, and criteria are release inputs, not
+constants. Future releases may add tasks, models, judges, subscription tiers,
+or a Codex candidate runtime.
+
 ## Design Goals
 
 - identical tasks, prompts, and starting revisions for every candidate;
@@ -57,6 +74,14 @@ For every candidate/task pair, the pipeline records:
 The current rubric has four dimensions: functional correctness, reliability
 and edge cases, maintainability and clarity, and scope discipline. A passing
 public test suite is evidence, not an automatic perfect score.
+
+Judges work independently. Each judge examines an isolated copy of the final
+candidate workspace, runs the public tests, and is asked to return structured
+scores from 1 to 10 with confidence, explanation, and concerns. For a completed candidate,
+the aggregate averages each criterion across valid judge responses. Its
+`overall_average` is the arithmetic mean of all four criterion averages.
+Invalid judge output is retained as evidence but excluded from score math;
+missing evidence is never converted to zero.
 
 ## Roles
 
@@ -213,6 +238,17 @@ to the results checkout by the normal workflow.
 The private pipeline generates data only. It does not build HTML and does not
 publish a website. Presentation must not alter, replace, or conceal the raw
 sanitized evidence.
+
+## Pilot Limits
+
+- One public task cannot establish a general model ranking.
+- A candidate gets one attempt; provider availability is measured separately
+  from patch quality.
+- Tasks and public tests are visible to candidates by design. Private prompts,
+  raw logs, reference solutions, and credentials are not.
+- The pilot currently measures execution time, not token cost or price.
+- Results require manual review before publication; a successful local run is
+  not automatically a public benchmark release.
 
 ## Security Boundary
 
