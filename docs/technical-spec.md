@@ -21,12 +21,13 @@ than a collection of isolated micro-prompts. Counts below are release
 configuration, not architectural limits:
 
 - a configurable number of tasks is run sequentially for each candidate;
-- the current pilot uses six tasks from the maintained `models-test` task suite
-  (the ledger task plus the five Phase 2 tasks);
+- the pipeline-validation pilot uses one task;
+- after the pilot succeeds, the benchmark expands to two or three tasks and
+  can grow further;
 - each task includes the documentation and local context needed to solve it;
 - the candidate receives one pass and one chance per task; retries are not
   allowed;
-- the candidate is configured in OpenCode and runs as a normal agent would;
+- every candidate in this benchmark is invoked through OpenCode;
 - task results are preserved before any judging begins.
 
 The benchmark must measure practical end-to-end work, not only the ability to
@@ -60,7 +61,7 @@ first version should use a versioned manifest such as:
 ```json
 {
   "candidates": [
-    {"id": "opencode-go/example-free", "runtime": "opencode", "model": "..."}
+    {"id": "example-free", "runtime": "opencode", "model": "..."}
   ],
   "tasks": ["phase1-ledger", "phase2-feature-implementation"],
   "judges": [
@@ -86,12 +87,13 @@ configuration without storing credentials.
    manifest.
 2. Provision or reset the dedicated clean-room Linux account.
 3. Prepare the configured task workspaces and task documentation in that
-   account.
+   account. The pipeline pilot uses one task; later releases may configure
+   more.
 4. Validate the candidate configuration and create a run ID.
 5. Start the candidate through OpenCode and execute the configured tasks
    sequentially.
 6. Enforce timeout, output limits, process-group cleanup, and cancellation.
-7. Freeze the complete six-task result before judging.
+7. Freeze the complete configured result before judging.
 8. Run public and hidden evaluators in separate environments.
 9. Send the resulting code and evidence to each configured judge independently
    for each configured criterion.
@@ -107,6 +109,10 @@ configuration without storing credentials.
 - Every run gets a disposable workspace and unique process group.
 - Candidate processes cannot read hidden fixtures, evaluator code, reference
   solutions, provider credentials, or other runs.
+- Runner-owned artifacts, judge prompts, raw model output, and aggregate data
+  are stored under a private directory in the runner account's home, outside
+  the candidate workspace. Permissions and process isolation must prevent the
+  candidate account from reading that directory.
 - Network access is denied by default and explicitly documented per harness.
 - File writes are limited to the candidate workspace.
 - Timeouts terminate the complete process group and are recorded as outcomes,

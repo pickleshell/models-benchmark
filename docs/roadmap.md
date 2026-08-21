@@ -16,6 +16,7 @@
 - harness interface and normalized events;
 - timeout and process cleanup;
 - artifact schema and validator.
+- runner-home private artifact directory with candidate-inaccessible permissions.
 
 ## Phase 2: Evaluation
 
@@ -27,13 +28,19 @@
 ## Phase 3: Pilot
 
 - provision one dedicated clean-room Linux account;
-- run the configured pilot task set sequentially for free OpenCode models;
+- run one task sequentially for free OpenCode models through OpenCode;
 - judge every result independently with the configured judge models;
 - inspect artifacts and failure classifications;
 - calibrate scoring and reproducibility;
 - publish an internal report.
 
-## Phase 4: First benchmark release
+## Phase 4: Expanded benchmark
+
+- add two or three tasks after the one-task pipeline pilot passes;
+- repeat the isolation, judging, and artifact checks;
+- expand the task set only through a new versioned manifest.
+
+## Phase 5: First benchmark release
 
 - tag an immutable release;
 - run the complete matrix;
