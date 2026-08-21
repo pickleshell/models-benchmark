@@ -90,6 +90,15 @@ npm run pilot
 Progress is emitted as newline-delimited JSON. Results are prepared under the
 configured `models-test` checkout for manual inspection and publication.
 
+After a pilot, build the local summary without publishing it:
+
+```sh
+npm run aggregate -- pilot-1-task-r6
+```
+
+The aggregate ignores judge scores for candidates whose agent execution
+failed. Such candidates remain visible with an explicit failure outcome.
+
 ## Result Layout
 
 For each candidate and task, the public results directory contains:
@@ -98,6 +107,9 @@ For each candidate and task, the public results directory contains:
 run.json
 candidate.diff
 test-result.json
+judges/<judge-id>.json
+aggregate.json
+aggregate.md
 ```
 
 `run.json` records the benchmark release, task, agent, runtime, model,
