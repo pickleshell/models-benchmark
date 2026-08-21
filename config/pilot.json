@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "pilot-2-tasks-r3",
+  "release": "pilot-2-tasks-r4",
   "models_test": "/home/gpt/models-test",
   "results_dir": "results/benchmark-pilot",
   "private_artifacts_dir": "~/.models-benchmark/runs",
@@ -52,8 +52,8 @@
     }
   ],
   "judges": [
-    {"id": "gpt-5-4", "agent": "opencode", "provider": "opencode", "model": "gpt-5.4", "subscription": "paid"},
-    {"id": "gemini-3-1-pro", "agent": "opencode", "provider": "opencode", "model": "gemini-3.1-pro", "subscription": "paid"}
+    {"id": "gpt-5-4-pro", "agent": "opencode", "provider": "opencode", "model": "opencode/gpt-5.4-pro", "subscription": "paid"},
+    {"id": "gemini-3-1-pro", "agent": "opencode", "provider": "opencode", "model": "opencode/gemini-3.1-pro", "subscription": "paid"}
   ],
   "criteria": [
     "functional_correctness",
