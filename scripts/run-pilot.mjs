@@ -88,7 +88,10 @@ function extractJudgeText(output) {
 }
 
 function parseJudgeJson(text) {
-  const candidate = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  const fenced = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  const start = fenced.indexOf('{');
+  const end = fenced.lastIndexOf('}');
+  const candidate = start >= 0 && end > start ? fenced.slice(start, end + 1) : fenced;
   try {
     const value = JSON.parse(candidate);
     if (!value || typeof value !== 'object' || !value.scores || typeof value.scores !== 'object') return null;
