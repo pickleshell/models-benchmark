@@ -87,6 +87,17 @@ function extractJudgeText(output) {
   return texts.join('\n').trim() || output.trim();
 }
 
+function parseJudgeJson(text) {
+  const candidate = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  try {
+    const value = JSON.parse(candidate);
+    if (!value || typeof value !== 'object' || !value.scores || typeof value.scores !== 'object') return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 async function installArchive(task) {
   const sourceFixture = path.join(modelsTest, task.fixture);
   const sourcePrompt = path.join(modelsTest, task.prompt);
@@ -160,11 +171,17 @@ async function runJudges(candidate, task, candidateResult) {
     const result = await runAsCandidate(command.command, command.args, { timeoutMs });
     await writeFile(path.join(privateJudgeDir, 'judge.stdout.txt'), result.stdout);
     await writeFile(path.join(privateJudgeDir, 'judge.stderr.txt'), result.stderr);
+    const response = extractJudgeText(result.stdout);
+    const parsed = result.status === 0 ? parseJudgeJson(response) : null;
     await writeJson(path.join(publicJudgeDir, `${judge.id}.json`), {
       schema_version: 1,
       judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription },
-      status: result.status === 0 ? 'completed' : 'failed',
-      response: extractJudgeText(result.stdout),
+      status: result.status !== 0 ? 'failed' : parsed ? 'completed' : 'invalid_output',
+      response,
+      scores: parsed?.scores ?? null,
+      confidence: parsed?.confidence ?? null,
+      explanation: parsed?.explanation ?? null,
+      concerns: parsed?.concerns ?? [],
       execution: { status: result.status, signal: result.signal, timed_out: result.timed_out },
       candidate: candidate.id,
       task: task.id

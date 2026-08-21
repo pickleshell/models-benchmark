@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "pilot-1-task-r5",
+  "release": "pilot-1-task-r6",
   "models_test": "/home/gpt/models-test",
   "results_dir": "results/benchmark-pilot",
   "private_artifacts_dir": "~/.models-benchmark/runs",
@@ -44,8 +44,8 @@
     }
   ],
   "judges": [
-    {"id": "north-mini-code-free", "agent": "opencode", "provider": "opencode", "model": "opencode/north-mini-code-free", "subscription": "free"},
-    {"id": "nemotron-3-ultra-free", "agent": "opencode", "provider": "opencode", "model": "opencode/nemotron-3-ultra-free", "subscription": "free"}
+    {"id": "hy3-free", "agent": "opencode", "provider": "opencode", "model": "opencode/hy3-free", "subscription": "free"},
+    {"id": "muse-spark-1-2-contributor-free", "agent": "opencode", "provider": "opencode", "model": "opencode/muse-spark-1.2-contributor-free", "subscription": "free"}
   ],
   "criteria": [
     "functional_correctness",
