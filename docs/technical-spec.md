@@ -211,6 +211,15 @@ as immutable artifacts. The aggregate must show each judge separately before
 calculating any mean or consensus score. A judge failure is missing evidence,
 not an automatic zero.
 
+Judging is identity-blind. The judge process may receive the task ID, rubric,
+the submitted workspace, and an explicit allowlist of public-test status fields,
+but must not receive candidate ID, model, agent/runtime, provider, subscription,
+candidate stdout/stderr, private artifacts, or candidate-derived paths, prompts,
+environment values, or temporary file names. The runner uses an opaque,
+cryptographically random workspace name and adds the real candidate association
+to the judge artifact only after the judge process exits. Blind judging hides
+declared identity but cannot prevent inference from code style.
+
 An aggregate score is optional and must show its formula, denominator, excluded
 runs, and uncertainty. A model with unavailable runs must not silently outrank
 or fail against a model with complete evidence.

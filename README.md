@@ -82,13 +82,19 @@ The current rubric has four dimensions: functional correctness, reliability
 and edge cases, maintainability and clarity, and scope discipline. A passing
 public test suite is evidence, not an automatic perfect score.
 
-Judges work independently. Each judge examines an isolated copy of the final
-candidate workspace, runs the public tests, and is asked to return structured
-scores from 1 to 10 with confidence, explanation, and concerns. For a completed candidate,
+Judging is identity-blind. Each judge examines an anonymous isolated copy of the
+submitted workspace, runs the public tests, and is asked to return structured
+scores from 1 to 10 with confidence, explanation, and concerns. The judge
+process receives no candidate ID, model, agent/runtime, provider, subscription,
+candidate logs, private artifacts, or candidate-derived path. For a completed candidate,
 the aggregate averages each criterion across valid judge responses. Its
 `overall_average` is the arithmetic mean of all four criterion averages.
 Invalid judge output is retained as evidence but excluded from score math;
 missing evidence is never converted to zero.
+
+Blind judging hides the declared candidate identity, but it cannot guarantee
+that a judge will not infer a model from stylistic or other characteristics of
+the submitted code.
 
 ## Roles
 

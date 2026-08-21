@@ -48,6 +48,13 @@ Treat `allowed_changes` as a release policy, not reporting metadata. A changed
 path outside it is a `forbidden_changes` outcome and must never be judged or
 aggregated as a completed candidate.
 
+Judging must remain identity-blind. Never add candidate ID, model, agent/runtime,
+provider, subscription, candidate logs, private artifacts, or candidate-derived
+paths, prompt text, environment values, or temporary names to judge inputs. Use
+an explicit allowlist for safe execution evidence and an opaque random workspace
+name. Candidate association belongs only in runner-side artifacts after judging;
+stylistic inference by a judge is an acknowledged residual risk.
+
 Benchmark release directories are immutable. A real run must stop before any
 work if either the private or sanitized public directory for its release ID
 already exists. Use a new release ID for every rerun.

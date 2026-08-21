@@ -11,6 +11,12 @@ import {
   parsePorcelainPaths,
   validateJudgePayload
 } from './lib/runner-utils.mjs';
+import {
+  buildJudgeInvocation,
+  buildJudgeEnvironment,
+  buildJudgePrompt,
+  createAnonymousJudgeWorkspace
+} from './lib/blind-judging.mjs';
 
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
 const configPath = process.env.BENCHMARK_CONFIG
@@ -157,13 +163,7 @@ async function installResetScript() {
 }
 
 function cleanRoomEnv() {
-  return {
-    HOME: agentHome,
-    PATH: `${opencodeRoot}/bin:/usr/local/bin:/usr/bin:/bin`,
-    XDG_CONFIG_HOME: path.join(agentHome, '.config'),
-    XDG_DATA_HOME: path.join(agentHome, '.local', 'share'),
-    TMPDIR: '/tmp'
-  };
+  return buildJudgeEnvironment({ agentHome, opencodeRoot });
 }
 
 function runAsCleanRoomHost(command, args, options = {}) {
@@ -237,23 +237,16 @@ async function runJudges(candidate, task, candidateResult) {
       });
       continue;
     }
-    const judgeWorkspace = path.join(judgeRoot, `${candidate.id}-${judge.id}`);
+    const judgeWorkspace = createAnonymousJudgeWorkspace(judgeRoot);
     await runAsCleanRoomHost('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
     await runAsCleanRoomHost('mkdir', ['-p', judgeWorkspace], { timeoutMs: 30000 });
     const copied = await runAsCleanRoomHost('cp', ['-a', `${cleanWorkspace}/.`, judgeWorkspace], { timeoutMs: 30000 });
     if (copied.status !== 0) throw new Error(`cannot prepare judge workspace: ${copied.stderr}`);
     await runAsCleanRoomHost('rm', ['-rf', agentHome], { timeoutMs: 30000 });
     await runAsCleanRoomHost('mkdir', ['-p', agentHome], { timeoutMs: 30000 });
-    const prompt = [
-      'You are an independent code judge. Do not modify files.',
-      `Review candidate ${candidate.id} for task ${task.id}.`,
-      `Score each criterion from 1 to 10: ${config.criteria.join(', ')}.`,
-      'Return a concise JSON object with scores, confidence, explanation, and concerns.',
-      `Candidate execution metadata: ${JSON.stringify(candidateResult)}`,
-      'Inspect the changed files in the workspace and run the public tests before judging.'
-    ].join('\n');
-    const command = { command: 'opencode', args: ['run', '--model', judge.model, '--dir', judgeWorkspace, '--dangerously-skip-permissions', '--format', 'json', prompt] };
-    const result = await runAsCandidate(command.command, command.args, { cwd: judgeWorkspace, writablePaths: [judgeWorkspace], timeoutMs });
+    const prompt = buildJudgePrompt({ taskId: task.id, criteria: config.criteria, candidateResult });
+    const command = buildJudgeInvocation({ judge, judgeWorkspace, prompt });
+    const result = await runAsCandidate(command.command, command.args, { cwd: command.cwd, writablePaths: [judgeWorkspace], timeoutMs });
     await writeFile(path.join(privateJudgeDir, 'judge.stdout.txt'), result.stdout);
     await writeFile(path.join(privateJudgeDir, 'judge.stderr.txt'), result.stderr);
     const response = extractJudgeText(result.stdout);
