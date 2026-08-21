@@ -130,8 +130,10 @@ npm run verify:sandbox
 ```
 
 It starts two transient units and verifies that an IPC marker created by the
-first is absent from the host and the second unit, and that host-owned process
-metadata is not visible to the clean-room user.
+first is absent from the host and the second unit, that host-owned process
+metadata is not visible to the clean-room user, and that the read-only
+OpenCode runtime can start inside the hardened boundary. It uses no model and
+does not create a release directory or consume provider quota.
 
 ## Required sudo boundary
 

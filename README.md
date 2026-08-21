@@ -19,6 +19,14 @@ format are implemented. `pilot-2-tasks-r4` was an operational diagnostic run:
 it found unavailable candidate and judge models and is not a publishable model
 comparison. The next immutable run is `pilot-2-tasks-r5`.
 
+The clean-room boundary is verified on the benchmark host with
+`npm run verify:sandbox`. This non-model smoke check starts two real transient
+systemd units and confirms that private shared memory is absent from both the
+host and the next unit, host process metadata is hidden, and the read-only
+OpenCode runtime can still start inside the same sandbox. It checks the
+isolation mechanism without spending model quota or creating a benchmark
+release.
+
 The project remains in pilot validation. Two tasks and one run per model are
 useful evidence, not a definitive general ranking.
 
@@ -176,6 +184,7 @@ point, execution environment, evidence, and review process explicit.
 | No cross-run files | A sandbox cannot see the host home, host temporary files, runner artifacts, or another model's workspace, session, or agent home. |
 | Private temporary storage | A model may use temporary files during its own run, but that storage is private to its sandbox and disappears when the process ends. Another model cannot find it. |
 | Private IPC and shared memory | SysV/POSIX IPC and `/dev/shm` are isolated per transient unit, so they cannot carry data from one candidate or judge to the next. |
+| Hidden host processes | `ProtectProc=invisible` prevents the clean-room account from using `/proc` to inspect unrelated host processes and their command lines. |
 | Read-only runtime | The OpenCode installation is mounted read-only, so a candidate cannot alter the agent runtime used by later runs. |
 | Limited writes | Candidate-controlled processes can write only their disposable workspace, fresh agent home, and private temporary storage. |
 | Trusted comparison | The runner compares the final file tree with a trusted baseline, including untracked files and changes hidden by a candidate commit. |
@@ -183,6 +192,7 @@ point, execution environment, evidence, and review process explicit.
 | Private raw evidence | Raw model output and operational diagnostics stay in the runner account's private directory; only sanitized artifacts enter `models-test`. |
 | Blind judging | Each judge receives a fresh anonymous workspace rebuilt from the trusted baseline plus one patch. It never receives candidate identity, logs, original workspace, or another judge's work. |
 | Availability gate | Required judges are checked before a release exists; candidates are checked before receiving a task. Provider availability is never confused with code quality. |
+| Single-run lock | A host-wide lock prevents two releases from resetting or using the same clean room at the same time. |
 | Immutable releases | A release ID cannot be reused. A rerun always has a new identifier and cannot overwrite or mix prior evidence. |
 
 In particular, a model cannot leave a solution in a shared temporary directory
@@ -195,6 +205,11 @@ model providers. This benchmark is designed to prevent accidental local state
 carry-over and ordinary execution mistakes; it is not an adversarial-network
 containment system for a model deliberately trying to publish data to an
 external service. A proxy-based egress allowlist is a separate hardening stage.
+
+The lock is deliberately fail-closed. If a runner is killed before cleanup, the
+next release stops rather than guessing that the room is safe. An operator must
+inspect the lock owner and confirm that no benchmark process remains before
+removing that exact stale lock. This is preferable to risking a mixed run.
 
 ## Repository Boundaries
 

@@ -207,6 +207,12 @@ following controls are part of the implemented contract:
     any probe or reset and is released only after final cleanup. A second runner
     stops before it can touch the shared clean-room workspace or agent home. The
     lock path is stable across release manifests using that clean room.
+13. **Operational verification.** `npm run verify:sandbox` starts two actual
+    transient units without invoking a model. It proves that one unit's shared
+    memory marker is invisible to the host and to the next unit, verifies that
+    unrelated host process metadata is hidden, and confirms that the read-only
+    OpenCode runtime remains usable inside the hardened boundary. This check is
+    required after installing or changing the sandbox configuration.
 
 These controls protect against accidental state carry-over and ordinary
 candidate-controlled writes. They are process and mount-namespace isolation,
