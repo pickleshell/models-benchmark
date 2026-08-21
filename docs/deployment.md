@@ -149,7 +149,10 @@ skipped and no quality score is aggregated.
 ### Blind-judging verification
 
 Before a release, verify that judging remains identity-blind. Each invocation
-must use a fresh `submission-<UUID>` workspace and a fresh judge agent home.
+must use a fresh `submission-<UUID>` workspace rebuilt from the trusted task
+baseline plus the recorded candidate patch; the candidate `.git` directory is
+never copied. Each judge also receives a fresh agent home and only the
+anonymous workspace is writable.
 The judge prompt and process inputs may contain only the task ID, rubric, the
 submitted workspace, and explicitly allowlisted public-test status fields.
 They must not contain candidate ID, model, agent/runtime, provider,
