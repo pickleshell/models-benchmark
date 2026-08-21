@@ -37,6 +37,7 @@ async function git(args, cwd) {
 
 function run(command, args, options = {}) {
   return new Promise((resolve) => {
+    const startedAt = new Date();
     const child = spawn(command, args, {
       cwd: options.cwd,
       env: options.env || process.env,
@@ -52,6 +53,9 @@ function run(command, args, options = {}) {
       settled = true;
       clearTimeout(timer);
       resolve({
+        started_at: startedAt.toISOString(),
+        completed_at: new Date().toISOString(),
+        duration_ms: Date.now() - startedAt.getTime(),
         status: result.status ?? null,
         signal: result.signal ?? null,
         stdout: Buffer.concat(stdout).toString(),
@@ -198,7 +202,14 @@ async function runJudges(candidate, task, candidateResult) {
       confidence: parsed?.confidence ?? null,
       explanation: parsed?.explanation ?? null,
       concerns: parsed?.concerns ?? [],
-      execution: { status: result.status, signal: result.signal, timed_out: result.timed_out },
+      execution: {
+        status: result.status,
+        signal: result.signal,
+        timed_out: result.timed_out,
+        started_at: result.started_at,
+        completed_at: result.completed_at,
+        duration_ms: result.duration_ms
+      },
       candidate: candidate.id,
       task: task.id
     });
@@ -219,7 +230,15 @@ async function runCandidate(candidate, task) {
   await writeFile(path.join(privateCandidateDir, 'agent.stdout.txt'), agent.stdout);
   await writeFile(path.join(privateCandidateDir, 'agent.stderr.txt'), agent.stderr);
   const tests = await runAsCandidate(task.test_command[0], task.test_command.slice(1), { cwd: path.join(cleanWorkspace, task.fixture), timeoutMs });
-  await writeJson(path.join(candidateDir, 'test-result.json'), { status: tests.status, timed_out: tests.timed_out, stdout: tests.stdout, stderr: tests.stderr });
+  await writeJson(path.join(candidateDir, 'test-result.json'), {
+    status: tests.status,
+    timed_out: tests.timed_out,
+    started_at: tests.started_at,
+    completed_at: tests.completed_at,
+    duration_ms: tests.duration_ms,
+    stdout: tests.stdout,
+    stderr: tests.stderr
+  });
   const diff = await git(['diff', '--binary'], cleanWorkspace);
   const status = await git(['status', '--porcelain'], cleanWorkspace);
   await writeFile(path.join(candidateDir, 'candidate.diff'), diff.stdout);
@@ -228,8 +247,24 @@ async function runCandidate(candidate, task) {
     release: config.release,
     task: task.id,
     candidate,
-    agent: { status: agent.status, signal: agent.signal, timed_out: agent.timed_out },
-    tests: { status: tests.status, timed_out: tests.timed_out },
+    started_at: agent.started_at,
+    completed_at: tests.completed_at,
+    duration_ms: tests.completed_at && agent.started_at ? new Date(tests.completed_at).getTime() - new Date(agent.started_at).getTime() : null,
+    agent: {
+      status: agent.status,
+      signal: agent.signal,
+      timed_out: agent.timed_out,
+      started_at: agent.started_at,
+      completed_at: agent.completed_at,
+      duration_ms: agent.duration_ms
+    },
+    tests: {
+      status: tests.status,
+      timed_out: tests.timed_out,
+      started_at: tests.started_at,
+      completed_at: tests.completed_at,
+      duration_ms: tests.duration_ms
+    },
     changed_files: status.stdout.split('\n').filter(Boolean).map((line) => line.slice(3)),
     artifacts: { public_dir: path.relative(modelsTest, candidateDir), private_dir: privateCandidateDir },
     completed_at: new Date().toISOString()

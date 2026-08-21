@@ -225,8 +225,11 @@ The initial implementation should provide:
 - a CLI to validate manifests and run one task or a matrix;
 - a local evaluator command;
 - a schema validator for run artifacts;
-- an aggregation command that emits JSON, CSV, and Markdown;
-- a report generator that links every score to evidence.
+- an aggregation command that emits JSON and Markdown data for a separate
+  reporting site or repository.
+
+The private pipeline deliberately does not generate or publish HTML pages.
+Presentation is downstream of the sanitized, versioned result data.
 
 Provider adapters must be replaceable. The benchmark core must not depend on a
 single gateway, model vendor, or UI.

@@ -34,6 +34,9 @@ for (const candidate of await readdir(root, { withFileTypes: true })) {
     outcome: run.agent.status !== 0 ? 'agent_failure' : run.tests.status !== 0 ? 'tests_failed' : 'completed',
     agent: run.agent,
     tests: run.tests,
+    duration_ms: run.duration_ms ?? null,
+    agent_duration_ms: run.agent?.duration_ms ?? null,
+    test_duration_ms: run.tests?.duration_ms ?? null,
     judge_count: judges.length,
     judge_average: averages
   });
@@ -43,11 +46,13 @@ rows.sort((a, b) => (Object.values(b.judge_average)[0] || 0) - (Object.values(a.
 const output = { schema_version: 1, release, criteria: config.criteria, candidates: rows, generated_at: new Date().toISOString() };
 await mkdir(root, { recursive: true });
 await writeFile(path.join(root, 'aggregate.json'), `${JSON.stringify(output, null, 2)}\n`);
-const lines = [`# ${release}`, '', '| Candidate | Agent | Model | Outcome | Judges | Average |', '|---|---|---|---|---:|---:|'];
+const lines = [`# ${release}`, '', '| Candidate | Agent | Model | Outcome | Agent time (s) | Candidate + tests (s) | Judges | Average |', '|---|---|---|---|---:|---:|---:|---:|'];
 for (const row of rows) {
   const values = Object.values(row.judge_average).filter(Number.isFinite);
   const average = values.length ? (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(2) : 'N/A';
-  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.outcome} | ${row.judge_count} | ${average} |`);
+  const agentDuration = Number.isFinite(row.agent_duration_ms) ? (row.agent_duration_ms / 1000).toFixed(2) : 'N/A';
+  const totalDuration = Number.isFinite(row.duration_ms) ? (row.duration_ms / 1000).toFixed(2) : 'N/A';
+  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.outcome} | ${agentDuration} | ${totalDuration} | ${row.judge_count} | ${average} |`);
 }
 await writeFile(path.join(root, 'aggregate.md'), `${lines.join('\n')}\n`);
 process.stdout.write(`${JSON.stringify({ release, candidates: rows.length, output: root })}\n`);

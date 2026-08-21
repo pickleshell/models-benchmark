@@ -5,6 +5,19 @@
 This private repository contains the benchmark runner and orchestration. Public
 tasks and public test results belong in `/home/gpt/models-test`.
 
+## Required reading and deployment
+
+For an installation or clean-room change, read `README.md`,
+`docs/deployment.md`, `docs/technical-spec.md`, and `config/pilot.json` before
+acting. The deployment guide is the operational source of truth; do not infer
+accounts, paths, or privilege boundaries from another host.
+
+The runner account is trusted and owns private raw artifacts. The clean-room
+account executes candidates and judges but must have no sudo access and no
+access to runner-owned artifacts, credentials, hidden data, or another run's
+workspace. The runner resets the room before every candidate and once more at
+the end of a completed matrix.
+
 ## Pilot workflow
 
 Run `npm run pilot:dry-run` before any real model invocation. The pilot runner
@@ -21,12 +34,21 @@ written to `models-test`.
 Never push or publish results automatically. Inspect the generated public
 artifacts and use a separate manual review before committing to `models-test`.
 
+Preserve timing data in sanitized artifacts: `started_at`, `completed_at`, and
+`duration_ms` are required for new candidate, test, and judge results. Do not
+attempt to reconstruct missing timing for older releases.
+
 ## Required checks
 
 ```sh
 npm run pilot:dry-run
 git diff --check
 ```
+
+For a deployment or environment change, also verify the configured clean-room
+user and its OpenCode CLI with the exact preflight commands in
+`docs/deployment.md`. Do not invoke `npm run pilot` merely as a health check:
+it spends provider quota and creates a benchmark run.
 
 Do not place credentials, hidden evaluation data, judge prompts, or raw logs in
 the public results repository.

@@ -10,9 +10,9 @@ scope discipline, reproducibility, latency, and operational failures.
 
 ## Current Status
 
-This repository currently contains the design baseline only. The benchmark
-runner, evaluator service, storage format, and first production benchmark have
-not been implemented yet.
+The clean-room pilot runner, isolated judge workflow, sanitized result format,
+and first one-task pilot are implemented. The pipeline is still in pilot
+validation, not a claim of a definitive model ranking.
 
 ## Design Goals
 
@@ -27,6 +27,7 @@ not been implemented yet.
 
 - [Technical specification](docs/technical-spec.md)
 - [Roadmap](docs/roadmap.md)
+- [Deployment guide](docs/deployment.md)
 
 The specification is intentionally open for review before implementation.
 
@@ -99,6 +100,12 @@ npm run aggregate -- pilot-1-task-r6
 The aggregate ignores judge scores for candidates whose agent execution
 failed. Such candidates remain visible with an explicit failure outcome.
 
+Each future `run.json` records `started_at`, `completed_at`, and `duration_ms`
+for the candidate execution, agent phase, and public-test phase. Judge
+artifacts record their execution duration too. Existing artifacts created
+before this field was introduced intentionally remain without reconstructed
+timing.
+
 ## Result Layout
 
 For each candidate and task, the public results directory contains:
@@ -111,6 +118,11 @@ judges/<judge-id>.json
 aggregate.json
 aggregate.md
 ```
+
+The pipeline publishes data only. A separate site or reporting repository may
+render it. `run.json` includes candidate, test, and overall execution timing;
+`aggregate.json` preserves the same duration data. Reports must render
+availability failures as `N/A`, not as zero-quality scores.
 
 `run.json` records the benchmark release, task, agent, runtime, model,
 subscription, execution status, changed files, and artifact locations. Raw
