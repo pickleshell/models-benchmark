@@ -18,6 +18,7 @@ const candidateUser = config.clean_room.user;
 const cleanRoomHome = path.resolve(config.clean_room.home);
 const resetScript = path.resolve(config.clean_room.reset_script);
 const archiveRoot = path.join(cleanRoomHome, 'task-archive');
+const judgeRoot = path.join(cleanRoomHome, 'judge');
 const resultsDir = path.resolve(modelsTest, config.results_dir);
 const privateDir = path.resolve(expandHome(config.private_artifacts_dir), config.release);
 
@@ -75,6 +76,17 @@ function commandFor(candidate, prompt) {
   return { command: 'opencode', args: ['run', '--model', candidate.model, '--dir', cleanWorkspace, '--dangerously-skip-permissions', '--format', 'json', prompt] };
 }
 
+function extractJudgeText(output) {
+  const texts = [];
+  for (const line of output.split('\n')) {
+    try {
+      const event = JSON.parse(line);
+      if (event.type === 'text' && event.part?.text) texts.push(event.part.text);
+    } catch {}
+  }
+  return texts.join('\n').trim() || output.trim();
+}
+
 async function installArchive(task) {
   const sourceFixture = path.join(modelsTest, task.fixture);
   const sourcePrompt = path.join(modelsTest, task.prompt);
@@ -123,6 +135,44 @@ async function resetRoom(task) {
   emit('reset_completed', { task: task.id });
 }
 
+async function runJudges(candidate, task, candidateResult) {
+  for (const judge of config.judges) {
+    const publicJudgeDir = path.join(resultsDir, config.release, candidate.id, task.id, 'judges');
+    const privateJudgeDir = path.join(privateDir, candidate.id, task.id, 'judges', judge.id);
+    await mkdir(publicJudgeDir, { recursive: true });
+    await mkdir(privateJudgeDir, { recursive: true, mode: 0o700 });
+    const judgeWorkspace = path.join(judgeRoot, `${candidate.id}-${judge.id}`);
+    await runAsCandidate('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
+    await runAsCandidate('mkdir', ['-p', judgeWorkspace], { timeoutMs: 30000 });
+    const copied = await runAsCandidate('cp', ['-a', `${cleanWorkspace}/.`, judgeWorkspace], { timeoutMs: 30000 });
+    if (copied.status !== 0) throw new Error(`cannot prepare judge workspace: ${copied.stderr}`);
+    await runAsCandidate('rm', ['-rf', agentHome], { timeoutMs: 30000 });
+    await runAsCandidate('mkdir', ['-p', agentHome], { timeoutMs: 30000 });
+    const prompt = [
+      'You are an independent code judge. Do not modify files.',
+      `Review candidate ${candidate.id} for task ${task.id}.`,
+      `Score each criterion from 1 to 10: ${config.criteria.join(', ')}.`,
+      'Return a concise JSON object with scores, confidence, explanation, and concerns.',
+      `Candidate execution metadata: ${JSON.stringify(candidateResult)}`,
+      'Inspect the changed files in the workspace and run the public tests before judging.'
+    ].join('\n');
+    const command = { command: 'opencode', args: ['run', '--model', judge.model, '--dir', judgeWorkspace, '--dangerously-skip-permissions', '--format', 'json', prompt] };
+    const result = await runAsCandidate(command.command, command.args, { timeoutMs });
+    await writeFile(path.join(privateJudgeDir, 'judge.stdout.txt'), result.stdout);
+    await writeFile(path.join(privateJudgeDir, 'judge.stderr.txt'), result.stderr);
+    await writeJson(path.join(publicJudgeDir, `${judge.id}.json`), {
+      schema_version: 1,
+      judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription },
+      status: result.status === 0 ? 'completed' : 'failed',
+      response: extractJudgeText(result.stdout),
+      execution: { status: result.status, signal: result.signal, timed_out: result.timed_out },
+      candidate: candidate.id,
+      task: task.id
+    });
+    await runAsCandidate('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
+  }
+}
+
 async function runCandidate(candidate, task) {
   const candidateDir = path.join(resultsDir, config.release, candidate.id, task.id);
   const privateCandidateDir = path.join(privateDir, candidate.id, task.id);
@@ -152,6 +202,7 @@ async function runCandidate(candidate, task) {
     completed_at: new Date().toISOString()
   };
   await writeJson(path.join(candidateDir, 'run.json'), record);
+  await runJudges(candidate, task, record);
   emit('candidate_completed', { candidate: candidate.id, task: task.id, agent_status: agent.status, test_status: tests.status, result_dir: candidateDir });
 }
 

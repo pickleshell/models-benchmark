@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release": "pilot-1-task-r4",
+  "release": "pilot-1-task-r5",
   "models_test": "/home/gpt/models-test",
   "results_dir": "results/benchmark-pilot",
   "private_artifacts_dir": "~/.models-benchmark/runs",
@@ -44,8 +44,8 @@
     }
   ],
   "judges": [
-    {"id": "chatgpt", "provider": "openai", "model": "configured-later"},
-    {"id": "gemini", "provider": "google", "model": "configured-later"}
+    {"id": "north-mini-code-free", "agent": "opencode", "provider": "opencode", "model": "opencode/north-mini-code-free", "subscription": "free"},
+    {"id": "nemotron-3-ultra-free", "agent": "opencode", "provider": "opencode", "model": "opencode/nemotron-3-ultra-free", "subscription": "free"}
   ],
   "criteria": [
     "functional_correctness",
