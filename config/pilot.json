@@ -5,9 +5,11 @@
   "results_dir": "results/benchmark-pilot",
   "private_artifacts_dir": "~/.models-benchmark/runs",
   "clean_room": {
-    "home": "~/.models-benchmark/clean-room",
-    "workspace": "~/.models-benchmark/clean-room/workspace",
-    "agent_home": "~/.models-benchmark/clean-room/agent-home"
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home"
   },
   "tasks": [
     {

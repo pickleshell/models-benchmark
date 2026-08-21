@@ -12,10 +12,11 @@ uses one public `feature-implementation` task and the three candidates in
 `config/pilot.json`. It runs candidates sequentially and starts a new agent
 session for every candidate.
 
-The runner resets the clean-room workspace and isolated agent home as the
-candidate account before each run. Raw model output is written under the
-private artifact directory; only sanitized `run.json`, `candidate.diff`, and
-test results are written to `models-test`.
+The runner resets the clean-room workspace and isolated agent home by invoking
+`/home/test/.models-benchmark/reset-room.mjs` as the candidate account `test`
+before each run. Raw model output is written under the private artifact
+directory; only sanitized `run.json`, `candidate.diff`, and test results are
+written to `models-test`.
 
 Never push or publish results automatically. Inspect the generated public
 artifacts and use a separate manual review before committing to `models-test`.

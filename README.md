@@ -56,6 +56,12 @@ The first pilot uses one public task and three models already present in the
 published comparison. Each model receives one pass and one chance. There is
 no retry and no reuse of a previous agent session.
 
+The pilot clean room is the dedicated Linux account `test`. Its reset script
+runs as `test`, removes the workspace and isolated OpenCode/Codex home, then
+restores the public task archive owned by that account. The runner invokes the
+script before every candidate so a model cannot inherit another model's files
+or session history.
+
 ## Repository Boundaries
 
 `models-benchmark` is private and contains the runner, manifests, reset

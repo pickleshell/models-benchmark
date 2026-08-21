@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
@@ -14,6 +14,10 @@ const modelsTest = path.resolve(config.models_test);
 const expandHome = (value) => value.replace(/^~(?=$|\/)/, os.homedir());
 const cleanWorkspace = path.resolve(expandHome(config.clean_room.workspace));
 const agentHome = path.resolve(expandHome(config.clean_room.agent_home));
+const candidateUser = config.clean_room.user;
+const cleanRoomHome = path.resolve(config.clean_room.home);
+const resetScript = path.resolve(config.clean_room.reset_script);
+const archiveRoot = path.join(cleanRoomHome, 'task-archive');
 const resultsDir = path.resolve(modelsTest, config.results_dir);
 const privateDir = path.resolve(expandHome(config.private_artifacts_dir), config.release);
 
@@ -27,7 +31,7 @@ async function writeJson(file, value) {
 }
 
 async function git(args, cwd) {
-  return run('git', ['-C', cwd, ...args], { cwd });
+  return runAsCandidate('git', ['-C', cwd, ...args], { cwd });
 }
 
 function run(command, args, options = {}) {
@@ -71,20 +75,45 @@ function commandFor(candidate, prompt) {
   return { command: 'opencode', args: ['run', '--model', candidate.model, '--dir', cleanWorkspace, '--auto', prompt] };
 }
 
+async function installArchive(task) {
+  const sourceFixture = path.join(modelsTest, task.fixture);
+  const sourcePrompt = path.join(modelsTest, task.prompt);
+  const targetFixture = path.join(archiveRoot, task.fixture);
+  const targetPrompt = path.join(archiveRoot, task.prompt);
+  const directory = await run('sudo', ['install', '-d', '-o', candidateUser, '-g', candidateUser, '-m', '0755', path.dirname(targetFixture), path.dirname(targetPrompt)], { timeoutMs: 30000 });
+  if (directory.status !== 0) throw new Error(`cannot prepare task archive: ${directory.stderr}`);
+  const fixture = await run('sudo', ['cp', '-a', sourceFixture, targetFixture], { timeoutMs: 30000 });
+  if (fixture.status !== 0) throw new Error(`cannot copy task fixture: ${fixture.stderr}`);
+  const prompt = await run('sudo', ['cp', sourcePrompt, targetPrompt], { timeoutMs: 30000 });
+  if (prompt.status !== 0) throw new Error(`cannot copy task prompt: ${prompt.stderr}`);
+  const owner = await run('sudo', ['chown', '-R', `${candidateUser}:${candidateUser}`, cleanRoomHome], { timeoutMs: 30000 });
+  if (owner.status !== 0) throw new Error(`cannot set task archive owner: ${owner.stderr}`);
+}
+
+async function installResetScript() {
+  const directory = await run('sudo', ['install', '-d', '-o', candidateUser, '-g', candidateUser, '-m', '0755', cleanRoomHome], { timeoutMs: 30000 });
+  if (directory.status !== 0) throw new Error(`cannot prepare clean-room home: ${directory.stderr}`);
+  const installed = await run('sudo', ['install', '-o', candidateUser, '-g', candidateUser, '-m', '0755', path.join(repo, 'scripts/reset-room.mjs'), resetScript], { timeoutMs: 30000 });
+  if (installed.status !== 0) throw new Error(`cannot install reset script: ${installed.stderr}`);
+}
+
+function runAsCandidate(command, args, options = {}) {
+  const env = {
+    HOME: agentHome,
+    PATH: `/home/test/.opencode/bin:/usr/local/bin:/usr/bin:/bin`,
+    XDG_CONFIG_HOME: path.join(agentHome, '.config'),
+    XDG_DATA_HOME: path.join(agentHome, '.local', 'share')
+  };
+  const envArgs = Object.entries(env).map(([key, value]) => `${key}=${value}`);
+  return run('sudo', ['-u', candidateUser, '--', 'env', ...envArgs, command, ...args], options);
+}
+
 async function resetRoom(task) {
   emit('reset_started', { task: task.id, workspace: cleanWorkspace });
-  await rm(cleanWorkspace, { recursive: true, force: true });
-  await rm(agentHome, { recursive: true, force: true });
-  await mkdir(path.dirname(cleanWorkspace), { recursive: true });
-  await mkdir(agentHome, { recursive: true, mode: 0o700 });
-  await cp(path.join(modelsTest, task.fixture), path.join(cleanWorkspace, task.fixture), { recursive: true });
-  await mkdir(path.dirname(path.join(cleanWorkspace, task.prompt)), { recursive: true });
-  await cp(path.join(modelsTest, task.prompt), path.join(cleanWorkspace, task.prompt));
-  await git(['init', '-q'], cleanWorkspace);
-  await git(['config', 'user.name', 'benchmark-baseline'], cleanWorkspace);
-  await git(['config', 'user.email', 'benchmark-baseline@localhost'], cleanWorkspace);
-  await git(['add', '.'], cleanWorkspace);
-  await git(['commit', '-qm', 'benchmark baseline'], cleanWorkspace);
+  await installResetScript();
+  await installArchive(task);
+  const reset = await runAsCandidate(process.execPath, [resetScript, '--archive-root', archiveRoot, '--fixture', task.fixture, '--prompt', task.prompt, '--workspace', cleanWorkspace, '--agent-home', agentHome, '--sandbox-root', cleanRoomHome], { timeoutMs: 30000 });
+  if (reset.status !== 0) throw new Error(`reset failed: ${reset.stderr}`);
   emit('reset_completed', { task: task.id });
 }
 
@@ -97,14 +126,10 @@ async function runCandidate(candidate, task) {
   const prompt = await readFile(path.join(cleanWorkspace, task.prompt), 'utf8');
   const command = commandFor(candidate, prompt);
   emit('candidate_started', { candidate: candidate.id, agent: candidate.agent, model: candidate.model, task: task.id });
-  const agent = await run(command.command, command.args, {
-    cwd: cleanWorkspace,
-    timeoutMs,
-    env: { ...process.env, HOME: agentHome, XDG_CONFIG_HOME: path.join(agentHome, '.config'), XDG_DATA_HOME: path.join(agentHome, '.local', 'share') }
-  });
+  const agent = await runAsCandidate(command.command, command.args, { cwd: cleanWorkspace, timeoutMs });
   await writeFile(path.join(privateCandidateDir, 'agent.stdout.txt'), agent.stdout);
   await writeFile(path.join(privateCandidateDir, 'agent.stderr.txt'), agent.stderr);
-  const tests = await run(task.test_command[0], task.test_command.slice(1), { cwd: path.join(cleanWorkspace, task.fixture), timeoutMs });
+  const tests = await runAsCandidate(task.test_command[0], task.test_command.slice(1), { cwd: path.join(cleanWorkspace, task.fixture), timeoutMs });
   await writeJson(path.join(candidateDir, 'test-result.json'), { status: tests.status, timed_out: tests.timed_out, stdout: tests.stdout, stderr: tests.stderr });
   const diff = await git(['diff', '--binary'], cleanWorkspace);
   const status = await git(['status', '--porcelain'], cleanWorkspace);
@@ -129,6 +154,12 @@ if (dryRun) {
   emit('dry_run', { release: config.release, task_count: config.tasks.length, candidates: config.candidates.map((candidate) => ({ id: candidate.id, agent: candidate.agent, model: candidate.model })) });
   process.exit(0);
 }
+
+const account = await run('getent', ['passwd', candidateUser], { timeoutMs: 5000 });
+if (account.status !== 0) throw new Error(`clean-room account not found: ${candidateUser}`);
+const opencode = await runAsCandidate('opencode', ['--version'], { timeoutMs: 10000 });
+if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
+emit('preflight_ok', { candidate_user: candidateUser, opencode_version: opencode.stdout.trim() });
 
 await mkdir(resultsDir, { recursive: true });
 for (const candidate of config.candidates) {
