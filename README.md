@@ -17,7 +17,7 @@ not been implemented yet.
 ## Design Goals
 
 - identical tasks, prompts, and starting revisions for every candidate;
-- isolated execution with no cross-run state or hidden evaluator access;
+- isolated execution with no cross-run state or access to private orchestration;
 - deterministic, machine-readable artifacts;
 - separate model quality from provider availability and infrastructure errors;
 - reproducible local runs and independently verifiable published reports;
@@ -33,6 +33,7 @@ The specification is intentionally open for review before implementation.
 ## Security Boundary
 
 Candidate models run against disposable workspaces with least-privilege
-credentials. Hidden tests, reference solutions, and scoring data must never be
-available to the candidate process. Secrets, provider tokens, and private
-repository contents are not benchmark artifacts.
+credentials. Tasks and public tests are intentionally available to the
+candidate. Reference solutions, judge prompts, scoring data, secrets, provider
+tokens, and private repository contents must never be available to the
+candidate process or published in the public results repository.
