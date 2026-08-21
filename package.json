@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "pilot": "node scripts/run-pilot.mjs",
-    "pilot:dry-run": "node scripts/run-pilot.mjs --dry-run"
+    "pilot:dry-run": "node scripts/run-pilot.mjs --dry-run",
+    "aggregate": "node scripts/aggregate-results.mjs"
   }
 }
