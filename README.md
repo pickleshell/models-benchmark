@@ -115,6 +115,105 @@ The current tasks are `feature-implementation` and `refactoring`. The former
 adds a feature-flag resolution behavior; the latter removes duplicated event
 filtering while preserving the public API and malformed-input behavior.
 
+## Pilot Configuration (`config/pilot.json`)
+
+The pilot manifest is the single source of truth for a benchmark release.
+All models, tasks, judges, criteria, and environment paths are declared here.
+
+### Top-Level Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `schema_version` | integer | yes | Manifest schema version (currently `1`) |
+| `release` | string | yes | Immutable release identifier (e.g., `pilot-2-tasks-r5`) |
+| `models_test` | string | yes | Absolute path to `models-test` checkout |
+| `results_dir` | string | yes | Relative path under `models_test` for sanitized artifacts |
+| `private_artifacts_dir` | string | yes | Runner-owned directory for raw logs (expands `~`) |
+| `artifact_schemas` | object | yes | Schema version registry for all artifact types |
+| `clean_room` | object | yes | Clean-room account and path configuration |
+| `tasks` | array | yes | Task definitions (see below) |
+| `candidates` | array | yes | Candidate model configurations |
+| `judges` | array | yes | Judge model configurations |
+| `criteria` | array | yes | Rubric criterion identifiers |
+
+### `artifact_schemas`
+
+Maps each artifact type to its schema version. The runner validates on
+write and read. Changing a version requires a migration plan.
+
+```json
+"artifact_schemas": {
+  "run": 1,
+  "judge": 1,
+  "preflight": 1,
+  "aggregate": 2,
+  "test_result": 1,
+  "candidate_diff": 1
+}
+```
+
+### `clean_room`
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `user` | string | yes | Clean-room account name (e.g., `test`) |
+| `home` | string | yes | Clean-room home directory (expands `~`) |
+| `opencode_root` | string | yes | Read-only OpenCode installation path |
+| `lock_path` | string | yes | Host-wide lock directory (expands `~`) |
+| `reset_script` | string | yes | Path to reset script inside clean-room home |
+| `workspace` | string | yes | Candidate workspace path (inside `home`) |
+| `agent_home` | string | yes | Fresh agent home per candidate (inside `home`) |
+
+### `tasks` (array of objects)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | yes | Unique task identifier |
+| `fixture` | string | yes | Relative path under `models_test` to task fixture |
+| `prompt` | string | yes | Relative path under `models_test` to task prompt markdown |
+| `test_command` | string[] | yes | Command to run public tests (e.g., `["npm", "test"]`) |
+| `allowed_changes` | string[] | yes | Paths (relative to fixture) the candidate may modify |
+
+**Change policy:** Any file changed outside `allowed_changes` triggers
+`forbidden_changes` outcome; judges are skipped, no quality score assigned.
+
+### `candidates` (array of objects)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | yes | Unique candidate identifier (used in artifact paths) |
+| `agent` | string | yes | Agent runtime: `opencode` or `codex` |
+| `runtime` | string | yes | Runtime identifier (currently `opencode`) |
+| `model` | string | yes | Model identifier as known by the agent (e.g., `opencode/big-pickle`) |
+| `subscription` | string | yes | Subscription tier label (e.g., `free`) |
+
+### `judges` (array of objects)
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | yes | Unique judge identifier |
+| `agent` | string | yes | Agent runtime for judging |
+| `provider` | string | yes | Provider identifier |
+| `model` | string | yes | Judge model identifier |
+| `subscription` | string | yes | Subscription tier label |
+
+### `criteria` (array of strings)
+
+Rubric criterion identifiers. Must match keys in judge score objects.
+Current pilot uses four:
+
+```json
+"criteria": [
+  "functional_correctness",
+  "reliability_edge_cases",
+  "maintainability_clarity",
+  "scope_discipline"
+]
+```
+
+Each judge scores every criterion 1–10. Aggregate averages across
+valid judge responses per criterion, then computes overall mean.
+
 ## Design Goals
 
 - identical tasks, prompts, and starting revisions for every candidate;
