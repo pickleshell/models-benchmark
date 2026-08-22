@@ -576,7 +576,264 @@ agent stdout/stderr remains under the private runner artifact directory.
 | `judges/<id>.json` | Judge identity, scores, confidence, explanation, concerns, timing, **judge_prompt_version**, **judge_prompt_hash**, **artifact_hash** | Sanitized and reviewable |
 | `aggregate.json` / `aggregate.md` | Comparable rows, score averages, **reproducibility metadata** | Generated locally, manually reviewed |
 
-The runner's own raw stdout/stderr and operational diagnostics stay under
+### Artifact Examples
+
+<details>
+<summary><strong>run.json (completed candidate)</strong></summary>
+
+```json
+{
+  "schema_version": 1,
+  "release": "pilot-2-tasks-r5",
+  "task": "feature-implementation",
+  "candidate": {
+    "id": "big-pickle",
+    "agent": "opencode",
+    "runtime": "opencode",
+    "model": "opencode/big-pickle",
+    "subscription": "free"
+  },
+  "started_at": "2026-01-15T10:30:00.000Z",
+  "completed_at": "2026-01-15T10:35:42.123Z",
+  "duration_ms": 342123,
+  "agent": {
+    "status": 0,
+    "signal": null,
+    "timed_out": false,
+    "output_limited": false,
+    "started_at": "2026-01-15T10:30:00.000Z",
+    "completed_at": "2026-01-15T10:34:12.456Z",
+    "duration_ms": 252456
+  },
+  "tests": {
+    "status": 0,
+    "timed_out": false,
+    "output_limited": false,
+    "started_at": "2026-01-15T10:34:12.456Z",
+    "completed_at": "2026-01-15T10:35:42.123Z",
+    "duration_ms": 89667
+  },
+  "outcome": "completed",
+  "changed_files": ["fixtures/phase2/feature-implementation/src/featureFlags.js"],
+  "forbidden_changes": [],
+  "artifacts": {
+    "public_dir": "results/benchmark-pilot/pilot-2-tasks-r5/big-pickle/feature-implementation",
+    "candidate_diff": { "path": "candidate.diff", "sha256": "a1b2c3d4..." },
+    "test_result": { "path": "test-result.json", "sha256": "e5f6g7h8..." }
+  },
+  "artifact_hash": { "path": "run.json", "sha256": "i9j0k1l2..." }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>run.json (unavailable candidate)</strong></summary>
+
+```json
+{
+  "schema_version": 1,
+  "release": "pilot-2-tasks-r5",
+  "task": "feature-implementation",
+  "candidate": {
+    "id": "deepseek-v4-flash-free",
+    "agent": "opencode",
+    "runtime": "opencode",
+    "model": "opencode/deepseek-v4-flash-free",
+    "subscription": "free"
+  },
+  "started_at": "2026-01-15T11:00:00.000Z",
+  "completed_at": "2026-01-15T11:00:00.000Z",
+  "duration_ms": 0,
+  "agent": null,
+  "tests": null,
+  "outcome": "unavailable",
+  "availability": {
+    "reason": "no_model_response",
+    "preflight": "model_preflight",
+    "started_at": "2026-01-15T10:59:45.123Z",
+    "completed_at": "2026-01-15T10:59:55.456Z",
+    "duration_ms": 10333
+  },
+  "changed_files": [],
+  "forbidden_changes": [],
+  "artifacts": { "public_dir": "results/benchmark-pilot/pilot-2-tasks-r5/deepseek-v4-flash-free/feature-implementation" },
+  "artifact_hash": { "path": "run.json", "sha256": "m3n4o5p6..." }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>judge.json (completed)</strong></summary>
+
+```json
+{
+  "schema_version": 1,
+  "judge": {
+    "id": "hy3-free",
+    "agent": "opencode",
+    "model": "opencode/hy3-free",
+    "subscription": "free"
+  },
+  "status": "completed",
+  "response": "{"scores":{"functional_correctness":9,"reliability_edge_cases":8,"maintainability_clarity":9,"scope_discipline":10},"confidence":0.92,"explanation":"All tests pass. Clean implementation with proper error handling.","concerns":[]}",
+  "scores": {
+    "functional_correctness": 9,
+    "reliability_edge_cases": 8,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "confidence": 0.92,
+  "explanation": "All tests pass. Clean implementation with proper error handling.",
+  "concerns": [],
+  "execution": {
+    "status": 0,
+    "signal": null,
+    "timed_out": false,
+    "started_at": "2026-01-15T10:36:00.000Z",
+    "completed_at": "2026-01-15T10:37:30.789Z",
+    "duration_ms": 90789
+  },
+  "judge_prompt_version": 1,
+  "judge_prompt_hash": "q7r8s9t0...",
+  "candidate": "big-pickle",
+  "task": "feature-implementation",
+  "artifact_hash": { "path": "hy3-free.json", "sha256": "u1v2w3x4..." }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>judge.json (skipped \u2014 candidate outcome)</strong></summary>
+
+```json
+{
+  "schema_version": 1,
+  "judge": {
+    "id": "hy3-free",
+    "agent": "opencode",
+    "model": "opencode/hy3-free",
+    "subscription": "free"
+  },
+  "status": "skipped",
+  "reason": "unavailable",
+  "candidate": "deepseek-v4-flash-free",
+  "task": "feature-implementation",
+  "artifact_hash": { "path": "hy3-free.json", "sha256": "y5z6a7b8..." }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>aggregate.json</strong></summary>
+
+```json
+{
+  "schema_version": 2,
+  "release": "pilot-2-tasks-r5",
+  "criteria": [
+    "functional_correctness",
+    "reliability_edge_cases",
+    "maintainability_clarity",
+    "scope_discipline"
+  ],
+  "candidates": [
+    {
+      "candidate": {
+        "id": "big-pickle",
+        "agent": "opencode",
+        "runtime": "opencode",
+        "model": "opencode/big-pickle",
+        "subscription": "free"
+      },
+      "task_count": 2,
+      "tasks": [
+        {
+          "task": "feature-implementation",
+          "outcome": "completed",
+          "agent": { "status": 0, "duration_ms": 252456 },
+          "tests": { "status": 0, "duration_ms": 89667 },
+          "duration_ms": 342123,
+          "judge_count": 2,
+          "judge_invocation_count": 2,
+          "judge_durations": [
+            { "id": "hy3-free", "status": "completed", "duration_ms": 90789 },
+            { "id": "nemotron-3-5-lightning-free", "status": "completed", "duration_ms": 85234 }
+          ],
+          "judge_duration_ms": 176023
+        },
+        {
+          "task": "refactoring",
+          "outcome": "completed",
+          "agent": { "status": 0, "duration_ms": 198765 },
+          "tests": { "status": 0, "duration_ms": 72341 },
+          "duration_ms": 271106,
+          "judge_count": 2,
+          "judge_invocation_count": 2,
+          "judge_durations": [
+            { "id": "hy3-free", "status": "completed", "duration_ms": 88432 },
+            { "id": "nemotron-3-5-lightning-free", "status": "completed", "duration_ms": 82117 }
+          ],
+          "judge_duration_ms": 170549
+        }
+      ],
+      "outcome": "completed",
+      "agent_duration_ms": 451221,
+      "test_duration_ms": 162008,
+      "duration_ms": 613229,
+      "judge_count": 4,
+      "judge_duration_by_id": {
+        "hy3-free": 179221,
+        "nemotron-3-5-lightning-free": 167351
+      },
+      "judge_duration_ms": 346572,
+      "judge_average": {
+        "functional_correctness": 9.0,
+        "reliability_edge_cases": 8.5,
+        "maintainability_clarity": 9.0,
+        "scope_discipline": 9.5
+      },
+      "overall_average": 9.0
+    },
+    {
+      "candidate": { "id": "mimo-v2-5-free", ... },
+      "task_count": 2,
+      "tasks": [ ... ],
+      "outcome": "completed",
+      "overall_average": 8.25
+    },
+    {
+      "candidate": { "id": "deepseek-v4-flash-free", ... },
+      "task_count": 2,
+      "tasks": [ ... ],
+      "outcome": "unavailable",
+      "judge_count": 0,
+      "overall_average": null
+    }
+  ],
+  "generated_at": "2026-01-15T12:00:00.000Z",
+  "reproducibility": {
+    "runner_version": "1.0.0",
+    "repository_commit": "abc123def456...",
+    "config_hash": "sha256-of-pilot.json",
+    "schema_registry": { "schema_registry_version": 1, "artifact_schemas": {...} },
+    "effective_limits": { "timeout_ms": 900000, "max_output_bytes": 2097152 },
+    "judge_prompt": { "version": 1, "template_hash": "sha256-of-template" },
+    "outcomes": {
+      "big-pickle": { "overall": "completed", "tasks": [...] },
+      "deepseek-v4-flash-free": { "overall": "unavailable", "tasks": [...] },
+      "mimo-v2-5-free": { "overall": "completed", "tasks": [...] }
+    }
+  }
+}
+```
+
+</details>
+
+The runner's own raw stdout/stderr and operational diagnostics stay underThe runner's own raw stdout/stderr and operational diagnostics stay under
 `~/.models-benchmark/runs` owned by the runner account. They are never copied
 to the results checkout by the normal workflow.
 
