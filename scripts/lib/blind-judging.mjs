@@ -1,5 +1,23 @@
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { computeHash } from './artifact-hash.mjs';
+
+const JUDGE_PROMPT_CONFIG_PATH = path.resolve(
+  new URL('..', import.meta.url).pathname,
+  '..', 'config', 'judge-prompt.json'
+);
+
+let judgePromptConfig = null;
+
+async function loadJudgePromptConfig() {
+  if (!judgePromptConfig) {
+    judgePromptConfig = JSON.parse(await readFile(JUDGE_PROMPT_CONFIG_PATH, 'utf8'));
+  }
+  return judgePromptConfig;
+}
+
+export const JUDGE_PROMPT_VERSION = 1;
 
 // Only these fields are safe execution evidence. Never pass the candidate
 // manifest or the complete run record to a judge process.
@@ -14,6 +32,7 @@ export function safeJudgeEvidence(candidateResult) {
   };
 }
 
+// Synchronous version for backward compatibility (default export)
 export function buildJudgePrompt({ taskId, criteria, candidateResult }) {
   const evidence = safeJudgeEvidence(candidateResult);
   return [
@@ -24,6 +43,33 @@ export function buildJudgePrompt({ taskId, criteria, candidateResult }) {
     `Safe execution evidence: ${JSON.stringify(evidence)}`,
     'Inspect the changed files in the workspace and run the public tests before judging.'
   ].join('\n');
+}
+
+// Async version that uses versioned template from config
+export async function buildJudgePromptAsync({ taskId, criteria, candidateResult }) {
+  const config = await loadJudgePromptConfig();
+  const evidence = safeJudgeEvidence(candidateResult);
+  const prompt = config.template
+    .replace('{taskId}', taskId)
+    .replace('{criteria}', criteria.join(', '))
+    .replace('{evidence}', JSON.stringify(evidence));
+  return prompt;
+}
+
+// Build prompt and compute hash of the rendered prompt (what judge actually receives)
+export async function buildJudgePromptWithHash({ taskId, criteria, candidateResult }) {
+  const prompt = await buildJudgePromptAsync({ taskId, criteria, candidateResult });
+  const promptHash = await computeHash(prompt);
+  return { prompt, prompt_hash: promptHash };
+}
+
+export async function getJudgePromptMetadata() {
+  const config = await loadJudgePromptConfig();
+  const templateHash = await computeHash(config.template);
+  return {
+    version: config.version,
+    template_hash: templateHash
+  };
 }
 
 export function createAnonymousJudgeWorkspace(root) {

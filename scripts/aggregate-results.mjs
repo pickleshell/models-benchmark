@@ -2,14 +2,56 @@
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { validateJudgePayload } from './lib/runner-utils.mjs';
+import { getSchemaVersion, getRegistry, loadSchemaRegistry } from './lib/schema-registry.mjs';
+import { computeFileHash } from './lib/artifact-hash.mjs';
+import { getJudgePromptMetadata } from './lib/blind-judging.mjs';
 
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
 const configPath = process.env.BENCHMARK_CONFIG
   ? path.resolve(process.env.BENCHMARK_CONFIG)
   : path.join(repo, 'config/pilot.json');
 const config = JSON.parse(await readFile(configPath, 'utf8'));
+const schemaRegistry = await loadSchemaRegistry(configPath);
 const release = process.argv[2] || config.release;
 const root = path.resolve(config.models_test, config.results_dir, release);
+
+async function getRepoCommit() {
+  try {
+    const { spawn } = await import('node:child_process');
+    const result = await new Promise((resolve) => {
+      const child = spawn('git', ['rev-parse', 'HEAD'], { cwd: repo });
+      let stdout = '';
+      child.stdout.on('data', (chunk) => { stdout += chunk; });
+      child.on('close', (code) => resolve({ code, stdout: stdout.trim() }));
+      child.on('error', () => resolve({ code: -1, stdout: '' }));
+    });
+    if (result.code === 0) return result.stdout;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function getConfigHash() {
+  return computeFileHash(configPath);
+}
+
+async function getRunnerVersion() {
+  try {
+    const pkgPath = path.join(repo, 'package.json');
+    const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
+    return pkg.version || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+function getEffectiveLimits(config) {
+  return {
+    timeout_ms: Number(process.env.BENCHMARK_TIMEOUT_MS || 15 * 60 * 1000),
+    max_output_bytes: Number(process.env.BENCHMARK_MAX_OUTPUT_BYTES || 2 * 1024 * 1024)
+  };
+}
 
 function inferOutcome(run) {
   if (run.outcome) return run.outcome;
@@ -117,7 +159,38 @@ for (const candidate of config.candidates) {
 }
 
 rows.sort((a, b) => (b.overall_average ?? -Infinity) - (a.overall_average ?? -Infinity));
-const output = { schema_version: 2, release, criteria: config.criteria, candidates: rows, generated_at: new Date().toISOString() };
+
+const repoCommit = await getRepoCommit();
+const configHash = await getConfigHash();
+const runnerVersion = await getRunnerVersion();
+const effectiveLimits = getEffectiveLimits(config);
+const judgePromptMeta = await getJudgePromptMetadata();
+const schemaRegistryObj = getRegistry(schemaRegistry.artifact_schemas);
+
+const outcomeSummary = {};
+for (const row of rows) {
+  outcomeSummary[row.candidate.id] = {
+    overall: row.outcome,
+    tasks: row.tasks.map(t => ({ task: t.task, outcome: t.outcome }))
+  };
+}
+
+const output = {
+  schema_version: getSchemaVersion('aggregate', schemaRegistry.artifact_schemas),
+  release,
+  criteria: config.criteria,
+  candidates: rows,
+  generated_at: new Date().toISOString(),
+  reproducibility: {
+    runner_version: runnerVersion,
+    repository_commit: repoCommit,
+    config_hash: configHash,
+    schema_registry: schemaRegistryObj,
+    effective_limits: effectiveLimits,
+    judge_prompt: judgePromptMeta,
+    outcomes: outcomeSummary
+  }
+};
 await mkdir(root, { recursive: true });
 await writeFile(path.join(root, 'aggregate.json'), `${JSON.stringify(output, null, 2)}\n`);
 const judgeColumns = (config.judges ?? []).map((judge) => `Judge: ${judge.id} (s)`);

@@ -17,7 +17,12 @@ test('sandbox verification uses the pilot clean-room lock', async () => {
     const privateArtifacts = path.join(temp, 'private');
     const lockPath = path.join(privateArtifacts, 'clean-room.lock');
     await mkdir(lockPath, { recursive: true });
-    await writeFile(path.join(lockPath, 'owner.json'), JSON.stringify({ pid: 1234, release: 'active-pilot' }));
+    // Use current process PID to simulate a live lock
+    await writeFile(path.join(lockPath, 'owner.json'), JSON.stringify({
+      pid: process.pid,
+      start_time: Date.now(),
+      release: 'active-pilot'
+    }));
     const configPath = path.join(temp, 'pilot.json');
     await writeFile(configPath, JSON.stringify({
       release: 'verification',

@@ -4,6 +4,14 @@
   "models_test": "/home/gpt/models-test",
   "results_dir": "results/benchmark-pilot",
   "private_artifacts_dir": "~/.models-benchmark/runs",
+  "artifact_schemas": {
+    "run": 1,
+    "judge": 1,
+    "preflight": 1,
+    "aggregate": 2,
+    "test_result": 1,
+    "candidate_diff": 1
+  },
   "clean_room": {
     "user": "test",
     "home": "/home/test/.models-benchmark",

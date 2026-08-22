@@ -12,13 +12,17 @@ import {
   parsePorcelainPaths,
   validateJudgePayload
 } from './lib/runner-utils.mjs';
+import { validateSchemaVersion, getSchemaVersion, getRegistry, loadSchemaRegistry } from './lib/schema-registry.mjs';
+import { computeFileHash, computeArtifactHash } from './lib/artifact-hash.mjs';
 import {
   buildJudgeInvocation,
   buildJudgeEnvironment,
-  buildJudgePrompt,
+  buildJudgePromptAsync,
+  buildJudgePromptWithHash,
   buildJudgeWritablePaths,
   buildBaselineComparisonPlan,
-  createAnonymousJudgeWorkspace
+  createAnonymousJudgeWorkspace,
+  getJudgePromptMetadata
 } from './lib/blind-judging.mjs';
 import { acquireCleanRoomLock, releaseCleanRoomLock, retainCleanRoomLock } from './lib/clean-room-lock.mjs';
 
@@ -27,6 +31,7 @@ const configPath = process.env.BENCHMARK_CONFIG
   ? path.resolve(process.env.BENCHMARK_CONFIG)
   : path.join(repo, 'config', 'pilot.json');
 const config = JSON.parse(await readFile(configPath, 'utf8'));
+const schemaRegistry = await loadSchemaRegistry(configPath);
 const dryRun = process.argv.includes('--dry-run');
 const timeoutMs = Number(process.env.BENCHMARK_TIMEOUT_MS || 15 * 60 * 1000);
 const maxOutputBytes = Number(process.env.BENCHMARK_MAX_OUTPUT_BYTES || 2 * 1024 * 1024);
@@ -295,14 +300,17 @@ async function runJudges(candidate, task, candidateResult) {
     await mkdir(publicJudgeDir, { recursive: true });
     await mkdir(privateJudgeDir, { recursive: true, mode: 0o700 });
     if (['agent_failure', 'unavailable', 'forbidden_changes'].includes(candidateResult.outcome)) {
-      await writeJson(path.join(publicJudgeDir, `${judge.id}.json`), {
-        schema_version: 1,
+      const judgeArtifact = {
+        schema_version: getSchemaVersion('judge', schemaRegistry.artifact_schemas),
         judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription },
         status: 'skipped',
         reason: candidateResult.outcome,
         candidate: candidate.id,
         task: task.id
-      });
+      };
+      const judgeHash = computeArtifactHash(judgeArtifact);
+      judgeArtifact.artifact_hash = { path: `${judge.id}.json`, sha256: judgeHash };
+      await writeJson(path.join(publicJudgeDir, `${judge.id}.json`), judgeArtifact);
       continue;
     }
     const judgeWorkspace = createAnonymousJudgeWorkspace(judgeRoot);
@@ -322,7 +330,8 @@ async function runJudges(candidate, task, candidateResult) {
     if (applied.status !== 0) throw new Error(`cannot apply candidate submission: ${applied.stderr}`);
     await runAsCleanRoomHost('rm', ['-rf', agentHome], { timeoutMs: 30000 });
     await runAsCleanRoomHost('mkdir', ['-p', agentHome], { timeoutMs: 30000 });
-    const prompt = buildJudgePrompt({ taskId: task.id, criteria: config.criteria, candidateResult });
+    const { prompt, prompt_hash } = await buildJudgePromptWithHash({ taskId: task.id, criteria: config.criteria, candidateResult });
+    const promptMeta = await getJudgePromptMetadata();
     const command = buildJudgeInvocation({ judge, judgeWorkspace, prompt });
     const result = await runAsJudge(command.command, command.args, {
       cwd: command.cwd,
@@ -333,8 +342,8 @@ async function runJudges(candidate, task, candidateResult) {
     await writeFile(path.join(privateJudgeDir, 'judge.stderr.txt'), result.stderr);
     const response = extractJudgeText(result.stdout);
     const parsed = result.status === 0 ? parseJudgeJson(response) : null;
-    await writeJson(path.join(publicJudgeDir, `${judge.id}.json`), {
-      schema_version: 1,
+    const judgeArtifact = {
+      schema_version: getSchemaVersion('judge', schemaRegistry.artifact_schemas),
       judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription },
       status: result.status !== 0 ? 'failed' : parsed ? 'completed' : 'invalid_output',
       response,
@@ -350,9 +359,14 @@ async function runJudges(candidate, task, candidateResult) {
         completed_at: result.completed_at,
         duration_ms: result.duration_ms
       },
+      judge_prompt_version: promptMeta.version,
+      judge_prompt_hash: prompt_hash,
       candidate: candidate.id,
       task: task.id
-    });
+    };
+    const judgeHash = computeArtifactHash(judgeArtifact);
+    judgeArtifact.artifact_hash = { path: `${judge.id}.json`, sha256: judgeHash };
+    await writeJson(path.join(publicJudgeDir, `${judge.id}.json`), judgeArtifact);
     await runAsCleanRoomHost('rm', ['-rf', judgeWorkspace], { timeoutMs: 30000 });
   }
 }
@@ -371,8 +385,9 @@ async function probeModel(model, task, role) {
 async function preflightCandidate(candidate, task) {
   const probe = await probeModel(candidate, task, 'candidate');
   const candidateRoot = path.join(resultsDir, config.release, candidate.id);
-  await writeJson(path.join(candidateRoot, 'preflight.json'), {
-    schema_version: 1,
+  const preflightPath = path.join(candidateRoot, 'preflight.json');
+  const preflightArtifact = {
+    schema_version: getSchemaVersion('preflight', schemaRegistry.artifact_schemas),
     candidate,
     status: probe.available ? 'available' : 'unavailable',
     reason: probe.reason,
@@ -382,7 +397,10 @@ async function preflightCandidate(candidate, task) {
     process_status: probe.result.status,
     timed_out: probe.result.timed_out,
     output_limited: probe.result.output_limited
-  });
+  };
+  const preflightHash = computeArtifactHash(preflightArtifact);
+  preflightArtifact.artifact_hash = { path: 'preflight.json', sha256: preflightHash };
+  await writeJson(preflightPath, preflightArtifact);
   const privateRoot = path.join(privateDir, candidate.id);
   await mkdir(privateRoot, { recursive: true, mode: 0o700 });
   await writeFile(path.join(privateRoot, 'preflight.stdout.txt'), probe.result.stdout);
@@ -394,8 +412,8 @@ async function recordUnavailableCandidate(candidate, task, preflight) {
   const candidateDir = path.join(resultsDir, config.release, candidate.id, task.id);
   await mkdir(candidateDir, { recursive: true });
   const startedAt = new Date().toISOString();
-  await writeJson(path.join(candidateDir, 'run.json'), {
-    schema_version: 1,
+  const runArtifact = {
+    schema_version: getSchemaVersion('run', schemaRegistry.artifact_schemas),
     release: config.release,
     task: task.id,
     candidate,
@@ -415,7 +433,10 @@ async function recordUnavailableCandidate(candidate, task, preflight) {
     changed_files: [],
     forbidden_changes: [],
     artifacts: { public_dir: path.relative(modelsTest, candidateDir) }
-  });
+  };
+  const runHash = computeArtifactHash(runArtifact);
+  runArtifact.artifact_hash = { path: 'run.json', sha256: runHash };
+  await writeJson(path.join(candidateDir, 'run.json'), runArtifact);
   emit('candidate_skipped', { candidate: candidate.id, task: task.id, outcome: 'unavailable', reason: preflight.reason });
 }
 
@@ -433,7 +454,8 @@ async function runCandidate(candidate, task) {
   await writeFile(path.join(privateCandidateDir, 'agent.stdout.txt'), agent.stdout);
   await writeFile(path.join(privateCandidateDir, 'agent.stderr.txt'), agent.stderr);
   const tests = await runAsCandidate(task.test_command[0], task.test_command.slice(1), { cwd: path.join(cleanWorkspace, task.fixture), timeoutMs });
-  await writeJson(path.join(candidateDir, 'test-result.json'), {
+  const testResultArtifact = {
+    schema_version: getSchemaVersion('test_result', schemaRegistry.artifact_schemas),
     status: tests.status,
     timed_out: tests.timed_out,
     output_limited: tests.output_limited,
@@ -442,14 +464,19 @@ async function runCandidate(candidate, task) {
     duration_ms: tests.duration_ms,
     stdout: tests.stdout,
     stderr: tests.stderr
-  });
+  };
+  const testResultHash = computeArtifactHash(testResultArtifact);
+  testResultArtifact.artifact_hash = { path: 'test-result.json', sha256: testResultHash };
+  await writeJson(path.join(candidateDir, 'test-result.json'), testResultArtifact);
   const compared = await compareAgainstBaseline(task);
   const changedFiles = compared.changedFiles;
   const forbiddenChanges = findForbiddenChanges(changedFiles, task.allowed_changes);
   const outcome = classifyOutcome({ agent, tests, forbiddenChanges });
-  await writeFile(path.join(candidateDir, 'candidate.diff'), compared.diff);
+  const diffPath = path.join(candidateDir, 'candidate.diff');
+  await writeFile(diffPath, compared.diff);
+  const diffHash = await computeFileHash(diffPath);
   const record = {
-    schema_version: 1,
+    schema_version: getSchemaVersion('run', schemaRegistry.artifact_schemas),
     release: config.release,
     task: task.id,
     candidate,
@@ -476,8 +503,14 @@ async function runCandidate(candidate, task) {
     outcome,
     changed_files: changedFiles,
     forbidden_changes: forbiddenChanges,
-    artifacts: { public_dir: path.relative(modelsTest, candidateDir) },
+    artifacts: {
+      public_dir: path.relative(modelsTest, candidateDir),
+      candidate_diff: { path: 'candidate.diff', sha256: diffHash },
+      test_result: { path: 'test-result.json', sha256: testResultHash }
+    }
   };
+  const runHash = computeArtifactHash(record);
+  record.artifact_hash = { path: 'run.json', sha256: runHash };
   await writeJson(path.join(candidateDir, 'run.json'), record);
   await runJudges(candidate, task, record);
   emit('candidate_completed', { candidate: candidate.id, task: task.id, outcome, agent_status: agent.status, test_status: tests.status, result_dir: candidateDir });
