@@ -273,6 +273,101 @@ After a pilot, build the local summary without publishing it:
 npm run aggregate -- pilot-1-task-r6
 ```
 
+### Sandbox Verification
+
+Verify the clean-room isolation boundaries without invoking any models:
+
+```sh
+npm run verify:sandbox
+```
+
+This starts two transient systemd units and confirms:
+- Private `/dev/shm` marker from first unit is absent from host and second unit
+- IPC namespace identifiers differ between units and host
+- Each unit can create a SysV message queue
+- Same-UID process visibility limitation is demonstrated
+- Read-only OpenCode runtime starts inside the hardened boundary
+
+The check acquires the same host-wide clean-room lock as a pilot and requires
+the clean-room account to be idle. It uses no model quota and creates no
+benchmark release.
+
+## Integrity and Reproducibility
+
+### Artifact Schema Versioning
+
+All public artifacts carry explicit schema versions defined in
+[`config/pilot.json`](config/pilot.json) under `artifact_schemas`:
+
+| Artifact | Version |
+|----------|---------|
+| `run.json` | 1 |
+| `judge/*.json` | 1 |
+| `preflight.json` | 1 |
+| `test-result.json` | 1 |
+| `aggregate.json` | 2 |
+
+The runner validates schema versions on write and read. Unknown or mismatched
+versions produce explicit errors. Older published artifacts are never silently
+rewritten.
+
+### Artifact Integrity Hashes
+
+Every published JSON artifact includes a canonical SHA-256 hash of its content
+(excluding the hash field itself), enabling post-publication integrity verification:
+
+- `run.json` → `artifact_hash`
+- `preflight.json` → `artifact_hash`
+- `test-result.json` → `artifact_hash`
+- `judge/<id>.json` → `artifact_hash`
+- Referenced files (`candidate.diff`, `test-result.json`) → `artifacts` object
+
+Hashes are computed **before** writing and embedded in the artifact. The
+canonical serialization excludes the hash field itself, so the published file
+hash matches the recorded value.
+
+### Judge Prompt Versioning
+
+Judge prompts are versioned in [`config/judge-prompt.json`](config/judge-prompt.json).
+Each judge result records:
+
+- `judge_prompt_version` — template version from config
+- `judge_prompt_hash` — SHA-256 of the **rendered** prompt sent to the judge
+
+This ensures exact reproducibility of the judging input.
+
+### Reproducibility Metadata
+
+`aggregate.json` includes a `reproducibility` object with:
+
+```json
+{
+  "runner_version": "from package.json",
+  "repository_commit": "git rev-parse HEAD",
+  "config_hash": "SHA-256 of pilot.json",
+  "schema_registry": { "version": 1, "artifact_schemas": {...} },
+  "effective_limits": { "timeout_ms": 900000, "max_output_bytes": 2097152 },
+  "judge_prompt": { "version": 1, "template_hash": "..." },
+  "outcomes": { "candidate-id": { "overall": "...", "tasks": [...] } }
+}
+```
+
+No private paths, credentials, or raw provider output are included.
+
+### Clean-Room Lock Recovery
+
+The host-wide lock uses a fail-closed atomic protocol:
+
+1. **Fast path**: `mkdir(lockPath)` succeeds → new lock acquired
+2. **Existing lock**: Read `owner.json`, validate `pid` + `start_time`
+3. **Live owner** (PID exists + start_time matches): refuse with error
+4. **Stale owner** (dead PID or start_time mismatch): atomic `rename(lockPath, quarantinePath)` → only winner creates new lock
+5. **Missing/invalid `owner.json`**: fail-closed, no auto-recovery
+
+The `start_time` uses `getconf CLK_TCK` for portable clock-tick conversion,
+preventing PID-reuse false positives. Malformed or missing owner metadata is
+never auto-recovered; manual inspection is required.
+
 The aggregate ignores judge scores for unavailable, failed, or policy-violating
 candidates. They remain visible with an explicit outcome rather than receiving
 a zero-quality score.
@@ -328,12 +423,12 @@ agent stdout/stderr remains under the private runner artifact directory.
 
 | File | Contents | Publication rule |
 | --- | --- | --- |
-| `<candidate>/preflight.json` | Availability-probe status and timing, without raw output | Sanitized and reviewable |
-| `run.json` | Candidate identity, selected agent/runtime, statuses, timestamps, durations, changed files | Sanitized and reviewable |
+| `<candidate>/preflight.json` | Availability-probe status, timing, **artifact_hash** | Sanitized and reviewable |
+| `run.json` | Candidate identity, agent/runtime, statuses, timestamps, durations, changed files, **artifacts** (file hashes), **artifact_hash** | Sanitized and reviewable |
 | `candidate.diff` | Final Git patch against the baseline | Sanitized and reviewable |
-| `test-result.json` | Public test exit status, timing, stdout, stderr | Sanitized and reviewable |
-| `judges/<id>.json` | Judge identity, scores, confidence, explanation, concerns, timing | Sanitized and reviewable |
-| `aggregate.json` / `aggregate.md` | Comparable rows and score averages | Generated locally, manually reviewed |
+| `test-result.json` | Public test exit status, timing, stdout, stderr, **artifact_hash** | Sanitized and reviewable |
+| `judges/<id>.json` | Judge identity, scores, confidence, explanation, concerns, timing, **judge_prompt_version**, **judge_prompt_hash**, **artifact_hash** | Sanitized and reviewable |
+| `aggregate.json` / `aggregate.md` | Comparable rows, score averages, **reproducibility metadata** | Generated locally, manually reviewed |
 
 The runner's own raw stdout/stderr and operational diagnostics stay under
 `~/.models-benchmark/runs` owned by the runner account. They are never copied
