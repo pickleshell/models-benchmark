@@ -43,16 +43,22 @@ for (const candidate of config.candidates) {
     try {
       run = JSON.parse(await readFile(path.join(taskDir, 'run.json'), 'utf8'));
     } catch {
-      taskResults.push({ task: task.id, outcome: 'missing_artifacts', judge_count: 0, agent_duration_ms: null, test_duration_ms: null, duration_ms: null });
+      taskResults.push({ task: task.id, outcome: 'missing_artifacts', judge_count: 0, judge_invocation_count: 0, judge_durations: [], judge_duration_ms: null, agent_duration_ms: null, test_duration_ms: null, duration_ms: null });
       continue;
     }
     const outcome = inferOutcome(run);
     let taskJudgeCount = 0;
+    const taskJudges = [];
     if (!['agent_failure', 'unavailable', 'forbidden_changes'].includes(outcome)) {
       try {
         for (const file of await readdir(path.join(taskDir, 'judges'))) {
           if (!file.endsWith('.json')) continue;
           const result = JSON.parse(await readFile(path.join(taskDir, 'judges', file), 'utf8'));
+          taskJudges.push({
+            id: result.judge?.id ?? file.slice(0, -'.json'.length),
+            status: result.status ?? 'unknown',
+            duration_ms: Number.isFinite(result.execution?.duration_ms) ? result.execution.duration_ms : null
+          });
           const valid = result.status === 'completed' ? validateJudgePayload(result, config.criteria) : null;
           if (valid) {
             judges.push(valid);
@@ -69,7 +75,12 @@ for (const candidate of config.candidates) {
       agent_duration_ms: run.agent?.duration_ms ?? null,
       test_duration_ms: run.tests?.duration_ms ?? null,
       duration_ms: run.duration_ms ?? null,
-      judge_count: taskJudgeCount
+      judge_count: taskJudgeCount,
+      judge_invocation_count: taskJudges.length,
+      judge_durations: taskJudges,
+      judge_duration_ms: taskJudges.every((judge) => Number.isFinite(judge.duration_ms))
+        ? taskJudges.reduce((sum, judge) => sum + judge.duration_ms, 0)
+        : taskJudges.length ? null : 0
     });
   }
   const judgeAverage = {};
@@ -86,6 +97,7 @@ for (const candidate of config.candidates) {
     agent_duration_ms: sumDuration(taskResults, 'agent_duration_ms'),
     test_duration_ms: sumDuration(taskResults, 'test_duration_ms'),
     duration_ms: sumDuration(taskResults, 'duration_ms'),
+    judge_duration_ms: sumDuration(taskResults, 'judge_duration_ms'),
     judge_count: judges.length,
     judge_average: judgeAverage,
     overall_average: scoreValues.length === config.criteria.length
@@ -98,12 +110,13 @@ rows.sort((a, b) => (b.overall_average ?? -Infinity) - (a.overall_average ?? -In
 const output = { schema_version: 2, release, criteria: config.criteria, candidates: rows, generated_at: new Date().toISOString() };
 await mkdir(root, { recursive: true });
 await writeFile(path.join(root, 'aggregate.json'), `${JSON.stringify(output, null, 2)}\n`);
-const lines = [`# ${release}`, '', '| Candidate | Agent | Model | Tasks | Outcome | Agent time (s) | Candidate + tests (s) | Judges | Average |', '|---|---|---|---:|---|---:|---:|---:|---:|'];
+const lines = [`# ${release}`, '', '| Candidate | Agent | Model | Tasks | Outcome | Agent time (s) | Candidate + tests (s) | Judge time (s) | Judges | Average |', '|---|---|---|---:|---|---:|---:|---:|---:|---:|'];
 for (const row of rows) {
   const average = Number.isFinite(row.overall_average) ? row.overall_average.toFixed(2) : 'N/A';
   const agentDuration = Number.isFinite(row.agent_duration_ms) ? (row.agent_duration_ms / 1000).toFixed(2) : 'N/A';
   const totalDuration = Number.isFinite(row.duration_ms) ? (row.duration_ms / 1000).toFixed(2) : 'N/A';
-  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.task_count} | ${row.outcome} | ${agentDuration} | ${totalDuration} | ${row.judge_count} | ${average} |`);
+  const judgeDuration = Number.isFinite(row.judge_duration_ms) ? (row.judge_duration_ms / 1000).toFixed(2) : 'N/A';
+  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.task_count} | ${row.outcome} | ${agentDuration} | ${totalDuration} | ${judgeDuration} | ${row.judge_count} | ${average} |`);
 }
 await writeFile(path.join(root, 'aggregate.md'), `${lines.join('\n')}\n`);
 process.stdout.write(`${JSON.stringify({ release, candidates: rows.length, tasks: config.tasks.length, output: root })}\n`);

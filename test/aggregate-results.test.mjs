@@ -32,7 +32,10 @@ test('aggregate includes every configured task and averages valid judge scores',
       candidate: config.candidates[0], task, outcome: 'completed',
       agent: { status: 0, duration_ms: 10 }, tests: { status: 0, duration_ms: 5 }, duration_ms: 15
     });
-    await writeJson(path.join(base, 'judges', 'judge.json'), { status: 'completed', scores });
+    await writeJson(path.join(base, 'judges', 'judge.json'), {
+      status: 'completed', scores, judge: { id: 'judge' },
+      execution: { duration_ms: task === 'first' ? 20 : 30 }
+    });
   }
   await run(process.execPath, [aggregateScript, 'two-tasks'], { env: { ...process.env, BENCHMARK_CONFIG: configPath } });
   const aggregate = JSON.parse(await readFile(path.join(modelsTest, 'results', 'two-tasks', 'aggregate.json'), 'utf8'));
@@ -43,6 +46,8 @@ test('aggregate includes every configured task and averages valid judge scores',
   assert.equal(aggregate.candidates[0].judge_average.scope, 8);
   assert.equal(aggregate.candidates[0].overall_average, 8.5);
   assert.equal(aggregate.candidates[0].duration_ms, 30);
+  assert.equal(aggregate.candidates[0].judge_duration_ms, 50);
+  assert.equal(aggregate.candidates[0].tasks[0].judge_durations[0].duration_ms, 20);
 });
 
 test('aggregate preserves unavailable candidates without inventing scores', async () => {

@@ -213,8 +213,9 @@ Inspect the generated artifacts under:
 
 Each `run.json` records `started_at`, `completed_at`, and `duration_ms` for the
 candidate execution plus agent and public-test phases. Judge files record their
-own execution durations. `aggregate.json` carries comparable result data only;
-site rendering is intentionally outside the private pipeline.
+own execution durations. `aggregate.json` carries per-judge timing, summed judge
+time per task and candidate, and comparable score data; site rendering is
+intentionally outside the private pipeline.
 
 `allowed_changes` in the task manifest is enforced before judging. A candidate
 that modifies tests, manifests, or another unapproved path is classified as
