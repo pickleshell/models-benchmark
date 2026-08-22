@@ -23,7 +23,7 @@ test('aggregate includes every configured task and averages valid judge scores',
   const config = {
     release: 'two-tasks', models_test: modelsTest, results_dir: 'results',
     candidates: [{ id: 'candidate', agent: 'opencode', runtime: 'opencode', model: 'model', subscription: 'free' }],
-    tasks: [{ id: 'first' }, { id: 'second' }], criteria: ['correctness', 'scope']
+    tasks: [{ id: 'first' }, { id: 'second' }], judges: [{ id: 'judge' }], criteria: ['correctness', 'scope']
   };
   await writeJson(configPath, config);
   for (const [task, scores] of [['first', { correctness: 8, scope: 10 }], ['second', { correctness: 10, scope: 6 }]]) {
@@ -47,6 +47,7 @@ test('aggregate includes every configured task and averages valid judge scores',
   assert.equal(aggregate.candidates[0].overall_average, 8.5);
   assert.equal(aggregate.candidates[0].duration_ms, 30);
   assert.equal(aggregate.candidates[0].judge_duration_ms, 50);
+  assert.equal(aggregate.candidates[0].judge_duration_by_id.judge, 50);
   assert.equal(aggregate.candidates[0].tasks[0].judge_durations[0].duration_ms, 20);
 });
 

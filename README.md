@@ -315,7 +315,9 @@ or judge result because the model never received the task. `aggregate.json` and
 The pipeline publishes data only. A separate site or reporting repository may
 render it. `run.json` includes candidate, test, and overall execution timing;
 `aggregate.json` preserves candidate, test, and judge duration data, including
-per-judge timing inside each task entry. Reports must render
+per-judge timing inside each task entry and per-candidate totals by judge ID.
+The generated Markdown aggregate has one timing column for each configured
+judge. Reports must render
 availability failures as `N/A`, not as zero-quality scores.
 
 `run.json` records the benchmark release, task, agent, runtime, model,
