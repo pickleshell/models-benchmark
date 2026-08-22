@@ -12,6 +12,53 @@ separate from availability, provider failures, and infrastructure problems.
 Public tasks and reviewed results live in `models-test`; this private repository
 contains the orchestration needed to make the comparison fair.
 
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Current Status](#current-status)
+- [Design Goals](#design-goals)
+- [Documentation](#documentation)
+- [What Is Tested](#what-is-tested)
+- [Roles](#roles)
+- [How The Pilot Works](#how-the-pilot-works)
+- [What Keeps A Run Fair](#what-keeps-a-run-fair)
+- [Repository Boundaries](#repository-boundaries)
+- [Outcome Rules](#outcome-rules)
+- [Pilot Commands](#pilot-commands)
+- [Sandbox Verification](#sandbox-verification)
+- [Integrity and Reproducibility](#integrity-and-reproducibility)
+- [Result Layout](#result-layout)
+- [Publication Sequence](#publication-sequence)
+- [Pilot Limits](#pilot-limits)
+- [Clean-Room Guarantee](#clean-room-guarantee)
+
+## Quick Start
+
+```bash
+# 1. Clone repositories
+git clone git@github.com:pickleshell/models-benchmark.git
+git clone git@github.com:pickleshell/models-test.git
+
+# 2. Install dependencies (runner account)
+cd models-benchmark && npm install
+
+# 3. Set up clean-room account (requires sudo)
+sudo useradd --create-home --shell /bin/bash test
+sudo -u test -H bash -lc 'curl -fsSL https://opencode.ai/install | bash'
+
+# 4. Verify sandbox isolation
+npm run verify:sandbox
+
+# 5. Dry-run the pilot matrix
+npm run pilot:dry-run
+
+# 6. Run actual pilot (consumes model quota)
+npm run pilot
+
+# 7. Generate aggregate report
+npm run aggregate -- <release-id>
+```
+
 ## Current Status
 
 The clean-room runner, isolated blind-judging workflow, and sanitized result
