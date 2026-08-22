@@ -861,6 +861,323 @@ sanitized evidence.
 - Results require manual review before publication; a successful local run is
   not automatically a public benchmark release.
 
+## Troubleshooting
+
+### Stale Lock Recovery
+
+**Symptom:** Runner fails with:
+```
+clean room lock exists but owner metadata is missing or invalid; inspect /path/to/lock before manual recovery
+```
+or
+```
+clean room is already in use (pid 12345, release pilot-x); inspect /path/to/lock before manual recovery
+```
+
+**Causes:**
+1. Previous runner crashed before cleanup (lock directory remains)
+2. Manual intervention left lock directory without valid `owner.json`
+3. Another process holds the lock legitimately
+
+**Recovery procedure:**
+
+1. **Verify no benchmark processes are running:**
+   ```bash
+   pgrep -u test -a
+   # If any output appears, stop those processes first
+   ```
+
+2. **Inspect the lock:**
+   ```bash
+   cat /home/gpt/.models-benchmark/clean-room.lock/owner.json
+   # Check pid, start_time, release fields
+   ```
+
+3. **If lock is stale (dead PID or start_time mismatch):**
+   ```bash
+   # Remove stale lock directory
+   rm -rf /home/gpt/.models-benchmark/clean-room.lock
+   # Re-run pilot
+   npm run pilot
+   ```
+
+2. **If lock is live (PID exists and start_time matches):**
+   - Another benchmark run is in progress
+   - Wait for it to complete or stop it cleanly
+   - Do NOT manually delete a live lock
+
+3. **If `owner.json` is missing/malformed:**
+   - This is a fail-closed condition (no auto-recovery)
+   - Manually remove the lock directory after verifying no live processes
+   - Investigate root cause (disk full, permission issue, crash during write)
+
+**Prevention:** The runner uses atomic rename-based stale recovery with quarantine paths. Stale locks are only auto-recovered when `owner.json` is valid but the owning process is dead (verified via PID + start_time).
+
+---
+
+### Unavailable Judge
+
+**Symptom:** Runner fails before any candidate runs:
+```
+required judge model is unavailable: hy3-free; no release directory was created
+```
+
+**Judge artifacts show:**
+```json
+{
+  "status": "skipped",
+  "reason": "unavailable"
+}
+```
+
+**Causes:**
+1. Judge model provider is down
+2. Judge model subscription exhausted/expired
+3. Network connectivity issue to provider
+4. Model identifier typo in `config/pilot.json`
+
+**Resolution:**
+
+1. **Verify judge model availability:**
+   ```bash
+   # Test judge model manually
+   sudo -u test env HOME=/home/test/.models-benchmark \
+     PATH=/home/test/.opencode/bin:/usr/local/bin:/usr/bin:/bin \
+     opencode run --model opencode/hy3-free --dir /tmp \
+     --dangerously-skip-permissions --format json \
+     "Reply with exactly: hi. Do not modify files."
+   ```
+
+3. **Check configuration:**
+   ```bash
+   # Verify judge config in pilot.json
+   cat config/pilot.json | jq '.judges[]'
+   ```
+
+4. **Check provider status:**
+   - OpenCode provider dashboard
+   - Subscription limits
+   - Network connectivity
+
+4. **If judge is temporarily unavailable:**
+   - Wait and retry
+   - Or update `config/pilot.json` with available judge
+
+5. **If judge is permanently unavailable:**
+   - Replace with available judge in `config/pilot.json`
+   - Use new release ID (immutable releases)
+
+---
+
+### Forbidden Changes
+
+**Symptom:** Candidate outcome shows `forbidden_changes`:
+```json
+{
+  "outcome": "forbidden_changes",
+  "forbidden_changes": ["fixtures/phase2/feature-implementation/test/featureFlags.test.js"]
+}
+```
+
+**Causes:**
+1. Candidate modified files outside `allowed_changes`
+2. Candidate modified test files, package.json, or config files
+3. Candidate modified files in other tasks' fixtures
+
+**Resolution:**
+
+1. **Review the diff:**
+   ```bash
+   cat results/benchmark-pilot/<release>/<candidate>/<task>/candidate.diff
+   ```
+
+2. **Check task configuration:**
+   ```bash
+   cat config/pilot.json | jq '.tasks[] | {id, allowed_changes}'
+   ```
+
+3. **If `allowed_changes` is too restrictive:**
+   - Update `config/pilot.json` with correct paths
+   - Use new release ID
+
+4. **If candidate behavior is unexpected:**
+   - Review task prompt for clarity
+   - Candidate may have misunderstood scope
+
+**Note:** `forbidden_changes` skips judging entirely. No quality score is assigned. The patch and test evidence are preserved for analysis.
+
+---
+
+### Sandbox Preflight Failures
+
+**Symptom:** Runner fails during preflight with:
+```
+OpenCode runtime root not found: /home/test/.opencode
+```
+or
+```
+OpenCode is unavailable for test: ...
+```
+
+**Causes:**
+1. OpenCode not installed for `test` user
+2. OpenCode installation path mismatch in `config/pilot.json`
+3. `test` user lacks execute permissions on OpenCode binary
+4. OpenCode version incompatible with runner
+
+**Resolution:**
+
+1. **Verify OpenCode installation:**
+   ```bash
+   sudo -u test -H bash -lc 'opencode --version'
+   # Should output version like "1.2.3"
+   ```
+
+2. **Check `clean_room.opencode_root` in pilot.json:**
+   ```bash
+   cat config/pilot.json | jq '.clean_room.opencode_root'
+   # Should match actual installation path
+   ls -la /home/test/.opencode/bin/opencode
+   ```
+
+3. **Reinstall OpenCode for test user:**
+   ```bash
+   sudo -u test -H bash -lc 'curl -fsSL https://opencode.ai/install | bash'
+   ```
+
+4. **Verify preflight command works:**
+   ```bash
+   sudo -u test env HOME=/home/test/.models-benchmark \
+     PATH=/home/test/.opencode/bin:/usr/local/bin:/usr/bin:/bin \
+     opencode --version
+   ```
+
+5. **Run sandbox verification:**
+   ```bash
+   npm run verify:sandbox
+   ```
+
+---
+
+### Clean-Room Account Active
+
+**Symptom:** Runner refuses to start:
+```
+clean-room account test is active; stop its processes before starting a benchmark:
+12345 sleep 60
+```
+
+**Resolution:**
+
+1. **Stop the processes:**
+   ```bash
+   sudo pkill -u test
+   # Or specific PIDs from the error message
+   ```
+
+2. **Verify account is idle:**
+   ```bash
+   pgrep -u test -a
+   # Should return nothing
+   ```
+
+3. **If processes persist (zombie/defunct):**
+   ```bash
+   sudo pkill -9 -u test
+   ```
+
+4. **Remove any stale lock and retry:**
+   ```bash
+   rm -rf /home/gpt/.models-benchmark/clean-room.lock
+   npm run pilot
+   ```
+
+---
+
+### Output Limit Exceeded
+
+**Symptom:** Candidate/judge execution fails with `output_limited: true`:
+```json
+{
+  "outcome": "agent_failure",
+  "agent": { "output_limited": true, ... }
+}
+```
+
+**Cause:** Process exceeded 2 MiB stdout/stderr cap (default).
+
+**Resolution:**
+
+1. **Check if output is genuinely large (verbose logging):**
+   - Review private logs: `~/.models-benchmark/runs/<release>/<candidate>/<task>/agent.stdout.txt`
+
+2. **Increase limit (requires new release):**
+   ```bash
+   BENCHMARK_MAX_OUTPUT_BYTES=4194304 npm run pilot
+   # Or set in environment permanently
+   ```
+
+3. **Review candidate/judge prompts for excessive output.**
+
+---
+
+### Test Command Failures
+
+**Symptom:** `tests_failed` outcome:
+```json
+{
+  "outcome": "tests_failed",
+  "tests": { "status": 1, "stdout": "...", "stderr": "..." }
+}
+```
+
+**Causes:**
+1. Candidate's solution broke existing tests
+2. Test command itself is broken
+3. Test environment missing dependencies
+
+**Resolution:**
+
+1. **Review test output:**
+   ```bash
+   cat results/benchmark-pilot/<release>/<candidate>/<task>/test-result.json | jq '.stdout, .stderr'
+   ```
+
+2. **Run tests manually in fixture:**
+   ```bash
+   cd /home/gpt/models-test/fixtures/phase2/feature-implementation
+   npm test
+   ```
+
+3. **Verify test command in pilot.json:**
+   ```bash
+   cat config/pilot.json | jq '.tasks[].test_command'
+   ```
+
+---
+
+### Network / Provider Errors
+
+**Symptom:** Preflight or execution fails with provider errors:
+```
+no_model_response / process_failure / timeout
+```
+
+**Resolution:**
+
+1. **Check network connectivity:**
+   ```bash
+   curl -I https://api.openai.com  # or relevant provider
+   ```
+
+2. **Check provider status page.**
+
+3. **Verify API keys/credentials if using paid models.**
+
+4. **For free models:** Check rate limits and quota.
+
+---
+
 ## Clean-Room Guarantee
 
 Models are deliberately isolated from one another. A model can see only the
