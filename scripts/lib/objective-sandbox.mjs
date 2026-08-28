@@ -31,7 +31,7 @@ export const objectiveSandboxEnvironment = Object.freeze([
 // workspaces therefore live as direct, opaque children of /run, which remains
 // visible to the unit. The trusted runner creates them mode 0700 and owns them
 // until all trusted inputs have been assembled.
-export const objectiveWorkspaceRuntimeDir = '/run';
+export const objectiveWorkspaceRuntimeDir = process.env.BENCHMARK_OBJECTIVE_WORKSPACE_RUNTIME_DIR || '/run';
 
 export function objectiveWorkspaceCreateCommand({ workspace, uid, gid }) {
   return ['install', '-d', '--mode=0700', `--owner=${uid}`, `--group=${gid}`, '--', workspace];

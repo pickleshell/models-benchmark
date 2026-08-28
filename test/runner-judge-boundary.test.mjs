@@ -123,7 +123,14 @@ test('candidate and judge process boundaries prevent cross-run workspace access'
       criteria: ['correctness']
     };
     await writeFile(configPath, JSON.stringify(benchmarkConfig));
-    const env = { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BENCHMARK_CONFIG: configPath, BENCHMARK_FAKE_CAPTURE: capture, BENCHMARK_FAKE_PROVIDER_LOG: providerLog };
+    const env = {
+      ...process.env,
+      PATH: `${fakeBin}:${process.env.PATH}`,
+      BENCHMARK_CONFIG: configPath,
+      BENCHMARK_FAKE_CAPTURE: capture,
+      BENCHMARK_FAKE_PROVIDER_LOG: providerLog,
+      BENCHMARK_OBJECTIVE_WORKSPACE_RUNTIME_DIR: path.join(temp, 'objective-runtime')
+    };
     const invoke = (...args) => run(process.execPath, [runnerScript, ...args], { env });
     await invoke('--phase', 'candidates');
     const taskRoot = path.join(modelsTest, 'results', 'boundary-release', candidate.id, 'task', 'attempts', 'attempt-1');
