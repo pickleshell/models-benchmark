@@ -242,6 +242,11 @@ own execution durations. `aggregate.json` carries per-judge timing, summed judge
 time per task and candidate, and comparable score data; site rendering is
 intentionally outside the private pipeline.
 
+Candidate runs also record `benchmark_metrics.cost_usd`, the provider-reported
+cost of the task-solving model call, and explicit component timings. Candidate
+preflight and all judging are excluded. Unknown provider cost is stored as
+`null` and is never estimated.
+
 `allowed_changes` in the task manifest is enforced before judging. A candidate
 that modifies tests, manifests, or another unapproved path is classified as
 `forbidden_changes`; its patch and test evidence are retained, but judges are

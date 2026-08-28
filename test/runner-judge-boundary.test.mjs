@@ -230,6 +230,12 @@ test('candidate and judge process boundaries prevent cross-run workspace access'
     const artifact = JSON.parse(await readFile(path.join(modelsTest, 'results', 'boundary-release', candidate.id, 'task', 'attempts', 'attempt-1', 'judges', 'judge-a.json'), 'utf8'));
     assert.equal(artifact.candidate, candidate.id);
     assert.equal(artifact.status, 'completed');
+    const candidateRun = JSON.parse(await readFile(path.join(taskRoot, 'run.json'), 'utf8'));
+    assert.equal(Number.isFinite(candidateRun.benchmark_metrics.duration_ms), true);
+    assert.equal(Number.isFinite(candidateRun.benchmark_metrics.model_duration_ms), true);
+    assert.equal(candidateRun.benchmark_metrics.cost_usd, null);
+    assert.equal(candidateRun.benchmark_metrics.includes_preflight, false);
+    assert.equal(candidateRun.benchmark_metrics.includes_judging, false);
     const objective = JSON.parse(await readFile(path.join(modelsTest, 'results', 'boundary-release', candidate.id, 'task', 'attempts', 'attempt-1', 'objective-evaluator.json'), 'utf8'));
     assert.equal(objective.evaluator.id, 'private-objective-v1');
     assert.equal(objective.passed, true);

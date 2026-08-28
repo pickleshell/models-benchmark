@@ -307,6 +307,15 @@ Each run must produce JSON containing at least:
     "exit_code": 0,
     "timeout": false
   },
+  "benchmark_metrics": {
+    "duration_ms": 0,
+    "model_duration_ms": 0,
+    "public_tests_duration_ms": 0,
+    "cost_usd": null,
+    "cost_source": "opencode_step_finish",
+    "includes_preflight": false,
+    "includes_judging": false
+  },
   "evaluation": {
     "public": {"passed": 0, "total": 0},
     "forbidden_changes": 0,

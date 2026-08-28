@@ -782,6 +782,15 @@ timing, output-limit state, and hashes only.
   "started_at": "2026-01-15T10:30:00.000Z",
   "completed_at": "2026-01-15T10:35:42.123Z",
   "duration_ms": 342123,
+  "benchmark_metrics": {
+    "duration_ms": 342123,
+    "model_duration_ms": 252456,
+    "public_tests_duration_ms": 89667,
+    "cost_usd": 0.031245,
+    "cost_source": "opencode_step_finish",
+    "includes_preflight": false,
+    "includes_judging": false
+  },
   "agent": {
     "status": 0,
     "signal": null,

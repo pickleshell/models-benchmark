@@ -536,6 +536,15 @@ async function recordUnavailableCandidate(candidate, task, preflight) {
     started_at: startedAt,
     completed_at: startedAt,
     duration_ms: 0,
+    benchmark_metrics: {
+      duration_ms: 0,
+      model_duration_ms: null,
+      public_tests_duration_ms: null,
+      cost_usd: null,
+      cost_source: null,
+      includes_preflight: false,
+      includes_judging: false
+    },
     agent: null,
     tests: null,
     outcome: 'unavailable',
@@ -567,6 +576,7 @@ async function runCandidate(candidate, task) {
   const command = commandFor(candidate, prompt);
   emit('candidate_started', { candidate: candidate.id, agent: candidate.agent, model: candidate.model, nomination: task.id, attempt: selectedAttempt });
   const agent = await runAsCandidate(command.command, command.args, { cwd: cleanWorkspace, timeoutMs });
+  const agentUsage = summarizeModelUsage(agent.stdout, candidate.agent);
   await writeFile(path.join(privateCandidateDir, 'agent.stdout.txt'), agent.stdout);
   await writeFile(path.join(privateCandidateDir, 'agent.stderr.txt'), agent.stderr);
   const compared = await compareAgainstBaseline(task);
@@ -610,6 +620,15 @@ async function runCandidate(candidate, task) {
     started_at: agent.started_at,
     completed_at: tests.completed_at,
     duration_ms: tests.completed_at && agent.started_at ? new Date(tests.completed_at).getTime() - new Date(agent.started_at).getTime() : null,
+    benchmark_metrics: {
+      duration_ms: tests.completed_at && agent.started_at ? new Date(tests.completed_at).getTime() - new Date(agent.started_at).getTime() : null,
+      model_duration_ms: agent.duration_ms,
+      public_tests_duration_ms: tests.duration_ms,
+      cost_usd: agentUsage.reported_cost_usd,
+      cost_source: agentUsage.source,
+      includes_preflight: false,
+      includes_judging: false
+    },
     agent: {
       status: agent.status,
       signal: agent.signal,
@@ -618,7 +637,7 @@ async function runCandidate(candidate, task) {
       started_at: agent.started_at,
       completed_at: agent.completed_at,
       duration_ms: agent.duration_ms,
-      usage: summarizeModelUsage(agent.stdout, candidate.agent)
+      usage: agentUsage
     },
     tests: {
       status: tests.status,

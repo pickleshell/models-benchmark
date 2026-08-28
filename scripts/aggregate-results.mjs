@@ -86,6 +86,13 @@ function sumDuration(taskResults, field) {
   return values.length === taskResults.length ? values.reduce((sum, value) => sum + value, 0) : null;
 }
 
+function sumCost(taskResults, field) {
+  const values = taskResults.map((task) => task[field]);
+  return values.length && values.every(Number.isFinite)
+    ? Number(values.reduce((sum, value) => sum + value, 0).toFixed(12))
+    : null;
+}
+
 function sumJudgeDuration(taskResults, judgeId) {
   const entries = taskResults.flatMap((task) => (task.judge_durations ?? []).filter((judge) => judge.id === judgeId));
   if (!entries.length) return null;
@@ -122,7 +129,7 @@ for (const candidate of config.candidates) {
     try {
       run = JSON.parse(await readFile(path.join(artifactDir, 'run.json'), 'utf8'));
     } catch {
-      taskResults.push({ nomination: task.id, attempt: canonicalAttempt, outcome: 'missing_artifacts', judge_count: 0, judge_scores: {}, judge_invocation_count: 0, judge_durations: [], judge_duration_ms: null, agent_duration_ms: null, test_duration_ms: null, duration_ms: null });
+      taskResults.push({ nomination: task.id, attempt: canonicalAttempt, outcome: 'missing_artifacts', judge_count: 0, judge_scores: {}, judge_invocation_count: 0, judge_durations: [], judge_duration_ms: null, agent_duration_ms: null, test_duration_ms: null, duration_ms: null, cost_usd: null });
       continue;
     }
     try {
@@ -176,6 +183,8 @@ for (const candidate of config.candidates) {
       agent_duration_ms: run.agent?.duration_ms ?? null,
       test_duration_ms: run.tests?.duration_ms ?? null,
       duration_ms: run.duration_ms ?? null,
+      cost_usd: run.benchmark_metrics?.cost_usd ?? run.agent?.usage?.reported_cost_usd ?? null,
+      cost_source: run.benchmark_metrics?.cost_source ?? run.agent?.usage?.source ?? null,
       judge_count: taskJudgeCount,
       judge_scores: taskJudgeScores,
       judge_invocation_count: taskJudges.length,
@@ -213,6 +222,7 @@ for (const candidate of config.candidates) {
     agent_duration_ms: sumDuration(taskResults, 'agent_duration_ms'),
     test_duration_ms: sumDuration(taskResults, 'test_duration_ms'),
     duration_ms: sumDuration(taskResults, 'duration_ms'),
+    cost_usd: sumCost(taskResults, 'cost_usd'),
     judge_count: judges.length,
     judge_average_by_id: judgeAverageById,
     judge_duration_by_id: judgeDurationById,
@@ -265,12 +275,14 @@ const output = {
 await mkdir(root, { recursive: true });
 await writeFile(path.join(root, 'aggregate.json'), `${JSON.stringify(output, null, 2)}\n`);
 const judgeColumns = (config.judges ?? []).map((judge) => `Judge: ${judge.id}`);
-const lines = [`# ${release}`, '', 'Ranking policy is decided separately; objective evaluator results are reported independently and are not blended into judge scores.', '', `| Candidate | Agent | Model | Tasks | Outcome | Objective | ${judgeColumns.join(' | ')} | Combined average | Judges |`, `|---|---|---|---:|---|---:|${judgeColumns.map(() => '---:').join('|')}|---:|---:|`];
+const lines = [`# ${release}`, '', 'Ranking policy is decided separately; objective evaluator results are reported independently and are not blended into judge scores.', '', `| Candidate | Agent | Model | Tasks | Outcome | Test time | Test price (USD) | Objective | ${judgeColumns.join(' | ')} | Combined average | Judges |`, `|---|---|---|---:|---|---:|---:|---:|${judgeColumns.map(() => '---:').join('|')}|---:|---:|`];
 for (const row of rows) {
   const average = Number.isFinite(row.overall_average) ? row.overall_average.toFixed(2) : 'N/A';
   const perJudge = (config.judges ?? []).map((judge) => Number.isFinite(row.judge_average_by_id[judge.id]) ? row.judge_average_by_id[judge.id].toFixed(2) : 'N/A');
   const objective = row.objective_total ? `${row.objective_pass_count}/${row.objective_total} (${Math.round(row.objective_pass_rate * 100)}%)` : 'N/A';
-  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.task_count} | ${row.outcome} | ${objective} | ${perJudge.join(' | ')} | ${average} | ${row.judge_count} |`);
+  const duration = Number.isFinite(row.duration_ms) ? `${(row.duration_ms / 1000).toFixed(3)} s` : 'N/A';
+  const cost = Number.isFinite(row.cost_usd) ? row.cost_usd.toFixed(6) : 'N/A';
+  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.task_count} | ${row.outcome} | ${duration} | ${cost} | ${objective} | ${perJudge.join(' | ')} | ${average} | ${row.judge_count} |`);
 }
 await writeFile(path.join(root, 'aggregate.md'), `${lines.join('\n')}\n`);
 process.stdout.write(`${JSON.stringify({ release, candidates: rows.length, nominations: nominations.length, canonical_attempt: canonicalAttempt, output: root })}\n`);

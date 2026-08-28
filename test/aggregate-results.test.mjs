@@ -31,7 +31,7 @@ test('aggregate includes every configured task and averages valid judge scores',
     const base = path.join(modelsTest, 'results', 'two-tasks', 'candidate', task);
     await writeJson(path.join(base, 'run.json'), {
       candidate: config.candidates[0], task, outcome: 'completed',
-      agent: { status: 0, duration_ms: 10 }, tests: { status: 0, duration_ms: 5 }, duration_ms: 15
+      agent: { status: 0, duration_ms: 10, usage: { source: 'opencode_step_finish', reported_cost_usd: task === 'first' ? 0.01 : 0.02 } }, tests: { status: 0, duration_ms: 5 }, duration_ms: 15
     });
     await writeJson(path.join(base, 'judges', 'judge.json'), {
       status: 'completed', scores, judge: { id: 'judge' },
@@ -47,9 +47,14 @@ test('aggregate includes every configured task and averages valid judge scores',
   assert.equal(aggregate.candidates[0].judge_average.scope, 8);
   assert.equal(aggregate.candidates[0].overall_average, 8.5);
   assert.equal(aggregate.candidates[0].duration_ms, 30);
+  assert.equal(aggregate.candidates[0].cost_usd, 0.03);
+  assert.equal(aggregate.candidates[0].tasks[0].cost_usd, 0.01);
   assert.equal(aggregate.candidates[0].judge_duration_ms, 50);
   assert.equal(aggregate.candidates[0].judge_duration_by_id.judge, 50);
   assert.equal(aggregate.candidates[0].tasks[0].judge_durations[0].duration_ms, 20);
+  const markdown = await readFile(path.join(modelsTest, 'results', 'two-tasks', 'aggregate.md'), 'utf8');
+  assert.match(markdown, /Test time \| Test price \(USD\)/);
+  assert.match(markdown, /0\.030000/);
 });
 
 test('aggregate preserves unavailable candidates without inventing scores', async () => {
