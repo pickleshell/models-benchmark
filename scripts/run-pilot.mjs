@@ -54,7 +54,10 @@ function optionValues(name) {
   }
   return values;
 }
-const phase = optionValues('--phase')[0] || 'all';
+// Candidate execution and objective tests are the safe default. Model judging
+// is a separate, explicit stage so a normal benchmark run never spends judge
+// quota or mixes assessment with candidate evidence collection.
+const phase = optionValues('--phase')[0] || 'candidates';
 if (!['all', 'candidates', 'judges'].includes(phase)) throw new Error(`invalid --phase: ${phase}`);
 const nominations = config.nominations ?? config.tasks ?? [];
 const nominationValues = optionValues('--nomination');
@@ -843,7 +846,18 @@ await Promise.all(nominations.filter((task) => task.objective_evaluator).map(obj
 knownCredentials = await loadKnownCredentials();
 if (dryRun) {
   const plannedRuns = selectedCandidates.flatMap((candidate) => selectedTasks.map((nomination) => ({ run_id: runId(candidate, nomination), nomination: nomination.id, model: candidate.id, attempt: selectedAttempt })));
-  emit('dry_run', { Benchmark: config.release, Nomination: selectedTasks.map(({ id }) => id), selected_Models: selectedCandidates.map(({ id, model }) => ({ id, model })), planned_Runs: plannedRuns, Attempts: [selectedAttempt], phase, resume, judges: selectedJudges.map(({ id, model }) => ({ id, model })) });
+  emit('dry_run', {
+    Benchmark: config.release,
+    Nomination: selectedTasks.map(({ id }) => id),
+    selected_Models: selectedCandidates.map(({ id, model }) => ({ id, model })),
+    planned_Runs: plannedRuns,
+    Attempts: [selectedAttempt],
+    phase,
+    resume,
+    judges: phase === 'judges' || phase === 'all'
+      ? selectedJudges.map(({ id, model }) => ({ id, model }))
+      : []
+  });
   process.exit(0);
 }
 

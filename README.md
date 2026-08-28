@@ -132,10 +132,10 @@ npm run verify:sandbox
 # 5. Dry-run the pilot matrix
 npm run pilot:dry-run
 
-# 6. Freeze candidate evidence (consumes candidate quota only)
-node scripts/run-pilot.mjs --phase candidates
+# 6. Run candidates and objective tests (consumes candidate quota only)
+npm run pilot
 
-# 7. Append one judge at a time; aggregate regenerates after each pass
+# 7. Separately append one judge at a time when assessment is wanted
 node scripts/run-pilot.mjs --phase judges --judge gemini-3-flash
 node scripts/run-pilot.mjs --phase judges --judge gpt-5-nano
 ```
@@ -184,10 +184,12 @@ plus the saved diff, and appends only the requested judge artifact. It never
 reruns a candidate. A release-level non-secret `manifest.json` freezes the
 task/model/rubric/prompt specification for staged compatibility.
 
-For `--phase all`, selected judges are probed before any selected candidate is
-run. `--phase candidates` deliberately does not probe judges, so frozen
+Candidate testing is the default and deliberately does not probe or invoke
+judges, so frozen
 candidate evidence can be collected now and judges appended later. Phase2-v2
 keeps its complete 31-model roster frozen before 3 → 3 → larger batches.
+The legacy explicit `--phase all` mode remains available for compatibility,
+but is not used by `npm run pilot`.
 
 Hidden evaluators are runner-private code under `private_evaluators_dir` (by
 default `evaluators/` in this repository). Their configured paths are relative
@@ -466,10 +468,9 @@ present in the published comparison. Each selected model receives one pass and
 one chance per Nomination. There is no retry unless the frozen release policy
 explicitly permits a separate Attempt.
 
-Before creating a release, the runner also probes every required judge. If a
-judge model is unavailable, the run stops before any candidate is given a task
-and before any release directory is created. This prevents a costly candidate
-matrix with no usable scoring evidence.
+Candidate testing does not probe judges. When judging is requested separately,
+the runner probes every selected judge before sending it frozen candidate
+evidence. An unavailable judge stops only that judging invocation.
 
 The pilot clean room is the dedicated Linux account `test`. Before every
 candidate, the runner removes the previous workspace and agent state and
@@ -506,7 +507,7 @@ point, execution environment, evidence, and review process explicit.
 | Change policy | Changes outside a task's `allowed_changes` are classified as `forbidden_changes` and never receive a quality score. |
 | Private raw evidence | Raw model output and operational diagnostics stay in the runner account's private directory; only sanitized artifacts enter `models-test`. |
 | Blind judging | Each judge receives a fresh anonymous workspace rebuilt from the trusted baseline plus one patch. It never receives candidate identity, logs, original workspace, or another judge's work. |
-| Availability gate | Required judges are checked before a release exists; candidates are checked before receiving a task. Provider availability is never confused with code quality. |
+| Availability gate | Candidates are checked before receiving a task; judges are checked only in the separate judging stage. Provider availability is never confused with code quality. |
 | Single-run lock | A host-wide lock prevents two releases from resetting or using the same clean room at the same time. |
 | Immutable releases | A release ID cannot be reused. A rerun always has a new identifier and cannot overwrite or mix prior evidence. |
 

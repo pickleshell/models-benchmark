@@ -245,10 +245,11 @@ following controls are part of the implemented contract:
     fresh agent home. Candidate identity, runtime, provider, subscription,
     logs, original workspace, and private artifacts are excluded from judge
     inputs.
-11. **Availability and immutability gates.** Required judges are probed before
-    release creation; candidates are probed before task assignment. Release
-    directories are immutable, preventing retries from replacing or mixing
-    evidence under the same release ID.
+11. **Availability and immutability gates.** Candidate testing and model
+    judging are separate stages. Candidates are probed before task assignment;
+    selected judges are probed only when the explicit judging stage runs.
+    Release directories are immutable, preventing retries from replacing or
+    mixing evidence under the same release ID.
 12. **Single-run ownership.** A host-wide clean-room lock is acquired before
     any probe or reset and is released only after final cleanup. A second runner
     stops before it can touch the shared clean-room workspace or agent home. The
@@ -326,9 +327,9 @@ probe. For OpenCode JSON mode, a process exit is insufficient: a recognised
 model text event is required. An unavailable model receives a public,
 sanitized `preflight.json` and `unavailable` task records; it receives no task,
 tests, patch capture, or judge invocation. Raw probe output remains private.
-Every required judge receives the same probe before a release directory is
-created. An unavailable judge aborts the planned run rather than consuming
-candidate attempts without scoring evidence.
+Every selected judge receives the same probe when the separate judging stage
+starts. An unavailable judge aborts that judging invocation without consuming
+or modifying candidate attempts.
 
 ## 7. Evaluation Model
 

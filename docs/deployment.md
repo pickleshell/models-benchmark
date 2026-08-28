@@ -200,15 +200,23 @@ model failures are recorded as `unavailable`, the selected Nomination for that m
 skipped, and the runner continues with the next candidate. The probe timing and
 safe process status are recorded; raw probe output remains private.
 
-Required judges are probed before the runner creates a release directory or
-assigns any candidate task. A missing judge stops the planned run immediately:
-there is no partial benchmark release to discard or publish.
+Candidate testing does not probe judges. When the separate judging stage is
+requested, every selected judge receives the same availability probe before it
+is given frozen candidate evidence. A missing judge stops that judging
+invocation without changing or rerunning candidate results.
 
-Run the pilot only after that review:
+Run candidate tasks and objective tests only after that review:
 
 ```sh
 npm run pilot
 npm run aggregate -- <release-id>
+```
+
+This command does not preflight or invoke LLM judges. Judging is a separate,
+explicit stage after candidate evidence has been frozen:
+
+```sh
+npm run pilot:judges -- --judge <judge-id>
 ```
 
 The runner resets the clean room before every candidate, starts fresh candidate

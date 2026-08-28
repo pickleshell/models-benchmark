@@ -25,7 +25,8 @@ uses the public nominations and three candidates in `config/pilot.json`. It
 runs selected models sequentially and starts a new agent session for every
 Run Attempt.
 
-The runner has append-only stages. `--phase candidates` preflights only selected
+The runner has append-only stages. Candidate testing is the default and
+`--phase candidates` preflights only selected
 candidates and freezes candidate evidence without invoking judges. `--phase
 judges` preflights only selected judges, verifies the saved candidate hashes,
 and rebuilds an anonymous workspace from the trusted baseline plus immutable
@@ -43,8 +44,10 @@ available only after a harmless request produces a recognised model response;
 a provider diagnostic or zero exit code alone is not evidence of availability.
 An unavailable model receives `preflight.json` and `unavailable` task records,
 then the runner proceeds to the next model without starting its task matrix.
-Probe required judges before creating a release directory or assigning a
-candidate task. If any judge is unavailable, stop with no release created.
+Do not probe or invoke judges during the candidate-testing pipeline. Probe
+selected judges only when the separate `--phase judges` stage is requested;
+an unavailable judge stops that judging invocation without altering frozen
+candidate evidence.
 
 The runner resets the clean-room workspace and isolated agent home by invoking
 `/home/test/.models-benchmark/reset-room.mjs` as the candidate account `test`

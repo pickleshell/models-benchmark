@@ -23,6 +23,8 @@ test('phase2-v2 plans exactly one nomination times the selected three-model subs
   });
   const record = dryRunRecord(stdout);
   assert.equal(record.Benchmark, 'phase2-v2-r5');
+  assert.equal(record.phase, 'candidates');
+  assert.deepEqual(record.judges, []);
   assert.deepEqual(record.Nomination, ['patch']);
   assert.equal(record.selected_Models.length, 3);
   assert.equal(record.planned_Runs.length, 3);
