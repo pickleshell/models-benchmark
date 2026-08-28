@@ -5,6 +5,7 @@
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=nodedotjs&logoColor=white)](#requirements)
 [![Platform](https://img.shields.io/badge/platform-Linux-FCC624?logo=linux&logoColor=black)](#requirements)
 [![Runtimes](https://img.shields.io/badge/runtimes-OpenCode%20%7C%20Codex-6f42c1)](#agent-runtimes)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Models Benchmark compares coding models on the same repository tasks under the
 same execution contract. Each candidate receives a clean workspace, a fresh
