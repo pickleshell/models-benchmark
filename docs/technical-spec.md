@@ -15,7 +15,7 @@ provider availability, execution failure, timeout, and evaluator failure.
   public, while orchestration and judging implementation remain private.
 - Ranking models from a single task or a single provider outage.
 
-## 2.1 First Benchmark Shape
+## 2.1 Benchmark Shape
 
 The benchmark is intentionally close to normal use of a coding agent rather
 than a collection of isolated micro-prompts. Counts below are release
@@ -23,12 +23,10 @@ configuration, not architectural limits:
 
 - a Benchmark freezes a full roster, then executes one selected Nomination
   across any selected subset of models before moving to another Nomination;
-- the initial hardened pilot uses the public `feature-implementation` and
-  `refactoring` tasks from `models-test`;
-- the pilot candidate set contains any three models already represented in the
-  published model comparison; the exact three are a manifest choice;
-- after the pilot succeeds, the benchmark expands to two or three tasks and
-  can grow further;
+- nominations use versioned public fixtures and prompts from `models-test`;
+- a release freezes its complete candidate roster even when an invocation
+  selects only a subset;
+- task and candidate counts are manifest choices rather than runner constants;
 - each task includes the documentation and local context needed to solve it;
 - the candidate receives one pass and one chance per task; retries are not
   allowed;
@@ -145,9 +143,10 @@ storing credentials.
 7. Enforce timeout, per-stream output limits, process-group cleanup, and
    cancellation.
 8. Freeze the complete configured result before judging.
-9. Run the published tests and checks in a separate evaluator environment.
-10. Send the resulting code and evidence to each configured judge independently
-   for each configured criterion.
+9. Run public tests and the private objective evaluator independently in their
+   respective sandbox contracts.
+10. Freeze candidate evidence. Only a later explicit judging stage may send
+   the resulting code and allowlisted evidence to configured judges.
 11. Record every judge response and score; do not ask a judge to reconcile
     another judge's score.
 12. Enforce allowed paths and classify forbidden modifications before judging.
@@ -180,9 +179,11 @@ a separate manual review and push operation.
   are stored under a private directory in the runner account's home, outside
   the candidate workspace. Permissions and process isolation must prevent the
   candidate account from reading that directory.
-- The current OpenCode harness retains outbound network access for model
-  providers. It must not receive host-home, runner-artifact, or runtime-write
-  access.
+- OpenCode and Codex harnesses retain outbound network access for model
+  providers. They must not receive host-home, runner-artifact, or runtime-write
+  access. A complete Codex runtime includes its main binary, code-mode host,
+  bundled `rg`, bundled `bwrap`, and package metadata; the runner validates
+  these before candidate preflight.
 - File writes are limited to the disposable workspace, fresh agent home, and
   private per-sandbox temporary filesystem; none survives into another run.
 - Timeouts terminate the complete process group and are recorded as outcomes,
@@ -263,14 +264,16 @@ following controls are part of the implemented contract:
     message queue. `ProtectProc=invisible` hides processes of other users, but
     not processes owned by the same clean-room UID; the runner therefore checks
     that the clean-room account is idle before it starts. The check also confirms
-    that the read-only OpenCode runtime remains usable inside the hardened
+    that the configured read-only runtime remains usable inside the hardened
     boundary. It acquires the same host-wide lock as a pilot and requires an
     idle clean-room account, so it cannot overlap a release. This check is
     required after installing or changing the sandbox configuration.
-14. **Non-mutating runtime preflight.** The OpenCode version check runs with
-    only the read-only runtime and private sandbox storage. It does not bind
-    the clean workspace or agent home, so an early runtime-preflight failure
-    cannot dirty candidate state.
+14. **Non-mutating runtime preflight.** Required OpenCode and/or Codex version
+    checks run with only read-only runtime binds and private sandbox storage.
+    They do not bind the clean workspace or agent home, so an early
+    runtime-preflight failure cannot dirty candidate state. Codex auth is
+    installed only after reset into a fresh disposable `CODEX_HOME`; no user
+    configuration, history, rules, plugins, memories, or sessions are copied.
 
 These controls protect against accidental state carry-over and ordinary
 candidate-controlled writes. They are process and mount-namespace isolation,

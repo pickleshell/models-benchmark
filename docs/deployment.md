@@ -23,6 +23,7 @@ The default pilot manifest expects:
 /home/gpt/.models-benchmark/runs           private raw artifacts
 /home/test/.models-benchmark               disposable clean-room root
 /home/test/.opencode/bin/opencode          OpenCode CLI for the test user
+/home/test/.codex-runtime                   read-only native Codex runtime bundle
 ```
 
 Update `config/pilot.json` together with this document if these paths or
@@ -44,10 +45,12 @@ before recovery. Never delete it merely because a release appears slow.
   for the selected OpenCode models.
 - The private `models-benchmark` repository and a checkout of `models-test`.
 - A dedicated clean-room user with no sudo group membership.
-- OpenCode installed for the clean-room user. Free OpenCode models may be used
-  without placing provider credentials in the disposable agent home. Do not
-  put credentials in `agent-home`: the reset procedure deletes it before every
-  candidate and judge.
+- OpenCode installed for the clean-room user, a complete native Codex runtime
+  bundle, or both, depending on the selected candidates. Free OpenCode models
+  may be used without provider credentials. Runtime credentials are sourced
+  from runner-owned locations and copied into the disposable agent home for
+  each run; never maintain credentials directly in `agent-home` because reset
+  deletes it before every candidate and judge.
 - The runner account is trusted and needs non-interactive sudo for the runner's
   archive installation, ownership setup, and execution as the clean-room user.
   Do not grant this to the clean-room account.
@@ -68,6 +71,35 @@ sudo install -d -o gpt -g gpt -m 0700 /home/gpt/.models-benchmark/runs
 sudo install -d -o test -g test -m 0755 /home/test/.models-benchmark
 ```
 
+### Optional Codex runtime
+
+Codex candidates require the native vendor bundle from an installed Codex CLI,
+not only the top-level `codex` executable. Locate the platform directory that
+contains `bin/`, `codex-path/`, `codex-resources/`, and
+`codex-package.json`, then install these files into the configured
+`clean_room.codex_root`:
+
+```text
+/home/test/.codex-runtime/
+├── bin/codex
+├── bin/codex-code-mode-host
+├── codex-path/rg
+├── codex-resources/bwrap
+└── codex-package.json
+```
+
+All runtime files should be owned by root and read-only to the clean-room
+account; executables use mode `0755` and `codex-package.json` uses `0644`.
+The runner validates the complete bundle before model preflight. Copying only
+`bin/codex` is invalid because some models require `codex-code-mode-host` to
+inspect and edit the workspace.
+
+Set `clean_room.codex_auth_file` to the runner-owned Codex `auth.json`. At each
+reset the runner creates a fresh `.codex` directory in the disposable agent
+home and installs only that file with owner `test` and mode `0600`. It does not
+copy runner configuration, history, memories, rules, plugins, databases, or
+sessions.
+
 The runner installs its reset script and copies the configured public task into
 the test account automatically at the start of each run. The test account must
 not be able to read `/home/gpt/.models-benchmark/runs` or the private runner
@@ -79,10 +111,9 @@ Every candidate, public test command, judge, and Git inspection of a
 candidate-owned workspace runs in a fresh transient `systemd-run` unit. The
 sandbox cannot see the host home, host temporary files, runner artifacts, or
 another run's workspace or agent state. It has only the selected disposable
-workspace, a fresh agent home, a read-only bind of
-`clean_room.opencode_root`, and a private temporary filesystem that is removed
-when the unit exits. The OpenCode runtime under `/home/test/.opencode` is not
-writable to candidate code.
+workspace, a fresh agent home, read-only binds for the configured OpenCode
+and/or Codex runtimes, and a private temporary filesystem that is removed when
+the unit exits. Runtime files are not writable to candidate code.
 
 The runner's reset/archive operations are trusted maintenance actions and run
 as `test` outside that sandbox. Do not run candidate-controlled commands with
@@ -185,6 +216,10 @@ rsync --version
 sudo -u test env HOME=/home/test/.models-benchmark \
   PATH=/home/test/.opencode/bin:/usr/local/bin:/usr/bin:/bin \
   opencode --version
+
+sudo -u test env HOME=/tmp CODEX_HOME=/tmp/.codex \
+  PATH=/home/test/.codex-runtime/bin:/usr/local/bin:/usr/bin:/bin \
+  codex --version
 ```
 
 The dry run validates the selected Nomination/model Run plan without invoking models. A real
@@ -224,9 +259,12 @@ and judge sessions, and performs one final reset at completion. A real run
 spends provider quota and may take several minutes; it must not be retried in
 place. Give a rerun a new release identifier.
 
-Release IDs are immutable. The runner refuses to start if either its private
-artifact directory or sanitized public result directory for the requested ID
-already exists. It never overwrites a partial or prior result.
+Release IDs and primary attempt artifacts are immutable. A release directory
+may persist across staged candidate and judge invocations. Without `--resume`,
+an existing primary attempt fails closed; with `--resume`, the runner verifies
+and skips complete compatible artifacts. It never overwrites a partial or prior
+attempt. Use a new release ID when the prompt, evaluator, runtime contract, or
+other frozen input changes.
 
 ## Verification and publication
 
