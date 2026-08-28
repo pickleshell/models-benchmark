@@ -929,6 +929,9 @@ try {
   }
   if (requiredAgents.has('codex')) {
     if (!codexRoot || !existsSync(codexRoot)) throw new Error('Codex runtime root is required for Codex candidates');
+    for (const relativePath of ['bin/codex', 'bin/codex-code-mode-host', 'codex-path/rg', 'codex-resources/bwrap', 'codex-package.json']) {
+      if (!existsSync(path.join(codexRoot, relativePath))) throw new Error(`Codex runtime is incomplete: missing ${relativePath}`);
+    }
     if (!existsSync(codexAuthFile)) throw new Error('Codex authentication file is required for Codex candidates');
     const codex = await runAsCandidate('codex', ['--version'], {
       cwd: '/tmp', sandboxEnv: runtimeProbeEnv(), includeCleanWorkspace: false,
