@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 5248,
+    "usage": {
+      "reported_cost_usd": 0.07024125,
+      "steps": 1,
+      "tokens": {
+        "input": 2,
+        "output": 16,
+        "reasoning": 0,
+        "total": 11191,
+        "cache_read": 0,
+        "cache_write": 11173
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 57821,
+    "usage": {
+      "reported_cost_usd": 0.243738,
+      "steps": 8,
+      "tokens": {
+        "input": 16,
+        "output": 3218,
+        "reasoning": 0,
+        "total": 126790,
+        "cache_read": 105916,
+        "cache_write": 17640
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 7,
+      "reliability_edge_cases": 5,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "confidence": 0.9,
+    "explanation": "Only the allowed file src/retryPolicy.js was changed; all 4 public tests pass. The patch correctly fixes the seeded defects: digit-only regex for delta-seconds, Number.isInteger attempt validation, max(0, dateMs-nowMs) clamping, correct 1000*2^(attempt-1) backoff, and 300000 cap (large attempts return finite 300000). Code is minimal and clear. However, an explicit contract requirement is violated: signed and fractional numeric strings must return null, but parseRetryAfter('+5'), ('-5'), and ('1.5') fall through the digit regex to Date.parse, which parses them as valid dates and returns 0 instead of null (verified: Date.parse('+5')=988668000000, Date.parse('1.5')=978649200000). Exponent (1e3) and hex (0x10) are safe only incidentally because Date.parse returns NaN. This is a genuine edge-case correctness gap not caught by the public tests.",
+    "concerns": [
+      "parseRetryAfter('+5'), ('-5'), ('1.5') return 0 instead of required null: rejected by digit regex but accepted by Date.parse as valid dates",
+      "Contract's 'signed/fractional numbers are invalid -> null' rule only partially satisfied; correct behavior for exponent/hex is incidental (Date.parse NaN), not by explicit guard"
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

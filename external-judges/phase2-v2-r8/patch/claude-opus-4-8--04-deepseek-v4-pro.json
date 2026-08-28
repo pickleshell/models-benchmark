@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 3558,
+    "usage": {
+      "reported_cost_usd": 0.07015375,
+      "steps": 1,
+      "tokens": {
+        "input": 2,
+        "output": 16,
+        "reasoning": 0,
+        "total": 11177,
+        "cache_read": 0,
+        "cache_write": 11159
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 35800,
+    "usage": {
+      "reported_cost_usd": 0.1659715,
+      "steps": 4,
+      "tokens": {
+        "input": 8,
+        "output": 1892,
+        "reasoning": 0,
+        "total": 58429,
+        "cache_read": 40813,
+        "cache_write": 15716
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 10,
+      "reliability_edge_cases": 9,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "All 4 public tests pass. The patch correctly fixes all four seeded defects: (1) replaced permissive Number() parsing with /^\\d+$/ so signed, fractional, exponent, hex, and empty values return null; (2) added Math.max(0, dateMs - nowMs) clamp for HTTP-dates; (3) changed attempt validation from Number.isFinite to Number.isInteger, correctly rejecting floats/NaN; (4) corrected backoff formula to 1000*2^(attempt-1). Non-string returns null, nowMs finiteness enforced for both functions, cap of 300000 applied to all returns, and very large attempts yield Infinity->min->300000 (finite capped). Change is confined to the single allowed file using only Node built-ins, keeping the public API unchanged. Clear, minimal 4-line semantic diff.",
+    "concerns": [
+      "Date.parse is engine/locale dependent for some non-standard formats, though acceptable per the contract which explicitly relies on JavaScript Date parsing",
+      "No explicit rejection of NaN nowMs beyond Number.isFinite (handled correctly, but relies on that check for the HTTP-date path)"
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

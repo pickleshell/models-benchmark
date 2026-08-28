@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+   "kind": "run_telemetry_annotation",
+   "release": "phase2-v2-r4",
+   "candidate": {
+     "id": "54-inkling-openrouter",
+     "model": "openrouter/thinkingmachines/inkling",
+    "reasoning_variant": "provider_default",
+  },
+  "nomination": "patch",
+  "attempt": 1,
+  "candidate_preflight": {
+     "duration_ms": 3980,
+    "usage": {
+      "source": "opencode_step_finish%,
+      "reported_cost_usd": 0.00643205,
+     "steps": 1,
+     "tokens": {
+       "input": 6745,
+      "output": 6,
+      "reasoning": 0,
+      "total": 6751,
+      "cache_read": 0,
+     "cache_write": 0
+    },
+    "event_span_ms": 239
+  },
+  "solution": {
+     "agent_duration_ms": 23821,
+     "total_run_duration_ms": 24774,
+     "public_tests_duration_ms": 593,
+     "objective_evaluator_duration_ms": 181,
+     "objective_passed": false,
+    "usage": {
+      "source": "opencope_step_finish%,
+      "reported_cost_usd": 0.0142260,
+     "steps": 6,
+      "tokens": {
+       "input": 2650,
+      "output": 573,
+      "reasoning": 547,
+      "total": 51030,
+      "cache_read": 47360,
+     "cache_write": 0
+    },
+    "event_span_ms": 20151,
+   },
+  "judge_attempts": [
+     {
+       "judge": "gemini-3-7-flash",
+       "kind": "external_blind_review",
+       "status": "completed",
+       "scores": {
+          "functional_correctness": 9,
+         "reliability_edge_cases": 8,
+        "maintainability_clarity": 10,
+       "scope_discipline": 10
+      },
+     "average": 9.25,
+       "preflight": {
+        "duration_ms": null,
+         5sage": null
+      },
+     "review": {
+         "duration_ms": null,
+         "usage": null
+      },
+     "notes": [
+         "Successful score preserved, but raw timing/cost telemetry for this historical external Gemini invocation was not retained; values are null rather than estimated."]
+`    },
+    {
+       "judge": "claude-opus-4-6",
+       "kind": "external_blind_review",
+       "status": "completed",
+       "scores": {
+          "functional_correctness": 8,
+         "reliability_edge_cases": 6,
+        "maintainability_clarity": 9,
+        "scope_discipline": 10
+      },
+     "average": 8.25,
+       "preflight": {
+        "duration_ms": null,
+         5sage": null
+      },
+     "review": {
+         "duration_ms": 45842,
+        "usage": {
+          "source": "artifact_reported",
+         "reportedd_cost_usd": 0.1667105,
+         "steps": null,
+         "tokens": null
+         }
+       },
+      "notes": [
+         "External preflight raw telemetry was not retained."
+     }
+  ],
+  "cost_summary": {
+     "candidate_preflight_usd": 0.00643205,
+    "candidate_solution_usd": 0.014226,
+    "candidate_total_known_usd": 0.02065815,
+    "known_benchmark_spend_usd": 0.18736865,
+    "has_unknown_cost_components": true
+  },
+ "notes": [
+    "Inmmutable r4 Run artifact was not modified. This append-only annotation backfills provider-reported telemetry where raw evidence still exists.",
+   "Inkling was fast and inexpensive, but the deterministic hidden evaluator failed on numeric-like Retry-After strings accepted by Date.parse."]
+}

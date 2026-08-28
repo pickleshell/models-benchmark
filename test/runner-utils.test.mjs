@@ -55,3 +55,16 @@ test('bounded collector truncates instead of retaining unlimited output', () => 
   assert.equal(collector.limited, true);
   assert.equal(collector.text(), 'abcd');
 });
+
+
+test('summarizeModelUsage totals provider-reported OpenCode cost and tokens', async () => {
+  const { summarizeModelUsage } = await import('../scripts/lib/runner-utils.mjs');
+  const output = [
+    JSON.stringify({ type: 'step_finish', part: { type: 'step-finish', cost: 0.01, tokens: { input: 10, output: 2, reasoning: 3, total: 15, cache: { read: 4, write: 1 } } } }),
+    JSON.stringify({ type: 'step_finish', part: { type: 'step-finish', cost: 0.02, tokens: { input: 5, output: 1, reasoning: 0, total: 6, cache: { read: 2, write: 0 } } } })
+  ].join('\n');
+  assert.deepEqual(summarizeModelUsage(output), {
+    source: 'opencode_step_finish', reported_cost_usd: 0.03, steps: 2,
+    tokens: { input: 15, output: 3, reasoning: 3, cache_read: 6, cache_write: 1, total: 21 }
+  });
+});

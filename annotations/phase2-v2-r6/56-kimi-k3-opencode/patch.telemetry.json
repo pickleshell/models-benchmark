@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "kind": "run_telemetry_annotation",
+  "release": "phase2-v2-r6",
+  "candidate": {
+    "preflight_duration_ms": 4721,
+    "preflight_cost_usd": 0.022437,
+    "solution_duration_ms": 44445,
+    "solution_cost_usd": 0.0797889,
+    "total_run_duration_ms": 45398,
+    "public_tests_duration_ms": 595,
+    "objective_evaluator_duration_ms": 178,
+    "objective_passed": false
+  },
+  "nomination": "patch",
+  "attempt": 1,
+  "reasoning_variant": "provider_default",
+  "judge_attempts": [
+    {
+      "judge": "gemini-3-7-flash",
+      "kind": "canonical_runner",
+      "preflight_duration_ms": 4626,
+      "review_duration_ms": 1547,
+      "status": "failed",
+      "reported_cost_usd": null
+    },
+    {
+      "judge": "claude-opus-4-8",
+      "kind": "canonical_runner",
+      "preflight_duration_ms": 9416,
+      "review_duration_ms": 1572,
+      "status": "failed",
+      "reported_cost_usd": null
+    },
+    {
+      "judge": "gemini-3-7-flash",
+      "kind": "external_blind_retry",
+      "preflight_duration_ms": 4824,
+      "preflight_cost_usd": 0.012858,
+      "review_duration_ms": 56194,
+      "review_cost_usd": 0.16719405,
+      "status": "completed",
+      "average": 8.5
+    },
+    {
+      "judge": "claude-opus-4-8",
+      "kind": "external_blind_retry",
+      "preflight_duration_ms": 4943,
+      "preflight_cost_usd": 0.07000375,
+      "review_duration_ms": 61543,
+      "review_cost_usd": 0.17827175,
+      "status": "completed",
+      "average": 7.75
+    }
+  ],
+  "cost_summary": {
+    "candidate_total_known_usd": 0.1022259,
+    "successful_external_judges_known_usd": 0.42832755,
+    "known_total_usd": 0.53055345,
+    "has_unknown_cost_components": true
+  },
+  "notes": [
+    "Public tests PASS; hidden objective FAIL on signed numeric-like Retry-After input.",
+    "Canonical judge main calls returned transient server errors and remain preserved.",
+    "External retries were blind and used fresh anonymous workspaces/HOMEs under Linux user test."
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 3902,
+    "usage": {
+      "reported_cost_usd": 0.0128475,
+      "steps": 1,
+      "tokens": {
+        "input": 8300,
+        "output": 9,
+        "reasoning": 44,
+        "total": 8353,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 49374,
+    "usage": {
+      "reported_cost_usd": 0.0849687,
+      "steps": 6,
+      "tokens": {
+        "input": 26256,
+        "output": 722,
+        "reasoning": 4510,
+        "total": 73786,
+        "cache_read": 42298,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 7,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The solution cleanly implements the backoff formula, attempt integer validation, delay capping (including for large attempt values), and non-negative date math. However, signed ('+5', '-5') and fractional ('1.5') numeric strings fall through to Date.parse, which V8 parses into timestamps instead of returning null as specified.",
+    "concerns": [
+      "parseRetryAfter does not explicitly reject signed or fractional numeric strings (e.g. '+5', '-5', '1.5') prior to Date.parse, causing Date.parse to treat them as valid dates rather than returning null."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

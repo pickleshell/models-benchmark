@@ -60,7 +60,7 @@ if (args[0] === '--version') { console.log('fake-opencode 1.0'); process.exit(0)
 console.log(JSON.stringify({ type: 'error', error: { message: 'Model not found' } }));
 `;
 
-test('an unavailable required judge stops before any release directory is created', async () => {
+test('an unavailable required judge stops after the release manifest is frozen but before candidate work', async () => {
   const temp = await mkdtemp(path.join(os.tmpdir(), 'models-benchmark-judge-preflight-'));
   try {
     const fakeBin = path.join(temp, 'bin');
@@ -92,10 +92,11 @@ test('an unavailable required judge stops before any release directory is create
       judges: [{ id: 'required-judge', agent: 'opencode', model: 'judge/missing' }], criteria: ['correctness']
     }));
     await assert.rejects(
-      run(process.execPath, [runnerScript], { env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BENCHMARK_CONFIG: configPath } }),
+      run(process.execPath, [runnerScript, '--phase', 'judges'], { env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BENCHMARK_CONFIG: configPath } }),
       /required judge model is unavailable/
     );
-    assert.equal(existsSync(path.join(modelsTest, 'results', 'judge-missing')), false);
+    assert.equal(existsSync(path.join(modelsTest, 'results', 'judge-missing', 'manifest.json')), true);
+    assert.equal(existsSync(path.join(modelsTest, 'results', 'judge-missing', 'candidate')), false);
     assert.equal(existsSync(path.join(privateArtifacts, 'judge-missing')), false);
   } finally {
     await rm(temp, { recursive: true, force: true });

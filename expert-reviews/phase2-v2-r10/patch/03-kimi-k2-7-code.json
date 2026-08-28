@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r10",
+  "candidate": "03-kimi-k2-7-code",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "operator-authorized expert review",
+    "model": "human"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10,
+    "average": 8.25
+  },
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS.",
+    "Only allowed retryPolicy.js changed.",
+    "Hidden evaluator exact failure: parseRetryAfter('+1', nowMs) returns 0 instead of null via permissive Date.parse fallback.",
+    "The patch correctly fixes seeded backoff, past-date clamp, and integer attempt validation but does not explicitly reject signed, fractional, exponent, or hex numeric-like strings before date parsing.",
+    "Fixed operator-authorized scores; do not revise them based on judge outputs."
+  ],
+  "telemetry_snapshot": {
+    "candidate_preflight": {
+      "duration_ms": 5360,
+      "cost_usd": 0.00470248,
+      "tokens": {
+        "input": 4520,
+        "output": 9,
+        "reasoning": 8,
+        "cache_read": 1792,
+        "cache_write": 0,
+        "total": 6329
+      }
+    },
+    "solution": {
+      "duration_ms": 131845,
+      "cost_usd": 0.03579015,
+      "tokens": {
+        "input": 10201,
+        "output": 1370,
+        "reasoning": 1750,
+        "cache_read": 71680,
+        "cache_write": 0,
+        "total": 85001
+      }
+    },
+    "public_tests": {
+      "status": "PASS",
+      "duration_ms": 595
+    },
+    "objective_evaluator": {
+      "status": "FAIL",
+      "duration_ms": 176
+    }
+  }
+}

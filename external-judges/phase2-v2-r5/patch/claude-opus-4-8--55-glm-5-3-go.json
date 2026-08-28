@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "source_release": "phase2-v2-r5",
+  "candidate": "55-glm-5-3-go",
+  "nomination": "patch",
+  "judge": {
+    "id": "claude-opus-4-8",
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "scores": {
+    "functional_correctness": 10,
+    "reliability_edge_cases": 9,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 9.5,
+  "confidence": 0.95,
+  "explanation": "The patch modifies only the allowed file src/retryPolicy.js (git status confirms single changed file) and keeps the public API intact. All 4 public tests pass. Manual edge-case verification confirms full contract compliance: digits-only regex /^[0-9]+$/ returns ms; signed (+5/-5), fractional (5.5), exponent (1e3), hex (0x10), empty, and non-string inputs all return null; HTTP-dates require finite nowMs and return max(0, dateMs-nowMs) (past dates -> 0, Infinity now -> null); computeRetryDelay uses Number.isInteger to reject floats and non-positive attempts, checks finite nowMs, lets valid Retry-After override, uses correct backoff 1000*2^(attempt-1), and caps at 300000 including for very large attempts. The changes are minimal, targeted at the seeded defects, and clearly written.",
+  "concerns": [
+    "Numeric-like validation relies on regexes plus Date.parse fallthrough; a bare '.' or similar edge tokens rely on Date.parse returning NaN (verified null) rather than explicit handling, which is correct but slightly implicit",
+    "No explicit rejection of negative delta-seconds via number path since digits-only regex handles it, which is fine but couples correctness to regex precision"
+  ],
+  "execution": {
+    "reported_cost_usd": 0.206377
+  },
+  "canonical_release_artifact": false
+}

@@ -85,3 +85,48 @@ export function createBoundedCollector(limitBytes) {
     text() { return Buffer.concat(chunks).toString(); }
   };
 }
+
+
+export function summarizeModelUsage(output, agent = 'opencode') {
+  if (agent !== 'opencode') {
+    return {
+      source: 'provider_not_reported',
+      reported_cost_usd: null,
+      steps: null,
+      tokens: { input: null, output: null, reasoning: null, cache_read: null, cache_write: null, total: null }
+    };
+  }
+  let reportedCostUsd = 0;
+  let sawCost = false;
+  let steps = 0;
+  const tokens = { input: 0, output: 0, reasoning: 0, cache_read: 0, cache_write: 0, total: 0 };
+  for (const line of String(output || '').split('\n')) {
+    if (!line.trim()) continue;
+    let event;
+    try { event = JSON.parse(line); } catch { continue; }
+    const part = event?.part ?? {};
+    if (event?.type !== 'step_finish' && part?.type !== 'step-finish') continue;
+    steps += 1;
+    const cost = Number(part.cost);
+    if (Number.isFinite(cost)) {
+      reportedCostUsd += cost;
+      sawCost = true;
+    }
+    const t = part.tokens ?? {};
+    for (const key of ['input', 'output', 'reasoning', 'total']) {
+      const value = Number(t[key]);
+      if (Number.isFinite(value)) tokens[key] += value;
+    }
+    const cache = t.cache ?? {};
+    const cacheRead = Number(cache.read);
+    const cacheWrite = Number(cache.write);
+    if (Number.isFinite(cacheRead)) tokens.cache_read += cacheRead;
+    if (Number.isFinite(cacheWrite)) tokens.cache_write += cacheWrite;
+  }
+  return {
+    source: 'opencode_step_finish',
+    reported_cost_usd: sawCost ? Number(reportedCostUsd.toFixed(12)) : null,
+    steps,
+    tokens
+  };
+}

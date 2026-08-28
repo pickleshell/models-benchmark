@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r25",
+  "candidate": "01-gpt-5-6-luna",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "gpt-5.6-sol"
+  },
+  "scores": {
+    "functional_correctness": 10,
+    "reliability_edge_cases": 10,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 9.75,
+  "objective_evaluator": "PASS",
+  "notes": [
+    "Public tests PASS, hidden objective PASS, and only the permitted retryPolicy.js file changed.",
+    "The patch keeps ASCII digit-only delta-seconds acceptance while explicitly rejecting signed, fractional, exponent, and hexadecimal numeric-like forms before Date.parse.",
+    "It clamps past HTTP dates to zero, requires attempt to be a positive integer, and uses base-1 exponential fallback with the 300000 ms cap.",
+    "The numeric-like rejection regexes are correct but slightly denser than the simplest possible implementation, so maintainability is 9 rather than 10.",
+    "Provider-reported solution cost is $0.00775616; candidate preflight is separate telemetry."
+  ]
+}

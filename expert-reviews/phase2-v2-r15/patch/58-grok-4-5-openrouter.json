@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r15",
+  "candidate": "58-grok-4-5-openrouter",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "GPT-5.6 Sol"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS and only the permitted retryPolicy.js file changed.",
+    "The patch uses an ASCII-digits-only fast path but lets nonmatching signed/fractional numeric-like strings fall through to permissive Date.parse, violating the explicit Retry-After contract.",
+    "Backoff exponent, past-date clamp, finite nowMs handling, and positive-integer attempt validation are otherwise corrected cleanly."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": 4561,
+    "candidate_preflight_cost_usd": 0.0147064,
+    "solution_duration_ms": 33055,
+    "solution_cost_usd": 0.03889,
+    "candidate_total_known_cost_usd": 0.0535964,
+    "public_tests_duration_ms": 595,
+    "objective_evaluator_duration_ms": 181
+  }
+}

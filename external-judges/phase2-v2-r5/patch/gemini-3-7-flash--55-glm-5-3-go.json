@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "source_release": "phase2-v2-r5",
+  "candidate": "55-glm-5-3-go",
+  "nomination": "patch",
+  "judge": {
+    "id": "gemini-3-7-flash",
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4602,
+    "usage": {
+      "source": "opencode_step_finish",
+      "reported_cost_usd": 0.013071,
+      "steps": 1,
+      "tokens": {
+        "input": 8309,
+        "output": 1,
+        "reasoning": 80,
+        "total": 8390,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "scores": {
+    "functional_correctness": 10,
+    "reliability_edge_cases": 10,
+    "maintainability_clarity": 10,
+    "scope_discipline": 10
+  },
+  "average": 10.0,
+  "confidence": 1,
+  "explanation": "The solution correctly implements parseRetryAfter and computeRetryDelay in retryPolicy.js according to all contract specifications, properly validating and rejecting non-decimal numeric formats, handling date calculations with non-finite checks and zero-flooring, validating integer attempt bounds and finite timestamps, capping delays at 300000ms including large exponent attempts, and modifying only the permitted target file with all tests passing.",
+  "concerns": [],
+  "execution": {
+    "status": 0,
+    "duration_ms": 54967,
+    "usage": {
+      "source": "opencode_step_finish",
+      "reported_cost_usd": 0.100245,
+      "steps": 9,
+      "tokens": {
+        "input": 40333,
+        "output": 869,
+        "reasoning": 3278,
+        "total": 102100,
+        "cache_read": 57620,
+        "cache_write": 0
+      }
+    }
+  },
+  "canonical_release_artifact": false,
+  "notes": [
+    "Blind external retry after canonical judge invocation returned a transient server error. Candidate identity/model/provider, objective evaluator, and other judge scores were not provided to the judge."
+  ]
+}

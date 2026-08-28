@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "base_config": "config/phase2-v2-r9.json",
+  "nomination": "patch",
+  "candidates": [
+    {
+      "id": "03-kimi-k2-7-code",
+      "label": "Kimi K2.7 Code",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k2.7-code",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "06-minimax-m3",
+      "label": "MiniMax M3",
+      "agent": "opencode",
+      "model": "opencode-go/minimax-m3",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "07-mimo-v2-5-pro",
+      "label": "MiMo V2.5 Pro",
+      "agent": "opencode",
+      "model": "opencode-go/mimo-v2.5-pro",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "09-grok-4-5",
+      "label": "Grok 4.5",
+      "agent": "opencode",
+      "model": "opencode-go/grok-4.5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "11-deepseek-v4-flash",
+      "label": "DeepSeek V4 Flash",
+      "agent": "opencode",
+      "model": "opencode-go/deepseek-v4-flash",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "58-grok-4-5-openrouter",
+      "label": "Grok 4.5 OpenRouter",
+      "agent": "opencode",
+      "model": "openrouter/x-ai/grok-4.5",
+      "subscription": "paid",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "14-hy3",
+      "label": "Hy3",
+      "agent": "opencode",
+      "model": "opencode-go/hy3",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "59-nemotron-3-super-openrouter-free",
+      "label": "Nemotron 3 Super OpenRouter Free",
+      "agent": "opencode",
+      "model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+      "subscription": "free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "15-glm-5-1",
+      "label": "GLM-5.1",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.1",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "35-nemotron-3-ultra-free",
+      "label": "Nemotron 3 Ultra Free",
+      "agent": "opencode",
+      "model": "opencode/nemotron-3-ultra-free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "53-claude-opus-5",
+      "label": "Claude Opus 5",
+      "agent": "opencode",
+      "model": "opencode/claude-opus-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "52-claude-sonnet-5",
+      "label": "Claude Sonnet 5",
+      "agent": "opencode",
+      "model": "opencode/claude-sonnet-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "19-big-pickle",
+      "label": "Big Pickle",
+      "agent": "opencode",
+      "model": "opencode/big-pickle",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "16-kimi-k2-6",
+      "label": "Kimi K2.6",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k2.6",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "51-claude-haiku-4-5",
+      "label": "Claude Haiku 4.5",
+      "agent": "opencode",
+      "model": "opencode/claude-haiku-4-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "01-gpt-5-6-luna",
+      "label": "GPT-5.6 Luna",
+      "agent": "opencode",
+      "model": "opencode-go/gpt-5.6-luna",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "05-glm-5-2",
+      "label": "GLM-5.2",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.2",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "60-gpt-5-6-terra-opencode",
+      "label": "GPT-5.6 Terra (OpenCode)",
+      "agent": "opencode",
+      "model": "opencode/gpt-5.6-terra",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "61-gpt-5-5-opencode",
+      "label": "GPT-5.5 (OpenCode)",
+      "agent": "opencode",
+      "model": "opencode/gpt-5.5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "62-gpt-5-5-pro-opencode",
+      "label": "GPT-5.5 Pro (OpenCode)",
+      "agent": "opencode",
+      "model": "opencode/gpt-5.5-pro",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "63-gpt-5-4-pro-opencode",
+      "label": "GPT-5.4 Pro (OpenCode)",
+      "agent": "opencode",
+      "model": "opencode/gpt-5.4-pro",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "64-gpt-5-3-codex-opencode",
+      "label": "GPT-5.3 Codex (OpenCode)",
+      "agent": "opencode",
+      "model": "opencode/gpt-5.3-codex",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "65-grok-4-6-go",
+      "label": "Grok 4.6 (OpenCode Go)",
+      "agent": "opencode",
+      "model": "opencode-go/grok-4.6",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "66-glm-5-3-go",
+      "label": "GLM-5.3 (OpenCode Go)",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.3",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "67-qwen3-8-max-go",
+      "label": "Qwen 3.8 Max (OpenCode Go)",
+      "agent": "opencode",
+      "model": "opencode-go/qwen3.8-max",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "68-kimi-k3-go",
+      "label": "Kimi K3 (OpenCode Go)",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k3",
+      "reasoning_variant": "provider_default"
+    }
+  ]
+}

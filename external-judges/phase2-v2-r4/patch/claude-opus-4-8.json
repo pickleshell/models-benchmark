@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "source_release": "phase2-v2-r4",
+  "nomination": "patch",
+  "judge": {
+    "id": "claude-opus-4-8",
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "confidence": 0.9,
+  "explanation": "All 4 public tests pass. The patch correctly fixes the seeded defects: digit-only parsing via /^[0-9]+$/ (rejecting exponent 1e3 and hex 0x10 -> null), whitespace trimming, empty/non-string -> null, max(0, dateMs-nowMs) for HTTP-dates, nowMs finite guard, attempt changed to Number.isInteger, backoff corrected to 2^(attempt-1), and 300000ms cap yielding finite delays for very large attempts (verified attempt=MAX_SAFE_INTEGER -> 300000). However, a contract-required edge case is violated: the spec says signed and fractional numbers must return null, but '+5', '-5', and '5.5' are not digit-only so they fall through to Date.parse, which parses them as valid dates (e.g. Date.parse('+5') is finite), causing parseRetryAfter to return 0 instead of null. This also lets a '0' override exponential backoff in computeRetryDelay. Public tests do not cover these cases so they pass. Code is clean, minimal, uses only built-ins, and strictly edits only the allowed file.",
+  "concerns": [
+    "parseRetryAfter('+5'), ('-5'), ('5.5') return 0 instead of null because Date.parse accepts these pseudo-numeric strings, violating the 'signed/fractional numbers are invalid -> null' requirement",
+    "The erroneous 0 for signed/fractional inputs would incorrectly override exponential backoff in computeRetryDelay (returning 0)",
+    "Public tests do not exercise signed/fractional inputs, so the passing suite masks this behavioral gap"
+  ],
+  "execution": {
+    "status": 0,
+    "started_at": 1787789185787,
+    "completed_at": 1787789231629,
+    "reported_cost_usd": 0.1667105
+  },
+  "canonical_release_artifact": false
+}

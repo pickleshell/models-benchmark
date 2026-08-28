@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4178,
+    "usage": {
+      "reported_cost_usd": 0.013056,
+      "steps": 1,
+      "tokens": {
+        "input": 8299,
+        "output": 9,
+        "reasoning": 72,
+        "total": 8380,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 58776,
+    "usage": {
+      "reported_cost_usd": 0.1280985,
+      "steps": 11,
+      "tokens": {
+        "input": 48000,
+        "output": 680,
+        "reasoning": 5263,
+        "total": 130783,
+        "cache_read": 76840,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 9,
+      "reliability_edge_cases": 8,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch cleanly fixes backoff exponent calculation (attempt - 1), validates integer attempts, enforces max(0, dateMs - nowMs) for past HTTP dates, and restricts delta-seconds to digits. All public tests pass with minimal and targeted changes.",
+    "concerns": [
+      "Signed and fractional numeric strings like '+5' or '5.5' are parsed as dates by Date.parse in Node instead of returning null as specified for invalid numeric formats."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

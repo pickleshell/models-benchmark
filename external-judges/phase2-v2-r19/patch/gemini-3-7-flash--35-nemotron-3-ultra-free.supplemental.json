@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4441,
+    "usage": {
+      "reported_cost_usd": 0.013149,
+      "steps": 1,
+      "tokens": {
+        "input": 8301,
+        "output": 9,
+        "reasoning": 84,
+        "total": 8394,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 67675,
+    "usage": {
+      "reported_cost_usd": 0.1547229,
+      "steps": 14,
+      "tokens": {
+        "input": 67353,
+        "output": 1070,
+        "reasoning": 4011,
+        "total": 176340,
+        "cache_read": 103906,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 7,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch correctly addresses the exponential backoff calculation (2^(attempt - 1)), integer validation for attempts, capping, and delta-seconds parsing. However, falling through directly to Date.parse causes signed numbers (e.g. '+10', '-10') and fractional numbers (e.g. '1.5') to be parsed by V8 as valid timestamps rather than returning null as required by the specification.",
+    "concerns": [
+      "`parseRetryAfter` does not reject signed or fractional numbers before delegating to `Date.parse`, causing strings like '+10' or '1.5' to resolve to non-null date offsets instead of null."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

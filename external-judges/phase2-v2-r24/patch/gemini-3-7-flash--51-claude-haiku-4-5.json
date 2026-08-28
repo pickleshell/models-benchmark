@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 7678,
+    "usage": {
+      "reported_cost_usd": 0.0130785,
+      "steps": 1,
+      "tokens": {
+        "input": 8299,
+        "output": 9,
+        "reasoning": 75,
+        "total": 8383,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 49148,
+    "usage": {
+      "reported_cost_usd": 0.1121556,
+      "steps": 8,
+      "tokens": {
+        "input": 41816,
+        "output": 527,
+        "reasoning": 5220,
+        "total": 89757,
+        "cache_read": 42194,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 6,
+      "reliability_edge_cases": 5,
+      "maintainability_clarity": 8,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch resolves the off-by-one exponential backoff exponent and clamps past HTTP-dates to zero, passing all public tests with a minimal diff in the designated file. However, it misses key contract requirements: parseRetryAfter uses Number() rather than validating ASCII digit-only delta-seconds (improperly accepting signed numbers, floats, hex, and exponent strings), and computeRetryDelay does not verify that attempt is an integer.",
+    "concerns": [
+      "parseRetryAfter does not restrict delta-seconds to ASCII decimal digits, improperly parsing signed numbers ('+5'), fractional values ('1.5'), hex ('0x10'), and exponent notation ('1e2').",
+      "computeRetryDelay checks attempt < 1 and finite status but does not validate Number.isInteger(attempt)."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

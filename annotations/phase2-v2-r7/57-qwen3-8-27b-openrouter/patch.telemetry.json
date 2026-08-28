@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "kind": "run_telemetry_annotation",
+  "release": "phase2-v2-r7",
+  "candidate": {
+    "id": "57-qwen3-8-27b-openrouter",
+    "model": "openrouter/qwen/qwen3.8-27b",
+    "reasoning_variant": "provider_default"
+  },
+  "nomination": "patch",
+  "candidate_preflight": {
+    "duration_ms": 6038,
+    "reported_cost_usd": 0.003264
+  },
+  "solution": {
+    "agent_duration_ms": 226026,
+    "total_run_duration_ms": 226984,
+    "public_tests_duration_ms": 601,
+    "objective_evaluator_duration_ms": 175,
+    "objective_passed": true,
+    "reported_cost_usd": 0.091643175,
+    "tokens": {
+      "input": 156659,
+      "output": 9482,
+      "reasoning": 0,
+      "cache_read": 10400,
+      "cache_write": 0,
+      "total": 176541
+    }
+  },
+  "judge_attempts": [
+    {
+      "judge": "gemini-3-7-flash",
+      "kind": "canonical_runner",
+      "status": "failed",
+      "preflight_duration_ms_observed": 4747,
+      "preflight_cost_usd": null,
+      "review_duration_ms": 1575,
+      "review_cost_usd": null,
+      "note": "Transient unexpected server error; no score."
+    },
+    {
+      "judge": "claude-opus-4-8",
+      "kind": "canonical_runner",
+      "status": "failed",
+      "preflight_duration_ms_observed": 3662,
+      "preflight_cost_usd": null,
+      "review_duration_ms": 1544,
+      "review_cost_usd": null,
+      "note": "Transient unexpected server error; no score."
+    },
+    {
+      "judge": "gemini-3-7-flash",
+      "kind": "external_blind_retry",
+      "status": "completed",
+      "preflight": {
+        "status": 0,
+        "duration_ms": 4687,
+        "usage": {
+          "reported_cost_usd": 0.0128805,
+          "steps": 1,
+          "tokens": {
+            "input": 8287,
+            "output": 9,
+            "reasoning": 51,
+            "total": 8347,
+            "cache_read": 0,
+            "cache_write": 0
+          }
+        }
+      },
+      "review": {
+        "status": 0,
+        "duration_ms": 69568,
+        "usage": {
+          "reported_cost_usd": 0.167568,
+          "steps": 14,
+          "tokens": {
+            "input": 69086,
+            "output": 2088,
+            "reasoning": 4276,
+            "total": 183510,
+            "cache_read": 108060,
+            "cache_write": 0
+          }
+        }
+      },
+      "scores": {
+        "functional_correctness": 10,
+        "reliability_edge_cases": 10,
+        "maintainability_clarity": 10,
+        "scope_discipline": 10
+      },
+      "average": 10.0,
+      "confidence": 1
+    },
+    {
+      "judge": "claude-opus-4-8",
+      "kind": "external_blind_retry",
+      "status": "completed",
+      "preflight": {
+        "status": 0,
+        "duration_ms": 3796,
+        "usage": {
+          "reported_cost_usd": 0.07019125,
+          "steps": 1,
+          "tokens": {
+            "input": 2,
+            "output": 16,
+            "reasoning": 0,
+            "total": 11183,
+            "cache_read": 0,
+            "cache_write": 11165
+          }
+        }
+      },
+      "review": {
+        "status": 0,
+        "duration_ms": 37438,
+        "usage": {
+          "reported_cost_usd": 0.195736,
+          "steps": 5,
+          "tokens": {
+            "input": 10,
+            "output": 2363,
+            "reasoning": 0,
+            "total": 77749,
+            "cache_read": 58172,
+            "cache_write": 17204
+          }
+        }
+      },
+      "scores": {
+        "functional_correctness": 10,
+        "reliability_edge_cases": 10,
+        "maintainability_clarity": 9,
+        "scope_discipline": 10
+      },
+      "average": 9.75,
+      "confidence": 0.95
+    }
+  ],
+  "cost_summary": {
+    "candidate_total_known_usd": 0.094907175,
+    "successful_external_judging_known_usd": 0.44637575,
+    "known_full_benchmark_spend_usd": 0.541282925,
+    "has_unknown_cost_components": true
+  },
+  "notes": [
+    "Public tests PASS, hidden objective evaluator PASS, additional adversarial probes PASS.",
+    "Qwen was slower than Kimi on Patch but solved the numeric-like Date.parse edge cases correctly.",
+    "Canonical judge failures are preserved separately; unknown costs are not estimated."
+  ]
+}

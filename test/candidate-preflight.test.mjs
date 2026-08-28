@@ -78,20 +78,29 @@ test('unavailable candidate is recorded and skipped while the next candidate run
     ];
     await writeFile(configPath, JSON.stringify({
       release: 'candidate-preflight', models_test: modelsTest, results_dir: 'results', private_artifacts_dir: privateArtifacts,
+      retry_policy: { canonical_attempt: 1, allow_retries: true },
       clean_room: { user: 'nobody', home: cleanHome, opencode_root: opencodeRoot, workspace: path.join(cleanHome, 'workspace'), agent_home: path.join(cleanHome, 'agent-home'), reset_script: path.join(cleanHome, 'reset-room.mjs') },
       tasks: [{ id: 'task', fixture: 'fixture', prompt: 'prompts/task.md', test_command: ['node', '-e', ''], allowed_changes: ['fixture/value.txt'] }],
       candidates, judges: [{ id: 'judge', agent: 'opencode', model: 'judge/available' }], criteria: ['correctness']
     }));
-    await run(process.execPath, [runnerScript], { env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BENCHMARK_CONFIG: configPath } });
+    await run(process.execPath, [runnerScript, '--phase', 'candidates'], { env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BENCHMARK_CONFIG: configPath } });
     const release = path.join(modelsTest, 'results', 'candidate-preflight');
     const preflight = JSON.parse(await readFile(path.join(release, 'unavailable', 'preflight.json'), 'utf8'));
-    const skipped = JSON.parse(await readFile(path.join(release, 'unavailable', 'task', 'run.json'), 'utf8'));
-    const completed = JSON.parse(await readFile(path.join(release, 'available', 'task', 'run.json'), 'utf8'));
-    const judge = JSON.parse(await readFile(path.join(release, 'available', 'task', 'judges', 'judge.json'), 'utf8'));
+    const skipped = JSON.parse(await readFile(path.join(release, 'unavailable', 'task', 'attempts', 'attempt-1', 'run.json'), 'utf8'));
+    const completed = JSON.parse(await readFile(path.join(release, 'available', 'task', 'attempts', 'attempt-1', 'run.json'), 'utf8'));
     assert.equal(preflight.status, 'unavailable'); assert.equal(skipped.outcome, 'unavailable');
-    assert.equal(completed.outcome, 'completed'); assert.equal(judge.status, 'completed');
-    await assert.rejects(readFile(path.join(release, 'unavailable', 'task', 'candidate.diff')));
-    await assert.rejects(readFile(path.join(release, 'unavailable', 'task', 'test-result.json')));
-    await assert.rejects(readFile(path.join(release, 'unavailable', 'task', 'judges', 'judge.json')));
+    assert.equal(completed.outcome, 'completed');
+    assert.equal(completed.nomination, 'task'); assert.equal(completed.run_id, 'candidate-preflight:available:task'); assert.equal(completed.attempt, 1);
+    await assert.rejects(readFile(path.join(release, 'unavailable', 'task', 'attempts', 'attempt-1', 'candidate.diff')));
+    await assert.rejects(readFile(path.join(release, 'unavailable', 'task', 'attempts', 'attempt-1', 'test-result.json')));
+    await assert.rejects(readFile(path.join(release, 'available', 'task', 'attempts', 'attempt-1', 'judges', 'judge.json')));
+    await assert.rejects(
+      run(process.execPath, [runnerScript, '--phase', 'candidates'], { env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BENCHMARK_CONFIG: configPath } }),
+      /attempt artifact already exists/
+    );
+    await run(process.execPath, [runnerScript, '--phase', 'candidates', '--attempt', '2'], { env: { ...process.env, PATH: `${fakeBin}:${process.env.PATH}`, BENCHMARK_CONFIG: configPath } });
+    const retry = JSON.parse(await readFile(path.join(release, 'available', 'task', 'attempts', 'attempt-2', 'run.json'), 'utf8'));
+    assert.equal(retry.attempt, 2);
+    assert.equal((await readFile(path.join(release, 'available', 'task', 'attempts', 'attempt-1', 'run.json'), 'utf8')).includes('"attempt": 1'), true);
   } finally { await rm(temp, { recursive: true, force: true }); }
 });

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 3669,
+    "usage": {
+      "reported_cost_usd": 0.07015375,
+      "steps": 1,
+      "tokens": {
+        "input": 2,
+        "output": 16,
+        "reasoning": 0,
+        "total": 11177,
+        "cache_read": 0,
+        "cache_write": 11159
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 54496,
+    "usage": {
+      "reported_cost_usd": 0.25521975,
+      "steps": 8,
+      "tokens": {
+        "input": 16,
+        "output": 3603,
+        "reasoning": 0,
+        "total": 126599,
+        "cache_read": 104967,
+        "cache_write": 18013
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 6,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "confidence": 0.9,
+    "explanation": "The patch fixes all seeded defects and passes all 4 public tests. parseRetryAfter now uses /^\\d+$/ for digit-only delta-seconds, clamps HTTP-date results with max(0, dateMs-nowMs), requires finite nowMs for dates, and rejects non-strings/empty. computeRetryDelay correctly uses Number.isInteger for attempt, checks finite nowMs, applies 1000*2^(attempt-1) with a 300000ms cap, and Retry-After overrides backoff. Large attempts return the capped 300000 (2**large=Infinity, min caps it). However, the contract requires signed and fractional strings to return null; because these fall through to Date.parse, '-5', '+5', and '5.5' are interpreted by V8 as year-dates and return 0 instead of null (verified on node v18). Exponent ('1e3') and hex ('0x10') return null only incidentally since Date.parse rejects them, not by explicit design. The code is clean, minimal (19 lines), Node built-ins only, and stays strictly within the single allowed file.",
+    "concerns": [
+      "parseRetryAfter('-5'), ('+5'), and ('5.5') return 0 instead of null because Date.parse leniently interprets them as year-dates, violating the explicit 'signed/fractional numbers are invalid and return null' requirement",
+      "Rejection of exponent/hex notation relies on Date.parse's incidental behavior rather than explicit validation, making it fragile to engine differences",
+      "Public tests do not exercise these invalid-numeric edge cases, so passing tests do not confirm full contract compliance"
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

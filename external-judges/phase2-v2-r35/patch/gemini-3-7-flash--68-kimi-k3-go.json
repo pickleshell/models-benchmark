@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4165,
+    "usage": {
+      "reported_cost_usd": 0.01299,
+      "steps": 1,
+      "tokens": {
+        "input": 8300,
+        "output": 9,
+        "reasoning": 63,
+        "total": 8372,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 1,
+    "duration_ms": 51733,
+    "usage": {
+      "reported_cost_usd": 0.1680879,
+      "steps": 12,
+      "tokens": {
+        "input": 80228,
+        "output": 1511,
+        "reasoning": 3544,
+        "total": 150839,
+        "cache_read": 65556,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": null,
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

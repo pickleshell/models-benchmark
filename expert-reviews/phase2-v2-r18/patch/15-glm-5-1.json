@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r18",
+  "candidate": "15-glm-5-1",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "gpt-5.6-sol"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS and only the permitted retryPolicy.js file changed.",
+    "Hidden evaluator failed exact assertion must reject \"+1\": actual 0, expected null.",
+    "The ASCII-digits branch is correct, but signed/fractional numeric-like strings can still fall through to permissive Date.parse."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": 4264,
+    "candidate_preflight_cost_usd": 0.00214484,
+    "solution_duration_ms": 68962,
+    "solution_cost_usd": 0.06041756,
+    "public_tests_duration_ms": 606,
+    "objective_evaluator_duration_ms": 178
+  }
+}

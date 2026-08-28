@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "source_release": "phase2-v2-r6",
+  "candidate": "56-kimi-k3-opencode",
+  "nomination": "patch",
+  "judge": {
+    "id": "claude-opus-4-8",
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "duration_ms": 4943,
+    "reported_cost_usd": 0.07000375
+  },
+  "review": {
+    "duration_ms": 61543,
+    "reported_cost_usd": 0.17827175
+  },
+  "scores": {
+    "functional_correctness": 7,
+    "reliability_edge_cases": 5,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 7.75,
+  "confidence": 0.9,
+  "concerns": [
+    "Signed and fractional numeric forms are accepted indirectly by Date.parse instead of returning null.",
+    "Exponent/hex rejection is incidental to Date.parse behavior rather than explicit validation.",
+    "Public tests do not cover these adversarial numeric forms."
+  ],
+  "raw_logs": "raw/claude-opus-4-8--56-kimi-k3-opencode",
+  "notes": [
+    "Blind external retry after canonical judge call returned transient server error."
+  ]
+}

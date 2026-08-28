@@ -13,7 +13,7 @@ const run = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const runnerScript = path.join(root, 'scripts/run-pilot.mjs');
 
-test('runner rejects an existing release before invoking a model', async () => {
+test('runner permits an existing release directory for staged invocation', async () => {
   const temp = await mkdtemp(path.join(os.tmpdir(), 'models-benchmark-release-'));
   const modelsTest = path.join(temp, 'models-test');
   const results = path.join(modelsTest, 'results', 'immutable');
@@ -31,7 +31,7 @@ test('runner rejects an existing release before invoking a model', async () => {
   }));
   await assert.rejects(
     run(process.execPath, [runnerScript], { env: { ...process.env, BENCHMARK_CONFIG: configPath } }),
-    /release already exists/
+    /clean-room account not found/
   );
 });
 

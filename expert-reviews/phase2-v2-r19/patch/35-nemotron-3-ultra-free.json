@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r19",
+  "candidate": "35-nemotron-3-ultra-free",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "gpt-5.6-sol"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS and only the permitted retryPolicy.js file changed.",
+    "Hidden evaluator failed exact assertion must reject \"+1\": actual 0, expected null; signed/fractional numeric-like strings still fall through to permissive Date.parse.",
+    "The frozen patch is reviewable and otherwise corrects past-date clamping, positive-integer attempt validation, and fallback exponent.",
+    "Agent process ended after producing the patch and passing public tests because Nvidia returned 502 Service temporarily overloaded. The provider/stream failure is preserved separately as agent_failure and does not change the frozen patch quality score.",
+    "Provider-reported candidate solution cost is $0."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": 7095,
+    "candidate_preflight_cost_usd": 0,
+    "solution_duration_ms": 71501,
+    "solution_cost_usd": 0,
+    "public_tests_duration_ms": 603,
+    "objective_evaluator_duration_ms": 184,
+    "agent_outcome": "agent_failure",
+    "agent_status": 1
+  }
+}

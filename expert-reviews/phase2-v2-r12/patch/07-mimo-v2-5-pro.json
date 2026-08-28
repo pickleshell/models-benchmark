@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r12",
+  "candidate": "07-mimo-v2-5-pro",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "GPT-5.6"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS; only the permitted retryPolicy.js file changed.",
+    "The objective evaluator failed the exact assertion must reject \"+1\": permissive Date.parse fallback returns 0 instead of null for that signed numeric-like Retry-After value, violating the explicit contract.",
+    "The ASCII-digit delta parsing, seeded backoff, past-date clamp, finite nowMs handling, and positive-integer attempt validation are otherwise corrected cleanly."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": null,
+    "candidate_preflight_cost_usd": null,
+    "solution_duration_ms": 64069,
+    "solution_cost_usd": 0.004208915,
+    "candidate_total_known_cost_usd": null,
+    "total_run_duration_ms": 65036,
+    "public_tests_duration_ms": 600,
+    "objective_evaluator_duration_ms": 183
+  }
+}

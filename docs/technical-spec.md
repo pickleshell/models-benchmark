@@ -9,7 +9,8 @@ provider availability, execution failure, timeout, and evaluator failure.
 ## 2. Non-goals
 
 - A generic leaderboard for language understanding.
-- Measuring raw token or API cost before a reliable usage source exists.
+- Estimating token or API cost when a provider-reported solution cost is
+  unavailable.
 - Requiring the benchmark pipeline itself to be public; task data and tests are
   public, while orchestration and judging implementation remain private.
 - Ranking models from a single task or a single provider outage.
@@ -20,7 +21,8 @@ The benchmark is intentionally close to normal use of a coding agent rather
 than a collection of isolated micro-prompts. Counts below are release
 configuration, not architectural limits:
 
-- a configurable number of tasks is run sequentially for each candidate;
+- a Benchmark freezes a full roster, then executes one selected Nomination
+  across any selected subset of models before moving to another Nomination;
 - the initial hardened pilot uses the public `feature-implementation` and
   `refactoring` tasks from `models-test`;
 - the pilot candidate set contains any three models already represented in the
@@ -37,13 +39,41 @@ configuration, not architectural limits:
 The benchmark must measure practical end-to-end work, not only the ability to
 solve a small isolated function.
 
+### Visible assistant commentary
+
+An append-only `assistant-commentary.jsonl` may retain user-visible ChatGPT
+benchmark progress, comments, and summaries for UI use at
+`annotations/<release>/<candidate>/`. It is annotation metadata, not benchmark
+ground truth: it must not alter candidate outcomes, hidden evaluator inputs or
+results, judge inputs, scores, or publication artifacts. Never record private
+chain-of-thought, secrets, credentials, hidden evaluator raw output, or
+unpublished sensitive internals.
+
+### Cost reporting policy
+
+The primary cost in a leaderboard or table is the provider-reported solution
+cost for the candidate task execution. It is the model's displayed task price
+and excludes candidate preflight plus every judge, fallback, and expert-review
+cost. Candidate total known cost including preflight may remain secondary
+telemetry. Input, output, reasoning, and cache token counts are diagnostic
+telemetry only and do not replace solution cost.
+
+If provider-reported solution cost is unknown, the value remains `null` and is
+rendered as `N/A` where appropriate; the pipeline and reporting layer must
+never estimate it from tokens, elapsed time, published rates, or another
+proxy. This reporting policy changes presentation only and does not permit
+rewriting immutable historical artifacts.
+
 ## 3. Core Concepts
 
-- **Benchmark release**: immutable version containing task fixtures, prompts,
-  rubric, runner, evaluator contract, and model manifest.
-- **Task**: a versioned repository state, public instructions, documentation,
-  and public tests.
-- **Run**: one candidate execution on one task in one isolated workspace.
+- **Benchmark**: the immutable release containing all nominations, the full
+  model roster, judging/evaluator contracts, and environment/spec hashes.
+- **Nomination**: one concrete benchmark task/category instance: its versioned
+  repository state, public instructions, documentation, and public tests.
+- **Run**: one specific model executing one Nomination within one Benchmark;
+  its logical identity is `(benchmark/release, model/candidate, nomination)`.
+- **Attempt**: one immutable execution attempt for a Run. The initial
+  execution is attempt 1; a retry creates attempt 2 and never overwrites 1.
 - **Candidate**: model, runtime, provider, and invocation configuration.
 - **Harness**: adapter that starts a candidate and streams normalized events.
 - **Evaluator**: independent process that tests the resulting workspace and
@@ -57,7 +87,7 @@ solve a small isolated function.
 
 ## 3.1 Candidate, Task, Judge, and Rubric Manifests
 
-Candidates, tasks, judges, and criteria are data, not hard-coded runner logic.
+Candidates, nominations, judges, and criteria are data, not hard-coded runner logic.
 Their counts may change between benchmark releases. The runner must validate
 and report the configured matrix rather than assume fixed cardinality. The
 first version should use a versioned manifest such as:
@@ -73,7 +103,7 @@ first version should use a versioned manifest such as:
       "subscription": "free"
     }
   ],
-  "tasks": ["phase1-ledger", "phase2-feature-implementation"],
+  "nominations": ["phase1-ledger", "phase2-feature-implementation"],
   "judges": [
     {"id": "chatgpt", "provider": "openai", "model": "..."},
     {"id": "gemini", "provider": "google", "model": "..."}
@@ -87,24 +117,31 @@ first version should use a versioned manifest such as:
 }
 ```
 
-Claude is intentionally excluded from the current pilot judge matrix, not
-from the architecture. The manifest must record model IDs and provider
-configuration without storing credentials.
+For fresh Phase2-v2 releases beginning with r18, canonical judging is ordered:
+first an expert review by ChatGPT `gpt-5.6-sol`, then exactly one identity-blind
+AI judge, `gemini-3-7-flash`. The mutable base configuration records the expert
+identity and contains only Gemini in `judges`; future fallback orchestration is
+limited to that Gemini attempt. Claude Opus 4.8 is removed from future
+canonical/fallback use because it is materially more expensive than Gemini and
+missed the deterministic hidden signed/fractional `Date.parse` `+1` defect in
+multiple completed Patch runs, so its incremental review value did not justify
+the recurring cost. Historical Claude results remain immutable evidence. The
+frozen r17 Nemotron specification is the final old two-blind-judge run because
+it was already in progress at the policy change; its incurred Claude cost stays
+recorded. The manifest must record model IDs and provider configuration without
+storing credentials.
 
 ## 4. Pipeline
 
-1. Resolve an immutable benchmark release, candidate manifest, and judge
-   manifest.
-2. Provision or reset the dedicated clean-room Linux account.
-3. Prepare the configured task workspace and task documentation in that
-   account. The next hardened pilot uses `feature-implementation` and
-   `refactoring`; later releases may configure more tasks.
-4. Probe every required judge before creating a release; stop if a required
-   judge is unavailable.
-5. Probe each candidate model with a harmless request and mark an unavailable
-   model before it receives any benchmark task.
-6. Start every available candidate through its configured agent (OpenCode or Codex) and
-   execute the configured tasks sequentially.
+1. Freeze the Benchmark, including its full model roster and all nomination,
+   evaluator, judge, and environment/spec hashes.
+2. Select one Nomination and any subset of roster model IDs; this filter does
+   not mutate the Benchmark manifest or release identity.
+3. Provision or reset the dedicated clean-room Linux account and prepare that
+   Nomination's workspace and documentation.
+4. Preflight only the selected models (and judges when that phase requires it).
+5. Start every selected available model through its configured agent to create
+   exactly one Run per selected model for the Nomination.
 7. Enforce timeout, per-stream output limits, process-group cleanup, and
    cancellation.
 8. Freeze the complete configured result before judging.
@@ -115,11 +152,11 @@ configuration without storing credentials.
     another judge's score.
 12. Enforce allowed paths and classify forbidden modifications before judging.
 13. Persist schema-versioned artifacts and classify every outcome.
-14. Reset the clean room completely before the next candidate. The reset is
+14. Reset the clean room completely before the next Attempt. The reset is
    run by the benchmark runner as the candidate account and removes the
    workspace, agent session files, caches, and other task history before
    restoring the original task state.
-15. Aggregate only comparable runs into a report with confidence notes.
+15. Aggregate only comparable canonical Attempts into a report with confidence notes.
 
 The runner writes sanitized results into a checkout of the public
 `models-test` repository (or an equivalent results directory). It prepares
@@ -193,7 +230,16 @@ following controls are part of the implemented contract:
    `forbidden_changes` result, not a successful solution.
 9. **Evidence separation.** Raw stdout, stderr, and diagnostics stay in a
    runner-owned private directory. Public results contain only sanitized,
-   reviewable artifacts.
+   reviewable artifacts. In particular, public test results retain execution
+   metadata and hashes of private output, never candidate-controlled raw text.
+   Hidden evaluator files are resolved only under the runner-private evaluator
+   root; the release manifest includes only their ID and content/source hashes.
+   The trusted runner copies evaluator, fixture, and immutable patch into a
+   disposable root, then transfers that exact root to the clean-room UID before
+   mounting it as the evaluator's sole writable bind. Trusted cleanup removes
+   it after exit. Objective units use `PrivateNetwork=yes`; with
+   `ProtectSystem=strict`, `/usr/bin/node` and its host system libraries remain
+   read-only-visible and no OpenCode/runtime/auth bind is present.
 10. **Independent blind judging.** Each judge receives a unique anonymous
     workspace rebuilt from the trusted baseline plus one recorded patch, plus a
     fresh agent home. Candidate identity, runtime, provider, subscription,
@@ -242,7 +288,9 @@ Each run must produce JSON containing at least:
   "schema_version": 1,
   "run_id": "run_...",
   "benchmark_version": "v...",
-  "task_id": "...",
+  "nomination": "...",
+  "run_id": "<release>:<model>:<nomination>",
+  "attempt": 1,
   "candidate": {
     "model": "...",
     "agent": "opencode",
@@ -334,7 +382,9 @@ relationship to the original.
 
 The initial implementation should provide:
 
-- a CLI to validate manifests and run one task or a matrix;
+- a CLI to validate manifests and execute one selected Nomination across a
+  selected model subset; `--nomination <id>` is canonical and `--task <id>` is
+  deprecated compatibility only;
 - a local evaluator command;
 - a schema validator for run artifacts;
 - an aggregation command that emits JSON and Markdown data for a separate
@@ -367,3 +417,7 @@ human review is required for disputes. The pilot selects any three candidates
 already listed in the public model comparison. Task, candidate, judge, and
 criterion counts remain configurable per release. Retry policy is fixed for the
 current pilot: one pass and one chance, with no candidate retry.
+
+
+### Canonical per-Nomination scorecard
+Each judge returns four 1–10 scores: `functional_correctness`, `reliability_edge_cases , `maintainability_clarity`, and `scope_discipline`. The runner/aggregator computes the arithmetic mean; judge-supplied averages are not authoritative. Scorecards are retained per Nomination and may be aggregated later. Blind judges are not shown hidden objective-evaluator status.

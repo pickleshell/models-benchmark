@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { pathToFileURL } from 'node:url';
+const source = process.argv[process.argv.indexOf('--source') + 1];
+const index = source.replace(/src[\\/]labels[\\/]statusLabel\.js$/, 'src/index.js');
+const { renderAccountSummary } = await import(pathToFileURL(index).href);
+const account = { name: '  Ada  ', status: ' pending__REVIEW - 42 ', balance: 7 }; const before = JSON.stringify(account);
+assert.equal(renderAccountSummary(account), 'Account: Ada | Status: Pending Review 42 | Balance: 7.00');
+assert.equal(renderAccountSummary({ name: null, status: '___ -- ', balance: Infinity }), 'Account:  | Status:  | Balance: 0.00');
+assert.equal(renderAccountSummary({ name: 'N', status: 'x---y  12', balance: -1.2 }), 'Account: N | Status: X Y 12 | Balance: -1.20');
+assert.equal(renderAccountSummary(undefined), 'Account:  | Status:  | Balance: 0.00'); assert.equal(JSON.stringify(account), before);

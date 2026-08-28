@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "release": "phase2-v2-r35",
+  "require_nomination_selection": true,
+  "retry_policy": {
+    "canonical_attempt": 1,
+    "allow_retries": false
+  },
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/benchmark-phase2-v2",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "strict_artifacts": true,
+  "artifact_schemas": {
+    "run": 1,
+    "judge": 1,
+    "preflight": 1,
+    "aggregate": 2,
+    "test_result": 1,
+    "candidate_diff": 1,
+    "objective_evaluator": 1
+  },
+  "clean_room": {
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home"
+  },
+  "nominations": [
+    {
+      "id": "patch",
+      "fixture": "fixtures/phase2-v2/patch-retry-policy",
+      "prompt": "benchmarks/phase2-v2/prompts/patch.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/patch-retry-policy"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-patch-retry-policy-v1",
+        "path": "phase2-v2/patch.mjs",
+        "source": "fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js"
+      }
+    },
+    {
+      "id": "bug-fix-ledger",
+      "fixture": "fixtures/phase2-v2/bug-fix-ledger",
+      "prompt": "benchmarks/phase2-v2/prompts/bug-fix-ledger.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/bug-fix-ledger"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-bug-fix-ledger-v1",
+        "path": "phase2-v2/bug-fix-ledger.mjs",
+        "source": "fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"
+      }
+    },
+    {
+      "id": "feature-implementation",
+      "fixture": "fixtures/phase2-v2/feature-implementation",
+      "prompt": "benchmarks/phase2-v2/prompts/feature-implementation.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/feature-implementation"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/feature-implementation/src/featureFlags.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-feature-implementation-v1",
+        "path": "phase2-v2/feature-implementation.mjs",
+        "source": "fixtures/phase2-v2/feature-implementation/src/featureFlags.js"
+      }
+    },
+    {
+      "id": "refactoring",
+      "fixture": "fixtures/phase2-v2/refactoring",
+      "prompt": "benchmarks/phase2-v2/prompts/refactoring.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/refactoring"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/refactoring/src/events.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-refactoring-v1",
+        "path": "phase2-v2/refactoring.mjs",
+        "source": "fixtures/phase2-v2/refactoring/src/events.js"
+      }
+    },
+    {
+      "id": "repository-navigation",
+      "fixture": "fixtures/phase2-v2/repository-navigation",
+      "prompt": "benchmarks/phase2-v2/prompts/repository-navigation.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/repository-navigation"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/repository-navigation/src/labels/statusLabel.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-repository-navigation-v1",
+        "path": "phase2-v2/repository-navigation.mjs",
+        "source": "fixtures/phase2-v2/repository-navigation/src/labels/statusLabel.js"
+      }
+    },
+    {
+      "id": "tests-edge-cases",
+      "fixture": "fixtures/phase2-v2/tests-edge-cases",
+      "prompt": "benchmarks/phase2-v2/prompts/tests-edge-cases.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/tests-edge-cases"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/tests-edge-cases/src/range.js",
+        "fixtures/phase2-v2/tests-edge-cases/test/range.test.mjs"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-tests-edge-cases-v1",
+        "path": "phase2-v2/tests-edge-cases.mjs",
+        "source": "fixtures/phase2-v2/tests-edge-cases/src/range.js"
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "id": "68-kimi-k3-go",
+      "label": "Kimi K3 (OpenCode Go)",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k3",
+      "reasoning_variant": "provider_default"
+    }
+  ],
+  "judges": [
+    {
+      "id": "gemini-3-7-flash",
+      "agent": "opencode",
+      "provider": "opencode",
+      "model": "opencode/gemini-3.7-flash",
+      "subscription": "paid",
+      "reasoning_variant": "provider_default"
+    }
+  ],
+  "criteria": [
+    "functional_correctness",
+    "reliability_edge_cases",
+    "maintainability_clarity",
+    "scope_discipline"
+  ],
+  "canonical_expert_review": {
+    "order": 1,
+    "reviewer": {
+      "name": "ChatGPT",
+      "model": "gpt-5.6-sol"
+    },
+    "required_before_blind_judges": true
+  }
+}

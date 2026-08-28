@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r22",
+  "candidate": "19-big-pickle",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "gpt-5.6-sol"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS and only the permitted retryPolicy.js file changed.",
+    "Hidden evaluator fails the exact signed numeric-like case: must reject \"+1\", actual 0, expected null. Non-digit strings still fall through to permissive Date.parse.",
+    "The patch otherwise fixes positive-integer attempts, 2^(attempt-1) fallback, huge-attempt finite cap, and past-date clamping.",
+    "Provider-reported solution cost is $0 and solution duration is 13.167 s; preflight is also provider-reported $0."
+  ]
+}

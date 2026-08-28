@@ -33,11 +33,12 @@ export function safeJudgeEvidence(candidateResult) {
 }
 
 // Synchronous version for backward compatibility (default export)
-export function buildJudgePrompt({ taskId, criteria, candidateResult }) {
+export function buildJudgePrompt({ taskId, taskInstructions = '', criteria, candidateResult }) {
   const evidence = safeJudgeEvidence(candidateResult);
   return [
     'You are an independent code judge. Do not modify files.',
     `Review the submitted solution for task ${taskId}.`,
+    `Task instructions:\n${taskInstructions}`,
     `Score each criterion from 1 to 10: ${criteria.join(', ')}.`,
     'Return a concise JSON object with scores, confidence, explanation, and concerns.',
     `Safe execution evidence: ${JSON.stringify(evidence)}`,
@@ -46,19 +47,20 @@ export function buildJudgePrompt({ taskId, criteria, candidateResult }) {
 }
 
 // Async version that uses versioned template from config
-export async function buildJudgePromptAsync({ taskId, criteria, candidateResult }) {
+export async function buildJudgePromptAsync({ taskId, taskInstructions = '', criteria, candidateResult }) {
   const config = await loadJudgePromptConfig();
   const evidence = safeJudgeEvidence(candidateResult);
   const prompt = config.template
     .replace('{taskId}', taskId)
+    .replace('{taskInstructions}', taskInstructions)
     .replace('{criteria}', criteria.join(', '))
     .replace('{evidence}', JSON.stringify(evidence));
   return prompt;
 }
 
 // Build prompt and compute hash of the rendered prompt (what judge actually receives)
-export async function buildJudgePromptWithHash({ taskId, criteria, candidateResult }) {
-  const prompt = await buildJudgePromptAsync({ taskId, criteria, candidateResult });
+export async function buildJudgePromptWithHash({ taskId, taskInstructions = '', criteria, candidateResult }) {
+  const prompt = await buildJudgePromptAsync({ taskId, taskInstructions, criteria, candidateResult });
   const promptHash = await computeHash(prompt);
   return { prompt, prompt_hash: promptHash };
 }

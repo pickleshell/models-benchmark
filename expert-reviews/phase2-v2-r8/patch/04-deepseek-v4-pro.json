@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r8",
+  "candidate": "04-deepseek-v4-pro",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "GPT-5.6 Sol"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS and only the permitted retryPolicy.js file changed.",
+    "Hidden evaluator FAIL: parseRetryAfter('+1', nowMs) returns 0 instead of null because signed numeric-like input falls through to permissive Date.parse.",
+    "The patch correctly fixes seeded backoff indexing, positive-integer attempt validation, and clamps past HTTP dates to zero, but does not explicitly reject signed/fractional/exponent/hex numeric-like strings before date parsing."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": 4382,
+    "candidate_preflight_cost_usd": 0.00490116,
+    "solution_duration_ms": 43028,
+    "solution_cost_usd": 0.013112924,
+    "candidate_total_known_cost_usd": 0.018014084,
+    "total_run_duration_ms": 43973,
+    "public_tests_duration_ms": 586,
+    "objective_evaluator_duration_ms": 179,
+    "solution_tokens": {
+      "input": 10089,
+      "output": 1176,
+      "reasoning": 1310,
+      "cache_read": 69632,
+      "cache_write": 0,
+      "total": 82207
+    }
+  }
+}

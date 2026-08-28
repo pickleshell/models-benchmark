@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r17",
+  "candidate": "59-nemotron-3-super-openrouter-free",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "GPT-5.6 Sol"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS; only the permitted retryPolicy.js file changed.",
+    "Hidden evaluator failed exact assertion must reject \"+1\": actual 0, expected null.",
+    "The patch correctly handles ASCII digit delta seconds, finite nowMs for date parsing, past-date clamp, positive-integer attempt validation, and corrected backoff exponent, but still permits signed/fractional numeric-like strings to fall through to Date.parse."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": 7248,
+    "candidate_preflight_cost_usd": 0,
+    "solution_duration_ms": 111281,
+    "solution_cost_usd": 0,
+    "public_tests_duration_ms": 613,
+    "objective_evaluator_duration_ms": 188
+  }
+}

@@ -1,0 +1,382 @@
+{
+  "schema_version": 1,
+  "release": "phase2-v2-r5",
+  "require_nomination_selection": true,
+  "retry_policy": {
+    "canonical_attempt": 1,
+    "allow_retries": false
+  },
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/benchmark-phase2-v2",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "strict_artifacts": true,
+  "artifact_schemas": {
+    "run": 1,
+    "judge": 1,
+    "preflight": 1,
+    "aggregate": 2,
+    "test_result": 1,
+    "candidate_diff": 1,
+    "objective_evaluator": 1
+  },
+  "clean_room": {
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home"
+  },
+  "nominations": [
+    {
+      "id": "patch",
+      "fixture": "fixtures/phase2-v2/patch-retry-policy",
+      "prompt": "benchmarks/phase2-v2/prompts/patch.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/patch-retry-policy"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-patch-retry-policy-v1",
+        "path": "phase2-v2/patch.mjs",
+        "source": "fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js"
+      }
+    },
+    {
+      "id": "bug-fix-ledger",
+      "fixture": "fixtures/phase2-v2/bug-fix-ledger",
+      "prompt": "benchmarks/phase2-v2/prompts/bug-fix-ledger.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/bug-fix-ledger"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-bug-fix-ledger-v1",
+        "path": "phase2-v2/bug-fix-ledger.mjs",
+        "source": "fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"
+      }
+    },
+    {
+      "id": "feature-implementation",
+      "fixture": "fixtures/phase2-v2/feature-implementation",
+      "prompt": "benchmarks/phase2-v2/prompts/feature-implementation.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/feature-implementation"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/feature-implementation/src/featureFlags.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-feature-implementation-v1",
+        "path": "phase2-v2/feature-implementation.mjs",
+        "source": "fixtures/phase2-v2/feature-implementation/src/featureFlags.js"
+      }
+    },
+    {
+      "id": "refactoring",
+      "fixture": "fixtures/phase2-v2/refactoring",
+      "prompt": "benchmarks/phase2-v2/prompts/refactoring.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/refactoring"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/refactoring/src/events.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-refactoring-v1",
+        "path": "phase2-v2/refactoring.mjs",
+        "source": "fixtures/phase2-v2/refactoring/src/events.js"
+      }
+    },
+    {
+      "id": "repository-navigation",
+      "fixture": "fixtures/phase2-v2/repository-navigation",
+      "prompt": "benchmarks/phase2-v2/prompts/repository-navigation.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/repository-navigation"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/repository-navigation/src/labels/statusLabel.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-repository-navigation-v1",
+        "path": "phase2-v2/repository-navigation.mjs",
+        "source": "fixtures/phase2-v2/repository-navigation/src/labels/statusLabel.js"
+      }
+    },
+    {
+      "id": "tests-edge-cases",
+      "fixture": "fixtures/phase2-v2/tests-edge-cases",
+      "prompt": "benchmarks/phase2-v2/prompts/tests-edge-cases.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/tests-edge-cases"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/tests-edge-cases/src/range.js",
+        "fixtures/phase2-v2/tests-edge-cases/test/range.test.mjs"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-tests-edge-cases-v1",
+        "path": "phase2-v2/tests-edge-cases.mjs",
+        "source": "fixtures/phase2-v2/tests-edge-cases/src/range.js"
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "id": "01-gpt-5-6-luna",
+      "agent": "opencode",
+      "model": "opencode-go/gpt-5.6-luna",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "02-qwen3-7-plus",
+      "agent": "opencode",
+      "model": "opencode-go/qwen3.7-plus",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "03-kimi-k2-7-code",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k2.7-code",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "04-deepseek-v4-pro",
+      "agent": "opencode",
+      "model": "opencode-go/deepseek-v4-pro",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "05-glm-5-2",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.2",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "06-minimax-m3",
+      "agent": "opencode",
+      "model": "opencode-go/minimax-m3",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "07-mimo-v2-5-pro",
+      "agent": "opencode",
+      "model": "opencode-go/mimo-v2.5-pro",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "09-grok-4-5",
+      "agent": "opencode",
+      "model": "opencode-go/grok-4.5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "10-kimi-k3",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k3",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "11-deepseek-v4-flash",
+      "agent": "opencode",
+      "model": "opencode-go/deepseek-v4-flash",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "13-mimo-v2-5",
+      "agent": "opencode",
+      "model": "opencode-go/mimo-v2.5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "14-hy3",
+      "agent": "opencode",
+      "model": "opencode-go/hy3",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "15-glm-5-1",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.1",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "16-kimi-k2-6",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k2.6",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "17-minimax-m2-7",
+      "agent": "opencode",
+      "model": "opencode-go/minimax-m2.7",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "18-gpt-5-3-codex-spark",
+      "agent": "codex",
+      "model": "gpt-5.3-codex-spark",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "19-big-pickle",
+      "agent": "opencode",
+      "model": "opencode/big-pickle",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "20-laguna-s-2-1-free",
+      "agent": "opencode",
+      "model": "opencode/laguna-s-2.1-free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "22-deepseek-v4-flash-free",
+      "agent": "opencode",
+      "model": "opencode/deepseek-v4-flash-free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "27-hy3-free",
+      "agent": "opencode",
+      "model": "opencode/hy3-free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "28-mimo-v2-5-free",
+      "agent": "opencode",
+      "model": "opencode/mimo-v2.5-free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "33-nemotron-3-5-lightning-free",
+      "agent": "opencode",
+      "model": "opencode/nemotron-3.5-lightning-free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "35-nemotron-3-ultra-free",
+      "agent": "opencode",
+      "model": "opencode/nemotron-3-ultra-free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "46-gpt-5-6-luna",
+      "agent": "codex",
+      "model": "gpt-5.6-luna",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "47-gpt-5-6-sol",
+      "agent": "codex",
+      "model": "gpt-5.6-sol",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "48-gpt-5-6-terra",
+      "agent": "codex",
+      "model": "gpt-5.6-terra",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "49-gpt-5-4",
+      "agent": "codex",
+      "model": "gpt-5.4",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "50-gpt-5-4-mini",
+      "agent": "codex",
+      "model": "gpt-5.4-mini",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "51-claude-haiku-4-5",
+      "agent": "opencode",
+      "model": "opencode/claude-haiku-4-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "52-claude-sonnet-5",
+      "agent": "opencode",
+      "model": "opencode/claude-sonnet-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "53-claude-opus-5",
+      "agent": "opencode",
+      "model": "opencode/claude-opus-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "54-inkling-openrouter",
+      "agent": "opencode",
+      "model": "openrouter/thinkingmachines/inkling",
+      "subscription": "paid",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "55-glm-5-3-go",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.3",
+      "subscription": "paid",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "56-kimi-k3-opencode",
+      "agent": "opencode",
+      "model": "opencode/kimi-k3",
+      "subscription": "paid",
+      "reasoning_variant": "provider_default"
+    }
+  ],
+  "canonical_expert_review": {
+    "order": 1,
+    "reviewer": {
+      "name": "ChatGPT",
+      "model": "gpt-5.6-sol"
+    },
+    "required_before_blind_judges": true
+  },
+  "judges": [
+    {
+      "id": "gemini-3-7-flash",
+      "agent": "opencode",
+      "provider": "opencode",
+      "model": "opencode/gemini-3.7-flash",
+      "subscription": "paid",
+      "reasoning_variant": "provider_default"
+    }
+  ],
+  "criteria": [
+    "functional_correctness",
+    "reliability_edge_cases",
+    "maintainability_clarity",
+    "scope_discipline"
+  ]
+}

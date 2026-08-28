@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "source_release": "phase2-v2-r4",
+  "nomination": "patch",
+  "judge": {
+    "id": "gemini-3-7-flash",
+    "model": "opencode/gemini-3.7-flash",
+    "subscription": "paid"
+  },
+  "scores": {
+    "functional_correctness": 9,
+    "reliability_edge_cases": 8,
+    "maintainability_clarity": 10,
+    "scope_discipline": 10
+  },
+  "average": 9.25,
+  "confidence": 0.95,
+  "explanation": "The patch cleanly fixes the exponential backoff formula (attempt - 1), enforces integer attempts, clamps HTTP-date delays with Math.max(0, ...), and restricts delta-seconds to ASCII digits. However, signed and fractional strings (e.g. '+5', '1.5') fall through to Date.parse, which V8 parses as dates resulting in 0 ms instead of null.",
+  "concerns": [
+    "Signed and fractional numeric strings (e.g., '+5', '1.5') are not rejected before Date.parse, causing Date.parse to leniently parse them and return 0 instead of null."
+  ],
+  "canonical_release_artifact": false
+}

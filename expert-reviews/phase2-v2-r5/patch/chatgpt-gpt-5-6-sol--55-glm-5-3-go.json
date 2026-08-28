@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "source_release": "phase2-v2-r5",
+  "candidate": "55-glm-5-3-go",
+  "nomination": "patch",
+  "reviewer": {
+    "id": "chatgpt-gpt-5-6-sol",
+    "model": "GPT-5.6 Sol",
+    "role": "expert_review"
+  },
+  "scores": {
+    "functional_correctness": 10,
+    "reliability_edge_cases": 10,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 9.75,
+  "objective_evaluator": "PASS",
+  "public_tests": "PASS",
+  "explanation": "The patch satisfies the full contract, passes public and hidden objective evaluation, and passes additional adversarial probes. The only deduction is maintainability/clarity: NUMERIC_LIKE and HEX_LIKE are correct but denser than the surrounding implementation.",
+  "canonical_release_artifact": false
+}

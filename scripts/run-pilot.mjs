@@ -1,19 +1,22 @@
 #!/usr/bin/env node
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import {
   classifyOutcome,
   createBoundedCollector,
   findForbiddenChanges,
   hasModelResponse,
   parsePorcelainPaths,
+  summarizeModelUsage,
   validateJudgePayload
 } from './lib/runner-utils.mjs';
 import { validateSchemaVersion, getSchemaVersion, getRegistry, loadSchemaRegistry } from './lib/schema-registry.mjs';
-import { computeFileHash, computeArtifactHash } from './lib/artifact-hash.mjs';
+import { computeFileHash, computeArtifactHash, computeHash, verifyFileHash } from './lib/artifact-hash.mjs';
+import { assertNoKnownCredentialLeak, collectSecretLikeStrings } from './lib/publication-guard.mjs';
 import {
   buildJudgeInvocation,
   buildJudgeEnvironment,
@@ -25,6 +28,15 @@ import {
   getJudgePromptMetadata
 } from './lib/blind-judging.mjs';
 import { acquireCleanRoomLock, releaseCleanRoomLock, retainCleanRoomLock } from './lib/clean-room-lock.mjs';
+import { hashTree } from './lib/tree-hash.mjs';
+import {
+  buildObjectiveSandboxInvocation,
+  objectiveWorkspaceCreateCommand,
+  objectiveWorkspaceCleanupCommand,
+  objectiveWorkspaceHandoffCommand,
+  objectiveWorkspaceRuntimeDir
+} from './lib/objective-sandbox.mjs';
+import { createObjectiveWorkspace } from './lib/objective-workspace.mjs';
 
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
 const configPath = process.env.BENCHMARK_CONFIG
@@ -32,15 +44,42 @@ const configPath = process.env.BENCHMARK_CONFIG
   : path.join(repo, 'config', 'pilot.json');
 const config = JSON.parse(await readFile(configPath, 'utf8'));
 const schemaRegistry = await loadSchemaRegistry(configPath);
-const dryRun = process.argv.includes('--dry-run');
+const argv = process.argv.slice(2);
+const dryRun = argv.includes('--dry-run');
+const resume = argv.includes('--resume');
+function optionValues(name) {
+  const values = [];
+  for (let i = 0; i < argv.length; i += 1) {
+    if (argv[i] === name && argv[i + 1]) values.push(...argv[i + 1].split(',').filter(Boolean));
+  }
+  return values;
+}
+const phase = optionValues('--phase')[0] || 'all';
+if (!['all', 'candidates', 'judges'].includes(phase)) throw new Error(`invalid --phase: ${phase}`);
+const nominations = config.nominations ?? config.tasks ?? [];
+const nominationValues = optionValues('--nomination');
+const legacyTaskValues = optionValues('--task');
+if (nominationValues.length && legacyTaskValues.length) throw new Error('use --nomination; --task is a deprecated compatibility alias and cannot be combined with it');
+if (legacyTaskValues.length) process.stderr.write('warning: --task is deprecated; use --nomination instead\n');
+if (config.require_nomination_selection === true && !(nominationValues.length || legacyTaskValues.length)) {
+  throw new Error('this benchmark requires explicit --nomination <id> selection');
+}
+const selectedAttempt = Number(optionValues('--attempt')[0] || config.retry_policy?.canonical_attempt || 1);
+if (!Number.isInteger(selectedAttempt) || selectedAttempt < 1) throw new Error('--attempt must be a positive integer');
+if (selectedAttempt > 1 && config.retry_policy?.allow_retries !== true) {
+  throw new Error(`attempt ${selectedAttempt} is not permitted by this benchmark retry policy`);
+}
+if (selectedAttempt > 1 && !optionValues('--attempt').length) throw new Error('a retry requires an explicit --attempt value');
 const timeoutMs = Number(process.env.BENCHMARK_TIMEOUT_MS || 15 * 60 * 1000);
 const maxOutputBytes = Number(process.env.BENCHMARK_MAX_OUTPUT_BYTES || 2 * 1024 * 1024);
 const modelsTest = path.resolve(config.models_test);
 const expandHome = (value) => value.replace(/^~(?=$|\/)/, os.homedir());
+const privateEvaluatorsDir = path.resolve(expandHome(config.private_evaluators_dir || path.join(repo, 'evaluators')));
 const cleanWorkspace = path.resolve(expandHome(config.clean_room.workspace));
 const agentHome = path.resolve(expandHome(config.clean_room.agent_home));
 const candidateUser = config.clean_room.user;
 const cleanRoomHome = path.resolve(config.clean_room.home);
+const cleanRoomAuthFile = path.join(cleanRoomHome, '..', '.local', 'share', 'opencode', 'auth.json');
 const resetScript = path.resolve(config.clean_room.reset_script);
 const archiveRoot = path.join(cleanRoomHome, 'task-archive');
 const judgeRoot = path.join(cleanRoomHome, 'judge');
@@ -52,9 +91,23 @@ const cleanRoomLockPath = config.clean_room.lock_path
   ? path.resolve(expandHome(config.clean_room.lock_path))
   : path.join(path.dirname(privateDir), 'clean-room.lock');
 const publicReleaseDir = path.join(resultsDir, config.release);
+const releaseManifestPath = path.join(publicReleaseDir, 'manifest.json');
 const opencodeRoot = path.resolve(config.clean_room.opencode_root);
 let sandboxSequence = 0;
 let cleanRoomTouched = false;
+let knownCredentials = new Set();
+
+function publicAttemptDir(candidate, nomination, attempt = selectedAttempt) {
+  return path.join(publicReleaseDir, candidate.id, nomination.id, 'attempts', `attempt-${attempt}`);
+}
+
+function privateAttemptDir(candidate, nomination, attempt = selectedAttempt) {
+  return path.join(privateDir, candidate.id, nomination.id, 'attempts', `attempt-${attempt}`);
+}
+
+function runId(candidate, nomination) {
+  return `${config.release}:${candidate.id}:${nomination.id}`;
+}
 
 function emit(event, data = {}) {
   process.stdout.write(`${JSON.stringify({ timestamp: new Date().toISOString(), event, ...data })}\n`);
@@ -63,6 +116,18 @@ function emit(event, data = {}) {
 async function writeJson(file, value) {
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+async function loadKnownCredentials() {
+  if (!existsSync(cleanRoomAuthFile)) return new Set();
+  try {
+    const auth = JSON.parse(await readFile(cleanRoomAuthFile, 'utf8'));
+    return new Set(collectSecretLikeStrings(auth));
+  } catch {
+    // This guard is deliberately best-effort. Authentication setup retains its
+    // existing behavior; a malformed optional auth file must never be echoed.
+    return new Set();
+  }
 }
 
 function run(command, args, options = {}) {
@@ -117,7 +182,10 @@ function commandFor(candidate, prompt) {
   if (candidate.agent === 'codex') {
     return { command: 'codex', args: ['exec', '--model', candidate.model, '--cd', cleanWorkspace, '--approve-for-me', prompt] };
   }
-  return { command: 'opencode', args: ['run', '--model', candidate.model, '--dir', cleanWorkspace, '--dangerously-skip-permissions', '--format', 'json', prompt] };
+  const args = ['run', '--model', candidate.model];
+  if (candidate.reasoning_variant && candidate.reasoning_variant !== 'provider_default') args.push('--variant', candidate.reasoning_variant);
+  args.push('--dir', cleanWorkspace, '--dangerously-skip-permissions', '--format', 'json', prompt);
+  return { command: 'opencode', args };
 }
 
 function extractJudgeText(output) {
@@ -254,14 +322,47 @@ function runAsJudge(command, args, options = {}) {
   return runAsCandidate(command, args, { ...options, includeCleanWorkspace: false });
 }
 
+// Objective checks are deliberately *not* trusted-host Node processes.  The
+// candidate patch is executable JavaScript, so importing it as gpt would turn
+// the evaluator into a credential/private-artifact escape hatch.  This unit
+// has only one disposable bind and no provider runtime, agent home, or network.
+function runObjectiveInSandbox(workspace, evaluatorFile, sourceFile, options = {}) {
+  const unit = `models-objective-${process.pid}-${Date.now()}-${sandboxSequence++}`;
+  return run('sudo', buildObjectiveSandboxInvocation({
+    unit, user: candidateUser, workspace, evaluatorFile, sourceFile,
+    timeoutMs: options.timeoutMs ?? timeoutMs
+  }), {
+    ...options, timeoutMs: (options.timeoutMs ?? timeoutMs) + 5000, cwd: '/tmp'
+  });
+}
+
 async function resetRoom(task) {
   cleanRoomTouched = true;
-  emit('reset_started', { task: task.id, workspace: cleanWorkspace });
+  emit('reset_started', { nomination: task.id, workspace: cleanWorkspace });
   await installResetScript();
   await installArchive(task);
   const reset = await runAsCleanRoomHost('/usr/bin/node', [resetScript, '--archive-root', archiveRoot, '--fixture', task.fixture, '--prompt', task.prompt, '--workspace', cleanWorkspace, '--agent-home', agentHome, '--sandbox-root', cleanRoomHome], { timeoutMs: 30000 });
   if (reset.status !== 0) throw new Error(`reset failed: ${reset.stderr}`);
-  emit('reset_completed', { task: task.id });
+  if (existsSync(cleanRoomAuthFile)) {
+    const authTarget = path.join(agentHome, '.local', 'share', 'opencode', 'auth.json');
+    const auth = await runAsCleanRoomHost('install', ['-D', '-m', '0600', cleanRoomAuthFile, authTarget], { timeoutMs: 30000 });
+    if (auth.status !== 0) throw new Error(`cannot install clean-room OpenCode credentials: ${auth.stderr}`);
+  }
+  await assertPreparedWorkspace(task);
+  emit('reset_completed', { nomination: task.id });
+}
+
+async function assertPreparedWorkspace(task) {
+  const sourceFixture = path.join(modelsTest, task.fixture);
+  const workspaceFixture = path.join(cleanWorkspace, task.fixture);
+  const fixtureCheck = await run('sudo', ['diff', '-qr', '--no-dereference', sourceFixture, workspaceFixture], { timeoutMs: 30000 });
+  if (fixtureCheck.status !== 0) {
+    throw new Error(`prepared workspace fixture differs from frozen source: ${task.id}: ${fixtureCheck.stdout || fixtureCheck.stderr}`);
+  }
+  const sourcePrompt = path.join(modelsTest, task.prompt);
+  const workspacePrompt = path.join(cleanWorkspace, task.prompt);
+  const promptCheck = await run('sudo', ['cmp', '-s', '--', sourcePrompt, workspacePrompt], { timeoutMs: 30000 });
+  if (promptCheck.status !== 0) throw new Error(`prepared workspace prompt differs from frozen source: ${task.id}`);
 }
 
 async function snapshotBaseline(task) {
@@ -293,20 +394,23 @@ async function compareAgainstBaseline(task) {
   return { diff: diff.stdout, changedFiles: parsePorcelainPaths(status.stdout) };
 }
 
-async function runJudges(candidate, task, candidateResult) {
-  for (const judge of config.judges) {
-    const publicJudgeDir = path.join(resultsDir, config.release, candidate.id, task.id, 'judges');
-    const privateJudgeDir = path.join(privateDir, candidate.id, task.id, 'judges', judge.id);
+async function runJudges(candidate, task, candidateResult, judges) {
+  for (const judge of judges) {
+    const attemptDir = publicAttemptDir(candidate, task);
+    const publicJudgeDir = path.join(attemptDir, 'judges');
+    const privateJudgeDir = path.join(privateAttemptDir(candidate, task), 'judges', judge.id);
     await mkdir(publicJudgeDir, { recursive: true });
     await mkdir(privateJudgeDir, { recursive: true, mode: 0o700 });
     if (['agent_failure', 'unavailable', 'forbidden_changes'].includes(candidateResult.outcome)) {
       const judgeArtifact = {
         schema_version: getSchemaVersion('judge', schemaRegistry.artifact_schemas),
-        judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription },
+        judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription, reasoning_variant: judge.reasoning_variant ?? 'provider_default' },
         status: 'skipped',
         reason: candidateResult.outcome,
         candidate: candidate.id,
-        task: task.id
+        nomination: task.id,
+        run_id: runId(candidate, task),
+        attempt: selectedAttempt
       };
       const judgeHash = computeArtifactHash(judgeArtifact);
       judgeArtifact.artifact_hash = { path: `${judge.id}.json`, sha256: judgeHash };
@@ -321,7 +425,7 @@ async function runJudges(candidate, task, candidateResult) {
     await runAsCleanRoomHost('mkdir', ['-p', judgeWorkspace], { timeoutMs: 30000 });
     const copied = await runAsCleanRoomHost('cp', ['-a', `${cleanWorkspace}/.`, judgeWorkspace], { timeoutMs: 30000 });
     if (copied.status !== 0) throw new Error(`cannot prepare judge workspace: ${copied.stderr}`);
-    const candidateDiff = path.join(resultsDir, config.release, candidate.id, task.id, 'candidate.diff');
+    const candidateDiff = path.join(attemptDir, 'candidate.diff');
     const judgePatch = path.join(judgeRoot, `.${path.basename(judgeWorkspace)}.diff`);
     const installedPatch = await run('sudo', ['install', '-o', candidateUser, '-g', candidateUser, '-m', '0600', candidateDiff, judgePatch], { timeoutMs: 30000 });
     if (installedPatch.status !== 0) throw new Error(`cannot stage candidate submission: ${installedPatch.stderr}`);
@@ -330,7 +434,8 @@ async function runJudges(candidate, task, candidateResult) {
     if (applied.status !== 0) throw new Error(`cannot apply candidate submission: ${applied.stderr}`);
     await runAsCleanRoomHost('rm', ['-rf', agentHome], { timeoutMs: 30000 });
     await runAsCleanRoomHost('mkdir', ['-p', agentHome], { timeoutMs: 30000 });
-    const { prompt, prompt_hash } = await buildJudgePromptWithHash({ taskId: task.id, criteria: config.criteria, candidateResult });
+    const taskInstructions = await readFile(path.join(modelsTest, task.prompt), 'utf8');
+    const { prompt, prompt_hash } = await buildJudgePromptWithHash({ taskId: task.id, taskInstructions, criteria: config.criteria, candidateResult });
     const promptMeta = await getJudgePromptMetadata();
     const command = buildJudgeInvocation({ judge, judgeWorkspace, prompt });
     const result = await runAsJudge(command.command, command.args, {
@@ -341,10 +446,11 @@ async function runJudges(candidate, task, candidateResult) {
     await writeFile(path.join(privateJudgeDir, 'judge.stdout.txt'), result.stdout);
     await writeFile(path.join(privateJudgeDir, 'judge.stderr.txt'), result.stderr);
     const response = extractJudgeText(result.stdout);
+    assertNoKnownCredentialLeak(response, knownCredentials);
     const parsed = result.status === 0 ? parseJudgeJson(response) : null;
     const judgeArtifact = {
       schema_version: getSchemaVersion('judge', schemaRegistry.artifact_schemas),
-      judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription },
+      judge: { id: judge.id, agent: judge.agent, model: judge.model, subscription: judge.subscription, reasoning_variant: judge.reasoning_variant ?? 'provider_default' },
       status: result.status !== 0 ? 'failed' : parsed ? 'completed' : 'invalid_output',
       response,
       scores: parsed?.scores ?? null,
@@ -357,12 +463,15 @@ async function runJudges(candidate, task, candidateResult) {
         timed_out: result.timed_out,
         started_at: result.started_at,
         completed_at: result.completed_at,
-        duration_ms: result.duration_ms
+        duration_ms: result.duration_ms,
+        usage: summarizeModelUsage(result.stdout, judge.agent)
       },
       judge_prompt_version: promptMeta.version,
       judge_prompt_hash: prompt_hash,
       candidate: candidate.id,
-      task: task.id
+      nomination: task.id,
+      run_id: runId(candidate, task),
+      attempt: selectedAttempt
     };
     const judgeHash = computeArtifactHash(judgeArtifact);
     judgeArtifact.artifact_hash = { path: `${judge.id}.json`, sha256: judgeHash };
@@ -396,7 +505,9 @@ async function preflightCandidate(candidate, task) {
     duration_ms: probe.result.duration_ms,
     process_status: probe.result.status,
     timed_out: probe.result.timed_out,
-    output_limited: probe.result.output_limited
+    output_limited: probe.result.output_limited,
+    usage: summarizeModelUsage(probe.result.stdout, candidate.agent),
+    notes: ['Availability preflight uses an exact hi request; provider/model default reasoning is preserved unless reasoning_variant is explicit.']
   };
   const preflightHash = computeArtifactHash(preflightArtifact);
   preflightArtifact.artifact_hash = { path: 'preflight.json', sha256: preflightHash };
@@ -409,14 +520,16 @@ async function preflightCandidate(candidate, task) {
 }
 
 async function recordUnavailableCandidate(candidate, task, preflight) {
-  const candidateDir = path.join(resultsDir, config.release, candidate.id, task.id);
+  const candidateDir = publicAttemptDir(candidate, task);
   await mkdir(candidateDir, { recursive: true });
   const startedAt = new Date().toISOString();
   const runArtifact = {
     schema_version: getSchemaVersion('run', schemaRegistry.artifact_schemas),
     release: config.release,
-    task: task.id,
-    candidate,
+    nomination: task.id,
+    run_id: runId(candidate, task),
+    attempt: selectedAttempt,
+    candidate: { ...candidate, reasoning_variant: candidate.reasoning_variant ?? 'provider_default' },
     started_at: startedAt,
     completed_at: startedAt,
     duration_ms: 0,
@@ -437,23 +550,36 @@ async function recordUnavailableCandidate(candidate, task, preflight) {
   const runHash = computeArtifactHash(runArtifact);
   runArtifact.artifact_hash = { path: 'run.json', sha256: runHash };
   await writeJson(path.join(candidateDir, 'run.json'), runArtifact);
-  emit('candidate_skipped', { candidate: candidate.id, task: task.id, outcome: 'unavailable', reason: preflight.reason });
+  emit('candidate_skipped', { candidate: candidate.id, nomination: task.id, attempt: selectedAttempt, outcome: 'unavailable', reason: preflight.reason });
 }
 
 async function runCandidate(candidate, task) {
-  const candidateDir = path.join(resultsDir, config.release, candidate.id, task.id);
-  const privateCandidateDir = path.join(privateDir, candidate.id, task.id);
+  const candidateDir = publicAttemptDir(candidate, task);
+  const privateCandidateDir = privateAttemptDir(candidate, task);
   await mkdir(candidateDir, { recursive: true });
   await mkdir(privateCandidateDir, { recursive: true, mode: 0o700 });
   await resetRoom(task);
   await snapshotBaseline(task);
   const prompt = await readFile(path.join(modelsTest, task.prompt), 'utf8');
   const command = commandFor(candidate, prompt);
-  emit('candidate_started', { candidate: candidate.id, agent: candidate.agent, model: candidate.model, task: task.id });
+  emit('candidate_started', { candidate: candidate.id, agent: candidate.agent, model: candidate.model, nomination: task.id, attempt: selectedAttempt });
   const agent = await runAsCandidate(command.command, command.args, { cwd: cleanWorkspace, timeoutMs });
   await writeFile(path.join(privateCandidateDir, 'agent.stdout.txt'), agent.stdout);
   await writeFile(path.join(privateCandidateDir, 'agent.stderr.txt'), agent.stderr);
-  const tests = await runAsCandidate(task.test_command[0], task.test_command.slice(1), { cwd: path.join(cleanWorkspace, task.fixture), timeoutMs });
+  const compared = await compareAgainstBaseline(task);
+  const changedFiles = compared.changedFiles;
+  const forbiddenChanges = findForbiddenChanges(changedFiles, task.allowed_changes);
+  assertNoKnownCredentialLeak(JSON.stringify({ changedFiles, forbiddenChanges }), knownCredentials);
+  const diffPath = path.join(candidateDir, 'candidate.diff');
+  assertNoKnownCredentialLeak(compared.diff, knownCredentials);
+  await writeFile(diffPath, compared.diff);
+  const diffHash = await computeFileHash(diffPath);
+  const objectiveEvaluator = task.objective_evaluator
+    ? await runObjectiveEvaluator(candidate, task, diffPath, privateCandidateDir)
+    : null;
+  const tests = await runAsCandidate(task.test_command[0], task.test_command.slice(1), { cwd: cleanWorkspace, timeoutMs });
+  await writeFile(path.join(privateCandidateDir, 'public-test.stdout.txt'), tests.stdout);
+  await writeFile(path.join(privateCandidateDir, 'public-test.stderr.txt'), tests.stderr);
   const testResultArtifact = {
     schema_version: getSchemaVersion('test_result', schemaRegistry.artifact_schemas),
     status: tests.status,
@@ -462,23 +588,21 @@ async function runCandidate(candidate, task) {
     started_at: tests.started_at,
     completed_at: tests.completed_at,
     duration_ms: tests.duration_ms,
-    stdout: tests.stdout,
-    stderr: tests.stderr
+    stdout_sha256: await computeHash(tests.stdout),
+    stderr_sha256: await computeHash(tests.stderr)
   };
   const testResultHash = computeArtifactHash(testResultArtifact);
   testResultArtifact.artifact_hash = { path: 'test-result.json', sha256: testResultHash };
-  await writeJson(path.join(candidateDir, 'test-result.json'), testResultArtifact);
-  const compared = await compareAgainstBaseline(task);
-  const changedFiles = compared.changedFiles;
-  const forbiddenChanges = findForbiddenChanges(changedFiles, task.allowed_changes);
+  const testResultPath = path.join(candidateDir, 'test-result.json');
+  await writeJson(testResultPath, testResultArtifact);
+  const testResultFileHash = await computeFileHash(testResultPath);
   const outcome = classifyOutcome({ agent, tests, forbiddenChanges });
-  const diffPath = path.join(candidateDir, 'candidate.diff');
-  await writeFile(diffPath, compared.diff);
-  const diffHash = await computeFileHash(diffPath);
   const record = {
     schema_version: getSchemaVersion('run', schemaRegistry.artifact_schemas),
     release: config.release,
-    task: task.id,
+    nomination: task.id,
+    run_id: runId(candidate, task),
+    attempt: selectedAttempt,
     candidate,
     started_at: agent.started_at,
     completed_at: tests.completed_at,
@@ -490,7 +614,8 @@ async function runCandidate(candidate, task) {
       output_limited: agent.output_limited,
       started_at: agent.started_at,
       completed_at: agent.completed_at,
-      duration_ms: agent.duration_ms
+      duration_ms: agent.duration_ms,
+      usage: summarizeModelUsage(agent.stdout, candidate.agent)
     },
     tests: {
       status: tests.status,
@@ -503,27 +628,223 @@ async function runCandidate(candidate, task) {
     outcome,
     changed_files: changedFiles,
     forbidden_changes: forbiddenChanges,
+    notes: [
+      `Reasoning variant: ${candidate.reasoning_variant ?? 'provider_default'}.`,
+      'Model cost is provider-reported from OpenCode step_finish events when available; it is not estimated.'
+    ],
     artifacts: {
       public_dir: path.relative(modelsTest, candidateDir),
       candidate_diff: { path: 'candidate.diff', sha256: diffHash },
-      test_result: { path: 'test-result.json', sha256: testResultHash }
+      test_result: { path: 'test-result.json', sha256: testResultFileHash },
+      ...(objectiveEvaluator ? { objective_evaluator: objectiveEvaluator } : {})
     }
   };
   const runHash = computeArtifactHash(record);
   record.artifact_hash = { path: 'run.json', sha256: runHash };
   await writeJson(path.join(candidateDir, 'run.json'), record);
-  await runJudges(candidate, task, record);
-  emit('candidate_completed', { candidate: candidate.id, task: task.id, outcome, agent_status: agent.status, test_status: tests.status, result_dir: candidateDir });
+  emit('candidate_completed', { candidate: candidate.id, nomination: task.id, attempt: selectedAttempt, outcome, agent_status: agent.status, test_status: tests.status, result_dir: candidateDir });
+}
+
+function pathIsWithin(root, candidate) {
+  return candidate === root || candidate.startsWith(`${root}${path.sep}`);
+}
+
+async function resolveTrustedRelativePath(root, relativePath, label) {
+  if (typeof relativePath !== 'string' || !relativePath || path.isAbsolute(relativePath)) {
+    throw new Error(`invalid ${label} path`);
+  }
+  const resolved = path.resolve(root, relativePath);
+  if (!pathIsWithin(root, resolved)) throw new Error(`${label} path escapes its trusted root`);
+  // Resolve links before use: lexical containment alone permits a symlink to
+  // redirect an otherwise safe-looking path outside its trusted root.
+  let realRoot;
+  let realResolved;
+  try {
+    [realRoot, realResolved] = await Promise.all([realpath(root), realpath(resolved)]);
+  } catch {
+    throw new Error(`${label} trusted input is unavailable`);
+  }
+  if (!pathIsWithin(realRoot, realResolved)) throw new Error(`${label} path escapes its trusted root`);
+  return realResolved;
+}
+
+async function objectiveEvaluatorPaths(task) {
+  const evaluator = task.objective_evaluator;
+  if (!evaluator?.id || !evaluator.path || !evaluator.source) {
+    throw new Error(`invalid objective evaluator configuration: ${task.id}`);
+  }
+  const evaluatorPath = await resolveTrustedRelativePath(privateEvaluatorsDir, evaluator.path, 'private evaluator');
+  const sourcePath = await resolveTrustedRelativePath(modelsTest, evaluator.source, 'objective evaluator source');
+  const fixturePath = await resolveTrustedRelativePath(modelsTest, task.fixture, 'task fixture');
+  if (!pathIsWithin(fixturePath, sourcePath)) throw new Error(`objective evaluator source must remain inside task fixture: ${task.id}`);
+  return { evaluator, evaluatorPath, sourcePath };
+}
+
+async function runObjectiveEvaluator(candidate, task, diffPath, privateCandidateDir) {
+  const { evaluator, evaluatorPath, sourcePath } = await objectiveEvaluatorPaths(task);
+  if (!existsSync(evaluatorPath) || !existsSync(sourcePath)) {
+    throw new Error(`objective evaluator trusted input is unavailable: ${task.id}`);
+  }
+  const evaluatorHash = await computeFileHash(evaluatorPath);
+  // Keep the bound clean-room outside the runner artifact tree: the evaluator
+  // sees this one disposable directory, not even the private-artifact parent.
+  // This directory itself is the bind root. Do not put it under a runner-owned
+  // 0700 parent: test must traverse every component of the mounted path.
+  const workspace = path.join(objectiveWorkspaceRuntimeDir, `models-objective-${randomUUID()}`);
+  const fixture = await resolveTrustedRelativePath(modelsTest, task.fixture, 'task fixture');
+  const workspaceFixture = path.join(workspace, task.fixture);
+  const workspaceSource = path.join(workspace, evaluator.source);
+  const workspaceEvaluator = path.join(workspace, 'evaluator.mjs');
+  let result;
+  try {
+    const created = await run('sudo', objectiveWorkspaceCreateCommand({
+      workspace, uid: process.getuid(), gid: process.getgid()
+    }), { timeoutMs: 30000 });
+    if (created.status !== 0) throw new Error(`cannot create objective workspace: ${created.stderr}`);
+    await mkdir(path.dirname(workspaceFixture), { recursive: true, mode: 0o700 });
+    await cp(fixture, workspaceFixture, { recursive: true, force: false, errorOnExist: true });
+    await cp(evaluatorPath, workspaceEvaluator, { force: false, errorOnExist: true });
+    const initialized = await run('git', ['init', '-q', workspace], { cwd: workspace, timeoutMs: 30000 });
+    if (initialized.status !== 0) throw new Error(`cannot initialize objective evaluator baseline: ${initialized.stderr}`);
+    const applied = await run('git', ['-C', workspace, 'apply', '--allow-empty', diffPath], { cwd: workspace, timeoutMs: 30000 });
+    if (applied.status !== 0) throw new Error(`cannot apply candidate diff for objective evaluator: ${applied.stderr}`);
+    // Make the exact mounted root traversable/readable by the evaluator UID
+    // only after all runner-trusted preparation is complete.
+    const handoff = await run('sudo', objectiveWorkspaceHandoffCommand({ user: candidateUser, workspace }), { timeoutMs: 30000 });
+    if (handoff.status !== 0) throw new Error(`cannot hand objective workspace to clean-room user: ${handoff.stderr}`);
+    result = await runObjectiveInSandbox(workspace, workspaceEvaluator, workspaceSource, { timeoutMs });
+    if (result.status === null) throw new Error(`cannot execute objective evaluator: ${task.id}`);
+    await mkdir(path.join(privateCandidateDir, 'objective-evaluator'), { recursive: true, mode: 0o700 });
+    await writeFile(path.join(privateCandidateDir, 'objective-evaluator', 'stdout.txt'), result.stdout);
+    await writeFile(path.join(privateCandidateDir, 'objective-evaluator', 'stderr.txt'), result.stderr);
+  } finally {
+    // After ownership handoff the runner may no longer traverse this 0700
+    // root; trusted sudo cleanup is therefore required on every exit path.
+    const cleanup = await run('sudo', objectiveWorkspaceCleanupCommand(workspace), { timeoutMs: 30000 });
+    if (cleanup.status !== 0) throw new Error(`cannot clean objective workspace: ${cleanup.stderr}`);
+  }
+  const artifact = {
+    schema_version: getSchemaVersion('objective_evaluator', schemaRegistry.artifact_schemas),
+    evaluator: { id: evaluator.id, sha256: evaluatorHash },
+    status: 'completed',
+    passed: result.status === 0,
+    started_at: result.started_at,
+    completed_at: result.completed_at,
+    duration_ms: result.duration_ms,
+    execution: {
+      status: result.status,
+      signal: result.signal,
+      timed_out: result.timed_out,
+      output_limited: result.output_limited,
+      started_at: result.started_at,
+      completed_at: result.completed_at,
+      duration_ms: result.duration_ms
+    }
+  };
+  const artifactHash = computeArtifactHash(artifact);
+  artifact.artifact_hash = { path: 'objective-evaluator.json', sha256: artifactHash };
+  const publicPath = path.join(publicAttemptDir(candidate, task), 'objective-evaluator.json');
+  await writeJson(publicPath, artifact);
+  return { path: 'objective-evaluator.json', sha256: await computeFileHash(publicPath) };
+}
+
+function select(items, values, label) {
+  if (!values.length) return items;
+  const selected = [];
+  for (const value of values) {
+    const item = items.find((entry) => entry.id === value || entry.model === value);
+    if (!item) throw new Error(`unknown ${label} filter: ${value}`);
+    if (!selected.includes(item)) selected.push(item);
+  }
+  return selected;
+}
+
+const selectedCandidates = select(config.candidates, optionValues('--candidate'), 'candidate');
+const selectedTasks = select(nominations, nominationValues.length ? nominationValues : legacyTaskValues, 'nomination');
+const selectedJudges = select(config.judges ?? [], optionValues('--judge'), 'judge');
+
+async function getReleaseSpec() {
+  const prompt = await getJudgePromptMetadata();
+  const frozenNominations = await Promise.all(nominations.map(async ({ objective_evaluator, ...task }) => {
+    const paths = objective_evaluator ? await objectiveEvaluatorPaths({ ...task, objective_evaluator }) : null;
+    const fixture = await resolveTrustedRelativePath(modelsTest, task.fixture, 'task fixture');
+    const promptPath = await resolveTrustedRelativePath(modelsTest, task.prompt, 'task prompt');
+    return {
+      ...task,
+      frozen_inputs: { fixture_tree: await hashTree(fixture), prompt_sha256: await computeFileHash(promptPath) },
+      ...(objective_evaluator ? { objective_evaluator: {
+        id: objective_evaluator.id,
+        sha256: await computeFileHash(paths.evaluatorPath),
+        source_sha256: await computeFileHash(paths.sourcePath)
+      } } : {})
+    };
+  }));
+  const spec = { schema_version: 3, release: config.release, nominations: frozenNominations, candidates: config.candidates, judges: config.judges ?? [], criteria: config.criteria, retry_policy: { canonical_attempt: config.retry_policy?.canonical_attempt ?? 1, allow_retries: config.retry_policy?.allow_retries === true }, judge_prompt: prompt, config_sha256: await computeFileHash(configPath) };
+  return { ...spec, spec_hash: computeArtifactHash(spec) };
+}
+
+async function ensureReleaseManifest() {
+  const expected = await getReleaseSpec();
+  if (existsSync(releaseManifestPath)) {
+    const actual = JSON.parse(await readFile(releaseManifestPath, 'utf8'));
+    const { spec_hash, ...unsigned } = actual;
+    if (!spec_hash || computeArtifactHash(unsigned) !== spec_hash) throw new Error(`release manifest integrity mismatch: ${config.release}`);
+    if (actual.spec_hash !== expected.spec_hash) throw new Error(`release manifest is incompatible with current benchmark specification: ${config.release}`);
+    return actual;
+  }
+  await writeJson(releaseManifestPath, expected);
+  return expected;
+}
+
+async function verifyCandidateArtifacts(candidate, task) {
+  const root = publicAttemptDir(candidate, task);
+  const runPath = path.join(root, 'run.json');
+  if (!existsSync(runPath)) throw new Error(`missing candidate run artifact: ${candidate.id}/${task.id}`);
+  const runArtifact = JSON.parse(await readFile(runPath, 'utf8'));
+  if (runArtifact.release !== config.release || runArtifact.nomination !== task.id || runArtifact.run_id !== runId(candidate, task) || runArtifact.attempt !== selectedAttempt || runArtifact.candidate?.id !== candidate.id) throw new Error(`incompatible candidate run artifact: ${candidate.id}/${task.id}/attempt-${selectedAttempt}`);
+  if (!runArtifact.artifact_hash?.sha256 || computeArtifactHash(runArtifact) !== runArtifact.artifact_hash.sha256) throw new Error(`candidate run integrity mismatch: ${candidate.id}/${task.id}`);
+  for (const key of ['candidate_diff', 'test_result', 'objective_evaluator']) {
+    const evidence = runArtifact.artifacts?.[key];
+    if (!evidence) continue;
+    const file = path.join(root, evidence.path);
+    if (!existsSync(file) || !(await verifyFileHash(file, evidence.sha256))) throw new Error(`candidate ${key} integrity mismatch: ${candidate.id}/${task.id}`);
+  }
+  if (!['unavailable'].includes(runArtifact.outcome) && !runArtifact.artifacts?.candidate_diff) throw new Error(`missing candidate diff evidence: ${candidate.id}/${task.id}`);
+  return runArtifact;
+}
+
+async function hasAnyCandidatePrimaryArtifact(candidate, task) {
+  const root = publicAttemptDir(candidate, task);
+  return ['candidate.diff', 'test-result.json', 'objective-evaluator.json', 'run.json']
+    .filter((file) => existsSync(path.join(root, file)));
+}
+
+async function verifyCandidatePreflight(candidate) {
+  const file = path.join(publicReleaseDir, candidate.id, 'preflight.json');
+  if (!existsSync(file)) return null;
+  const artifact = JSON.parse(await readFile(file, 'utf8'));
+  if (artifact.candidate?.id !== candidate.id || !['available', 'unavailable'].includes(artifact.status) || !artifact.artifact_hash?.sha256 || computeArtifactHash(artifact) !== artifact.artifact_hash.sha256) {
+    throw new Error(`candidate preflight artifact is incompatible or corrupt: ${candidate.id}`);
+  }
+  return artifact;
+}
+
+async function hasCompleteJudge(candidate, task, judge) {
+  const file = path.join(publicAttemptDir(candidate, task), 'judges', `${judge.id}.json`);
+  if (!existsSync(file)) return false;
+  const artifact = JSON.parse(await readFile(file, 'utf8'));
+  if (artifact.judge?.id !== judge.id || artifact.candidate !== candidate.id || artifact.nomination !== task.id || artifact.run_id !== runId(candidate, task) || artifact.attempt !== selectedAttempt || !artifact.artifact_hash?.sha256 || computeArtifactHash(artifact) !== artifact.artifact_hash.sha256) throw new Error(`existing judge artifact is incompatible or corrupt: ${candidate.id}/${task.id}/attempt-${selectedAttempt}/${judge.id}`);
+  return true;
 }
 
 if (!existsSync(modelsTest)) throw new Error(`models-test checkout not found: ${modelsTest}`);
+// Resolve every hidden evaluator and public source before the first model probe.
+await Promise.all(nominations.filter((task) => task.objective_evaluator).map(objectiveEvaluatorPaths));
+knownCredentials = await loadKnownCredentials();
 if (dryRun) {
-  emit('dry_run', { release: config.release, task_count: config.tasks.length, candidates: config.candidates.map((candidate) => ({ id: candidate.id, agent: candidate.agent, model: candidate.model })) });
+  const plannedRuns = selectedCandidates.flatMap((candidate) => selectedTasks.map((nomination) => ({ run_id: runId(candidate, nomination), nomination: nomination.id, model: candidate.id, attempt: selectedAttempt })));
+  emit('dry_run', { Benchmark: config.release, Nomination: selectedTasks.map(({ id }) => id), selected_Models: selectedCandidates.map(({ id, model }) => ({ id, model })), planned_Runs: plannedRuns, Attempts: [selectedAttempt], phase, resume, judges: selectedJudges.map(({ id, model }) => ({ id, model })) });
   process.exit(0);
-}
-
-if (existsSync(publicReleaseDir) || existsSync(privateDir)) {
-  throw new Error(`benchmark release already exists: ${config.release}; choose a new immutable release identifier`);
 }
 
 const cleanRoomLock = await acquireCleanRoomLock(cleanRoomLockPath, {
@@ -548,29 +869,84 @@ try {
   if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
   emit('preflight_ok', { candidate_user: candidateUser, opencode_version: opencode.stdout.trim() });
 
-  for (const judge of config.judges) {
-    const probe = await probeModel(judge, config.tasks[0], 'judge');
-    if (!probe.available) throw new Error(`required judge model is unavailable: ${judge.id}; no release directory was created`);
-  }
-
   await mkdir(resultsDir, { recursive: true });
-  for (const candidate of config.candidates) {
-    const preflight = await preflightCandidate(candidate, config.tasks[0]);
-    if (!preflight.available) {
-      for (const task of config.tasks) await recordUnavailableCandidate(candidate, task, preflight);
-      continue;
+  await ensureReleaseManifest();
+  // Preserve the all-in-one safety gate: unlike an explicitly staged
+  // candidate pass, `all` never spends candidate execution before every
+  // requested judge has proved available.
+  const judgeAvailability = new Map();
+  if (phase === 'all' && !resume) {
+    for (const judge of selectedJudges) {
+      const probe = await probeModel(judge, selectedTasks[0], 'judge');
+      if (!probe.available) throw new Error(`required judge model is unavailable: ${judge.id}`);
+      judgeAvailability.set(judge.id, true);
     }
-    for (const task of config.tasks) await runCandidate(candidate, task);
   }
-  await resetRoom(config.tasks[config.tasks.length - 1]);
+  if (phase === 'candidates' || phase === 'all') {
+    for (const candidate of selectedCandidates) {
+      const pending = [];
+      for (const task of selectedTasks) {
+        const primaryArtifacts = await hasAnyCandidatePrimaryArtifact(candidate, task);
+        if (primaryArtifacts.includes('run.json')) {
+          if (!resume) throw new Error(`candidate attempt artifact already exists: ${candidate.id}/${task.id}/attempt-${selectedAttempt}; use --resume to verify and skip it`);
+          await verifyCandidateArtifacts(candidate, task);
+        } else if (primaryArtifacts.length) {
+          throw new Error(`candidate partial/incomplete primary artifact state exists: ${candidate.id}/${task.id} (${primaryArtifacts.join(', ')})`);
+        } else pending.push(task);
+      }
+      if (!pending.length) continue;
+      const existingPreflight = await verifyCandidatePreflight(candidate);
+      const preflight = existingPreflight
+        ? { available: existingPreflight.status === 'available', reason: existingPreflight.reason, result: existingPreflight }
+        : await preflightCandidate(candidate, pending[0]);
+      if (!preflight.available) {
+        for (const task of pending) await recordUnavailableCandidate(candidate, task, preflight);
+        continue;
+      }
+      for (const task of pending) await runCandidate(candidate, task);
+    }
+  }
+  if (phase === 'judges' || phase === 'all') {
+    if (!resume) {
+      for (const judge of selectedJudges) {
+        const probe = await probeModel(judge, selectedTasks[0], 'judge');
+        if (!probe.available) throw new Error(`required judge model is unavailable: ${judge.id}`);
+        judgeAvailability.set(judge.id, true);
+      }
+    }
+    for (const candidate of selectedCandidates) {
+      for (const task of selectedTasks) {
+        const candidateResult = await verifyCandidateArtifacts(candidate, task);
+        const pending = [];
+        for (const judge of selectedJudges) {
+          if (await hasCompleteJudge(candidate, task, judge)) {
+            if (!resume) throw new Error(`judge artifact already exists: ${candidate.id}/${task.id}/${judge.id}; use --resume to skip it`);
+          } else pending.push(judge);
+        }
+        if (pending.length) {
+          for (const judge of pending) {
+            if (!judgeAvailability.has(judge.id)) {
+              const probe = await probeModel(judge, task, 'judge');
+              if (!probe.available) throw new Error(`required judge model is unavailable: ${judge.id}`);
+              judgeAvailability.set(judge.id, true);
+            }
+          }
+          await runJudges(candidate, task, candidateResult, pending);
+        }
+      }
+    }
+    const aggregate = await run(process.execPath, [path.join(repo, 'scripts', 'aggregate-results.mjs'), config.release], { cwd: repo, timeoutMs: 30000 });
+    if (aggregate.status !== 0) throw new Error(`cannot regenerate aggregate: ${aggregate.stderr}`);
+  }
+  await resetRoom(nominations[nominations.length - 1]);
   await runAsCleanRoomHost('rm', ['-rf', baselineRoot, comparisonRoot], { timeoutMs: 30000 });
   cleanRoomSafe = true;
   emit('clean_room_final_reset', { workspace: cleanWorkspace, agent_home: agentHome });
-  emit('pilot_completed', { results_dir: resultsDir, publication: 'manual' });
+  emit('pilot_completed', { phase, results_dir: resultsDir, publication: 'manual' });
 } finally {
   try {
     if (cleanRoomTouched && !cleanRoomSafe) {
-      await resetRoom(config.tasks[config.tasks.length - 1]);
+      await resetRoom(nominations[nominations.length - 1]);
       await runAsCleanRoomHost('rm', ['-rf', baselineRoot, comparisonRoot], { timeoutMs: 30000 });
       cleanRoomSafe = true;
       emit('clean_room_final_reset', { workspace: cleanWorkspace, agent_home: agentHome, after_failure: true });

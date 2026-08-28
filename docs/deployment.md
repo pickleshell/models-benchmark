@@ -110,8 +110,12 @@ the next:
   Keep the agent runtime read-only.
 - Keep raw artifacts in the runner-owned directory and do not bind it into a
   candidate or judge sandbox.
-- Reset workspace and agent home before every candidate and after the matrix.
-- Never reuse a release ID. Do not rerun or append to a partial release.
+- Reset workspace and agent home before every Attempt and after the selected
+  Nomination batch.
+- A Benchmark release freezes its complete roster. Select a Nomination and a
+  model subset with `--nomination`; filters never alter the release manifest.
+  Attempt 1 is immutable. A retry requires an explicit permitted `--attempt 2`
+  and is stored separately; it never replaces Attempt 1.
 
 Temporary files are allowed only inside a sandbox's own disposable temporary
 filesystem. That filesystem is private to the transient unit, cannot be read
@@ -141,6 +145,19 @@ does not create a release directory or consume provider quota.
 It acquires the same clean-room lock as `npm run pilot` and refuses to run if
 the clean-room account is active, so do not run it alongside a pilot.
 It releases that lock only after its temporary same-UID sentinel has exited;
+
+Objective evaluators have their own no-model smoke check:
+
+```sh
+npm run verify:objective-sandbox
+```
+
+It launches the production objective-unit contract with a tiny local module,
+verifying the configured UID, a separate network namespace, candidate-module
+import and workspace write, and denial of clean-room auth/agent paths and a
+runner-private sentinel. It never calls OpenCode, Codex, a provider, or a
+benchmark candidate. When an outer connector applies `NoNewPrivileges`, it
+reports `NOT VERIFIED` without attempting nested sudo or weakening policy.
 failed verifier cleanup leaves a marked stale lock for manual recovery.
 
 ## Required sudo boundary
@@ -170,16 +187,16 @@ sudo -u test env HOME=/home/test/.models-benchmark \
   opencode --version
 ```
 
-The dry run validates the configured matrix without invoking models. A real
+The dry run validates the selected Nomination/model Run plan without invoking models. A real
 run performs the same `rsync --version` preflight before creating a release
 directory or invoking a candidate. Review
-`config/pilot.json` carefully before the first real run: it defines tasks,
+`config/pilot.json` carefully before the first real run: it defines nominations,
 candidates, judges, subscriptions, and the release identifier.
 
-Before any task is started, each configured candidate receives a harmless
+Before any Nomination is started, each selected model receives a harmless
 availability probe (`Reply with exactly: hi.`) in a clean room. The runner
 requires an actual model response, not merely a zero exit code. Provider or
-model failures are recorded as `unavailable`, all tasks for that candidate are
+model failures are recorded as `unavailable`, the selected Nomination for that model is
 skipped, and the runner continues with the next candidate. The probe timing and
 safe process status are recorded; raw probe output remains private.
 
@@ -229,8 +246,10 @@ must use a fresh `submission-<UUID>` workspace rebuilt from the trusted task
 baseline plus the recorded candidate patch; the candidate `.git` directory is
 never copied. Each judge also receives a fresh agent home and only the
 anonymous workspace is writable.
-The judge prompt and process inputs may contain only the task ID, rubric, the
-submitted workspace, and explicitly allowlisted public-test status fields.
+The judge prompt and process inputs may contain only the task ID, exact trusted
+public task instructions, rubric, submitted workspace, and explicitly
+allowlisted public-test status fields. The private evaluator root, evaluator
+locator, hidden result, and candidate identity are never judge inputs.
 They must not contain candidate ID, model, agent/runtime, provider,
 subscription, candidate logs, private artifacts, or candidate-derived paths,
 environment values, or temporary names. Only the anonymous workspace and fresh

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r21",
+  "candidate": "52-claude-sonnet-5",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "gpt-5.6-sol"
+  },
+  "scores": {
+    "functional_correctness": 10,
+    "reliability_edge_cases": 10,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 9.75,
+  "objective_evaluator": "PASS",
+  "notes": [
+    "Public tests PASS, hidden objective PASS, and only the permitted retryPolicy.js file changed.",
+    "The patch accepts ASCII-digit delta-seconds, rejects non-digit numeric-like forms before Date.parse, clamps past HTTP-dates to zero, validates attempt as a positive integer, and uses 2^(attempt-1) capped fallback.",
+    "The Number/isNaN numeric-like guard is slightly less self-documenting than an explicit invalid-numeric-form grammar, so maintainability is 9 rather than 10.",
+    "Provider-reported solution cost is $0.1478449; candidate preflight is separate telemetry."
+  ]
+}

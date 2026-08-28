@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 3732,
+    "usage": {
+      "reported_cost_usd": 0.0702225,
+      "steps": 1,
+      "tokens": {
+        "input": 2,
+        "output": 16,
+        "reasoning": 0,
+        "total": 11188,
+        "cache_read": 0,
+        "cache_write": 11170
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 63951,
+    "usage": {
+      "reported_cost_usd": 0.256798,
+      "steps": 8,
+      "tokens": {
+        "input": 16,
+        "output": 3539,
+        "reasoning": 0,
+        "total": 129039,
+        "cache_read": 107136,
+        "cache_write": 18348
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 6,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "confidence": 0.86,
+    "explanation": "All 4 public tests pass and the seeded defects are correctly fixed: digit-only numeric parsing via /^[0-9]+$/, max(0,dateMs-nowMs) clamping, HTTP-date requiring finite nowMs, Number.isInteger attempt check, corrected 2^(attempt-1) backoff, 300000 cap on both paths, and finite capped delay for very large attempts (verified computeRetryDelay({attempt:1e6}) -> 300000). The change is minimal (9 insertions/6 deletions), clear, uses only Node built-ins, keeps the public API intact, and edits only the permitted src/retryPolicy.js. The notable weakness is edge-case handling: the contract requires signed and fractional numeric strings to return null, but the regex correctly excludes them from the numeric branch only to have them fall through to Date.parse, which in V8 parses '+5','-5','5.5' as loose dates and returns 0/a delta instead of null. Exponent, hex, empty, and non-string inputs are handled correctly.",
+    "concerns": [
+      "parseRetryAfter('+5'/'-5') returns 0 and '5.5' returns a value instead of null because Date.parse loosely accepts them, violating the 'signed/fractional numbers are invalid' requirement",
+      "These specific invalid-input cases are not covered by the public tests, so the contract violation is not caught by npm test"
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

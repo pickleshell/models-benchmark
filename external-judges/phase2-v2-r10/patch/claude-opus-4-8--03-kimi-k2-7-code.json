@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 3718,
+    "usage": {
+      "reported_cost_usd": 0.07016,
+      "steps": 1,
+      "tokens": {
+        "input": 2,
+        "output": 13,
+        "reasoning": 0,
+        "total": 11187,
+        "cache_read": 0,
+        "cache_write": 11172
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 42009,
+    "usage": {
+      "reported_cost_usd": 0.20611725,
+      "steps": 6,
+      "tokens": {
+        "input": 12,
+        "output": 2660,
+        "reasoning": 0,
+        "total": 92002,
+        "cache_read": 72827,
+        "cache_write": 16503
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 7,
+      "reliability_edge_cases": 6,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "confidence": 0.9,
+    "explanation": "All 4 public tests pass and the patch is minimal, clear, and confined to the single allowed file using Node built-ins only. Most contract behaviors are correct: exponent/hex/empty/non-string rejected, digit parsing to ms, past-date clamped to 0 via max(0,...), HTTP-date requires finite nowMs, 300000 cap, fallback 1000*2^(attempt-1), large attempts return a finite capped delay, and positive-integer attempt validation. However, there is a real edge-case defect: the contract requires signed numbers ('+5','-5') and fractional numbers ('1.5') to return null, but they slip past the /^\\d+$/ digit guard into Date.parse, which parses them as valid past dates that then get clamped to 0 instead of null. Verified: parseRetryAfter('+5', now)=0, parseRetryAfter('-5', now)=0, parseRetryAfter('1.5', now)=0. Exponent and hex are correctly rejected because Date.parse fails on them.",
+    "concerns": [
+      "Signed numbers (+5/-5) return 0 instead of null, violating the contract",
+      "Fractional numbers (1.5) return 0 instead of null, violating the contract",
+      "These defects are not caught by the public tests, so passing tests overstate correctness"
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

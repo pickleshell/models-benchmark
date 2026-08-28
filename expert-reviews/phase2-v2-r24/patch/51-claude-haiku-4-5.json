@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r24",
+  "candidate": "51-claude-haiku-4-5",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "gpt-5.6-sol"
+  },
+  "scores": {
+    "functional_correctness": 7,
+    "reliability_edge_cases": 5,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 7.75,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS and only the permitted retryPolicy.js file changed.",
+    "Hidden evaluator failed exact assertion must reject \"+1\": actual 1000, expected null.",
+    "The patch fixes past-date clamping and corrects fallback to 2^(attempt-1), but leaves permissive Number(trimmed) parsing, so signed, fractional, exponent, and hexadecimal numeric forms remain incorrectly accepted.",
+    "The patch also leaves attempt validation as finite >= 1 rather than requiring a positive integer.",
+    "Provider-reported solution cost is $0.02885935; candidate preflight cost is separate telemetry."
+  ]
+}

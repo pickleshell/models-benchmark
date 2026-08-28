@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4228,
+    "usage": {
+      "reported_cost_usd": 0.013017,
+      "steps": 1,
+      "tokens": {
+        "input": 8298,
+        "output": 9,
+        "reasoning": 67,
+        "total": 8374,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 63890,
+    "usage": {
+      "reported_cost_usd": 0.1442355,
+      "steps": 12,
+      "tokens": {
+        "input": 61540,
+        "output": 1058,
+        "reasoning": 4328,
+        "total": 143796,
+        "cache_read": 76870,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 9,
+      "reliability_edge_cases": 8,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch correctly implements the required retry delay calculation, attempt validation, date parsing diff logic, and delay capping while strictly touching only the target file. However, signed and fractional number strings (e.g. '+5', '1.5') fall through to JavaScript's Date.parse instead of being rejected upfront, causing non-standard V8 date parsing rather than returning null.",
+    "concerns": [
+      "parseRetryAfter does not explicitly reject signed or fractional numbers before Date.parse, allowing strings such as '+5' or '1.5' to be parsed as valid dates in V8 instead of returning null."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

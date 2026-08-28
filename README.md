@@ -12,6 +12,86 @@ separate from availability, provider failures, and infrastructure problems.
 Public tasks and reviewed results live in `models-test`; this private repository
 contains the orchestration needed to make the comparison fair.
 
+## Phase2-v2 sequential queue
+
+The Phase2-v2 queue is versioned in
+[`config/phase2-v2-queue.json`](config/phase2-v2-queue.json). It processes one
+candidate at a time on nomination `patch`, starts from a fresh immutable r10+
+release configuration, and preserves the existing runner's candidate and
+clean-room contracts. By default, after telemetry and `model_complete` for the
+current candidate, the controller automatically advances sequentially to the
+next queued candidate. Pass `--stop-after-current` to finish only the current
+candidate and leave the next queue item unstarted.
+
+Effective with the next fresh release after `phase2-v2-r17` (`r18+`), canonical
+judging is exactly ordered as: (1) a ChatGPT `gpt-5.6-sol` expert review, then
+(2) one identity-blind AI judge, `gemini-3-7-flash`. The base configuration
+enforces the expert identity and generates only Gemini in `judges`; fallback
+orchestration likewise applies only to that Gemini attempt. Claude Opus 4.8 is
+removed from future canonical and fallback work because it is materially more
+expensive than Gemini and, in multiple completed Patch runs, missed the
+deterministic hidden signed/fractional `Date.parse` `+1` defect. Its incremental
+review value did not justify the recurring cost. Existing Claude artifacts and
+costs remain immutable historical evidence. `r17` Nemotron is the final run
+under the old two-blind-judge policy because its frozen specification was
+already in progress when this policy changed; its already-incurred Claude cost
+remains recorded.
+
+```bash
+# Inspect the next model without creating a release or contacting a provider.
+npm run phase2:queue:dry-run
+
+# Start Kimi K2.7 Code (creates r10 only when actually run).
+node scripts/run-phase2-queue.mjs --candidate 03-kimi-k2-7-code
+
+# See the current queue item and its review-gate path.
+node scripts/run-phase2-queue.mjs --status
+
+# After placing the printed operator review JSON at expert-reviews/<release>/patch/<candidate>.json:
+node scripts/run-phase2-queue.mjs --candidate 03-kimi-k2-7-code
+
+# Complete only the current candidate; write telemetry and model_complete, then do not start the next queued candidate.
+node scripts/run-phase2-queue.mjs --candidate 03-kimi-k2-7-code --stop-after-current
+
+# Retry only canonical-judge infrastructure failures through the anonymous fallback.
+node scripts/run-phase2-queue.mjs --candidate 03-kimi-k2-7-code --retry-failed-judges
+```
+
+When candidate evidence is frozen but the required expert review is absent, the
+command exits in `WAITING_FOR_EXPERT_REVIEW` and prints the exact file path and
+template. It never invents an expert/ChatGPT score, and a resume never reruns a
+candidate. For r18+, that first review must identify ChatGPT `gpt-5.6-sol`.
+The subsequent Gemini canonical judge failure with no score uses the hardened
+external blind-review helper with an opaque sandbox identifier, the frozen diff,
+and the rendered v3 prompt only. Telemetry is append-only JSONL under
+`annotations/`; unknown costs are recorded as `null`.
+
+### Visible assistant commentary
+
+User-visible ChatGPT benchmark progress, comments, and summaries worth
+preserving may be appended to
+`annotations/<release>/<candidate>/assistant-commentary.jsonl`. These records
+are annotation/UI metadata only: they are not benchmark ground truth and must
+never affect candidate results, hidden evaluation, judge inputs, scores, or
+publication artifacts. Never log private chain-of-thought, secrets,
+credentials, hidden evaluator raw output, or unpublished sensitive internals.
+
+### Cost reporting policy
+
+For every leaderboard or comparison table, the primary cost metric—the model's
+displayed task price—is the provider-reported **solution cost** for the
+candidate's task execution itself. It excludes candidate availability
+preflight, all judge runs, and all fallback or expert-review work. This keeps
+the price column attributable to the model actually solving the task.
+
+Candidate total known cost, including candidate preflight, may be shown only as
+secondary telemetry. Input, output, reasoning, and cache token counts are
+diagnostic telemetry and are substantially less important than solution cost.
+When the provider does not report solution cost, record and render it as
+`null`/`N/A`; never estimate a cost from tokens, duration, pricing tables, or
+any other proxy. Historical artifacts remain immutable and are never rewritten
+to apply this presentation policy.
+
 ## Table of Contents
 
 - [Quick Start](#quick-start)
@@ -52,11 +132,12 @@ npm run verify:sandbox
 # 5. Dry-run the pilot matrix
 npm run pilot:dry-run
 
-# 6. Run actual pilot (consumes model quota)
-npm run pilot
+# 6. Freeze candidate evidence (consumes candidate quota only)
+node scripts/run-pilot.mjs --phase candidates
 
-# 7. Generate aggregate report
-npm run aggregate -- <release-id>
+# 7. Append one judge at a time; aggregate regenerates after each pass
+node scripts/run-pilot.mjs --phase judges --judge gemini-3-flash
+node scripts/run-pilot.mjs --phase judges --judge gpt-5-nano
 ```
 
 ## Current Status
@@ -84,13 +165,67 @@ run: it receives only the read-only runtime and private sandbox storage, never
 the clean workspace or persistent agent home. A failed version check therefore
 cannot leave candidate state behind.
 
-The project remains in pilot validation. Two tasks and one run per model are
+The project remains in pilot validation. Two Nominations and one Attempt per Run are
 useful evidence, not a definitive general ranking.
 
 The current pilot configuration is data-driven: candidate models, judges,
-tasks, criteria, subscription labels, and release ID live in
+nominations, criteria, subscription labels, and release ID live in
 [`config/pilot.json`](config/pilot.json). Their counts can change in later
 releases without changing the runner's core workflow.
+
+### Staged execution
+
+Candidate and judge phases are independent and append-only. Candidate phase
+preflights only selected candidates and writes immutable `preflight.json`,
+`run.json`, `candidate.diff`, and `test-result.json`; it never invokes a
+judge. Judge phase preflights only selected judges, verifies the saved candidate
+artifact hashes, rebuilds the anonymous workspace from the trusted baseline
+plus the saved diff, and appends only the requested judge artifact. It never
+reruns a candidate. A release-level non-secret `manifest.json` freezes the
+task/model/rubric/prompt specification for staged compatibility.
+
+For `--phase all`, selected judges are probed before any selected candidate is
+run. `--phase candidates` deliberately does not probe judges, so frozen
+candidate evidence can be collected now and judges appended later. Phase2-v2
+keeps its complete 31-model roster frozen before 3 → 3 → larger batches.
+
+Hidden evaluators are runner-private code under `private_evaluators_dir` (by
+default `evaluators/` in this repository). Their configured paths are relative
+to that root and are resolved fail-closed against traversal and symlink escape.
+Only a public evaluator ID plus evaluator and public-source SHA-256 values are
+put in the release manifest. The source locator remains relative to the public
+`models-test` fixture and is never published as evaluator metadata.
+
+Use repeatable or comma-separated selectors, for example:
+
+```bash
+node scripts/run-pilot.mjs --phase candidates --candidate mimo-v2-5-free --nomination patch
+node scripts/run-pilot.mjs --phase judges --candidate mimo-v2-5-free --nomination patch --judge gemini-3-flash
+node scripts/run-pilot.mjs --phase judges --judge gemini-3-flash --resume
+```
+
+`--nomination` is canonical; `--task` remains a deprecated compatibility alias.
+An existing primary Attempt fails closed. `--resume` only skips a complete,
+compatible Attempt and never overwrites it. `aggregate.json`
+and `aggregate.md` are derived outputs and are regenerated after a judge pass;
+they show configured per-judge score columns, partial coverage as `N/A`, and a
+combined average over valid completed judges. Publication remains manual.
+
+Objective evaluators run after candidate exit in a separate unprivileged
+transient systemd unit with `PrivateNetwork=yes`, only a disposable evaluation
+workspace bind, and no OpenCode runtime, agent home, credentials, or runner
+artifact bind. Raw output stays private; public evidence is safe metadata,
+hashes, timing, and pass/fail. Manifests cryptographically freeze complete
+fixture trees, exact prompts, evaluator source, and the judge template; resume
+refuses a changed input or a self-inconsistent manifest. Phase2-v2 evaluator
+sources and canonical solutions remain embargoed until the full candidate run.
+The trusted runner copies the evaluator, public fixture, and immutable patch
+before changing that disposable root to the clean-room user; it removes the
+test-owned root itself after the unit exits. `ProtectSystem=strict` keeps the
+host Node binary and its system libraries read-only-visible, so this unit has
+no runtime bind. Run `npm run verify:objective-sandbox` for a no-model real
+unit smoke; it reports `NOT VERIFIED` (rather than weakening policy) when an
+outer connector prevents nested sudo.
 
 ### Next Pilot Matrix
 
@@ -131,7 +266,7 @@ All models, tasks, judges, criteria, and environment paths are declared here.
 | `private_artifacts_dir` | string | yes | Runner-owned directory for raw logs (expands `~`) |
 | `artifact_schemas` | object | yes | Schema version registry for all artifact types |
 | `clean_room` | object | yes | Clean-room account and path configuration |
-| `tasks` | array | yes | Task definitions (see below) |
+| `nominations` | array | yes | Nomination definitions (`tasks` is legacy input compatibility only) |
 | `candidates` | array | yes | Candidate model configurations |
 | `judges` | array | yes | Judge model configurations |
 | `criteria` | array | yes | Rubric criterion identifiers |
@@ -164,11 +299,11 @@ write and read. Changing a version requires a migration plan.
 | `workspace` | string | yes | Candidate workspace path (inside `home`) |
 | `agent_home` | string | yes | Fresh agent home per candidate (inside `home`) |
 
-### `tasks` (array of objects)
+### `nominations` (array of objects)
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `id` | string | yes | Unique task identifier |
+| `id` | string | yes | Unique nomination identifier |
 | `fixture` | string | yes | Relative path under `models_test` to task fixture |
 | `prompt` | string | yes | Relative path under `models_test` to task prompt markdown |
 | `test_command` | string[] | yes | Command to run public tests (e.g., `["npm", "test"]`) |
@@ -239,7 +374,7 @@ Each candidate receives the same public task fixture, task instructions,
 documentation, starting Git baseline, and public tests. The current pilot runs
 the public `feature-implementation` and `refactoring` tasks from `models-test`.
 
-For every candidate/task pair, the pipeline records:
+For every Benchmark/model/Nomination Run, the pipeline records:
 
 - whether the agent process completed, timed out, or failed;
 - the resulting Git diff and changed-file list;
@@ -283,6 +418,29 @@ submission and a fresh agent home of their own.
 
 ## How The Pilot Works
 
+### Canonical terms and nomination-first workflow
+
+- **Benchmark** is the complete frozen release: nominations, full model roster,
+  judging/evaluator contracts, and environment/spec hashes.
+- **Nomination** is one concrete benchmark task/category instance.
+- **Run** is one model executing one Nomination in one Benchmark, identified by
+  `(release, model ID, nomination ID)`.
+- **Attempt** is an immutable execution of a Run. Attempt 1 is normal policy;
+  a retry is separately stored and never replaces it.
+
+Freeze the Benchmark and full roster first, then select one Nomination and any
+subset of models. Selection filters never alter the release manifest or its
+identity. Example progression (no model identities, nominations, or spec hashes
+change between batches):
+
+```sh
+# Dry-run example: plan one Nomination across three selected models (no model calls)
+BENCHMARK_CONFIG=config/phase2-v2.json node scripts/run-pilot.mjs --dry-run --nomination patch --candidate 54-inkling-openrouter,55-glm-5-3-go,56-kimi-k3-opencode
+
+# After Patch is validated, use the same selection pattern for later Nominations.
+node scripts/run-pilot.mjs --phase candidates --nomination feature-implementation --candidate A,B,C
+```
+
 Codex acts as the visible orchestrator. It reads the private runner
 configuration, starts the pilot, reports live progress, and stops on an
 unexpected failure. Candidate models are executed one at a time in the clean
@@ -292,20 +450,21 @@ room through their configured OpenCode or Codex agent.
 flowchart TD
     A[User gives Codex the benchmark command] --> B[Private models-benchmark runner]
     B --> C[Reset clean-room account as candidate user]
-    C --> D[Restore the next public task]
+    C --> D[Restore the selected public Nomination]
     D --> E[Start a new OpenCode or Codex session]
     E --> F[Candidate model works once]
     F --> G[Run public tests and collect diff]
     G --> H[Save raw output in runner HOME]
     H --> I[Write sanitized artifacts to models-test checkout]
     I --> J[Manual review and publication]
-    J --> K[Reset room before next candidate]
+    J --> K[Reset room before next Attempt]
     K --> C
 ```
 
-The next hardened pilot uses two public tasks and three models already present
-in the published comparison. Each model receives one pass and one chance per
-task. There is no retry and no reuse of a previous agent session.
+The next hardened pilot uses two public Nominations and three models already
+present in the published comparison. Each selected model receives one pass and
+one chance per Nomination. There is no retry unless the frozen release policy
+explicitly permits a separate Attempt.
 
 Before creating a release, the runner also probes every required judge. If a
 judge model is unavailable, the run stops before any candidate is given a task
@@ -472,6 +631,25 @@ Hashes are computed **before** writing and embedded in the artifact. The
 canonical serialization excludes the hash field itself, so the published file
 hash matches the recorded value.
 
+
+### Reasoning variant / thinking level
+
+Every Run records `reasoning_variant`. If no explicit OpenCode `--variant` is supplied, the canonical value is `provider_default`. When a provider/model supports explicit reasoning effort, store the exact requested value such as `low`, `medium`, `high`, `xhigh`, `max`, or `minimal`. Never infer a level from token counts or model behavior. Historical runs without an explicit variant may be annotated as `provider_default` when the invocation is known to have omitted `--variant`; immutable Run artifacts are not rewritten.
+
+### Canonical per-Nomination scorecard
+
+Every completed judge evaluation uses the same four 1–10 criteria. The benchmark, not the judge, computes the arithmetic mean so all judges and releases aggregate identically.
+
+| Criterion | Score |
+| --- | ---: |
+| Functional correctness | x/10 |
+| Reliability / edge cases | x/10 |
+| Maintainability / clarity | x/10 |
+| Scope discipline | x/10 |
+| **Average** | **(sum / 4)/10** |
+
+The scorecard is stored per Nomination and may later be aggregated by model, Nomination, judge, provider, release, or any other reporting view. Starting with r18, ChatGPT `gpt-5.6-sol` supplies the required first expert review and `gemini-3.7-flash` is the sole subsequent blind judge. Hidden objective-evaluator results remain separate from both forms of review.
+
 ### Judge Prompt Versioning
 
 Judge prompts are versioned in [`config/judge-prompt.json`](config/judge-prompt.json).
@@ -532,9 +710,9 @@ The complete public release tree looks like this:
 <release>/
   aggregate.json
   aggregate.md
-  <candidate>/
+  <model>/
     preflight.json
-    <task>/
+    <nomination>/attempts/attempt-1/
       run.json
       candidate.diff
       test-result.json
@@ -544,8 +722,8 @@ The complete public release tree looks like this:
 An unavailable candidate has a deliberately smaller artifact set:
 
 ```text
-<candidate>/preflight.json
-<candidate>/<task>/run.json
+<model>/preflight.json
+<model>/<nomination>/attempts/attempt-1/run.json
 ```
 
 `preflight.json` records the safe availability result and timing. The skipped
@@ -561,9 +739,16 @@ The generated Markdown aggregate has one timing column for each configured
 judge. Reports must render
 availability failures as `N/A`, not as zero-quality scores.
 
+Where a report includes a cost column, it must use the provider-reported
+candidate solution cost defined in [Cost reporting policy](#cost-reporting-policy),
+not candidate preflight, judge, fallback, total, or estimated cost.
+
 `run.json` records the benchmark release, task, agent, runtime, model,
 subscription, execution status, changed files, and artifact locations. Raw
-agent stdout/stderr remains under the private runner artifact directory.
+agent stdout/stderr remains under the private runner artifact directory. Public
+test stdout/stderr is likewise private (`public-test.stdout.txt` and
+`public-test.stderr.txt`); public `test-result.json` records structured status,
+timing, output-limit state, and hashes only.
 
 ### Public Artifact Fields
 
@@ -572,7 +757,7 @@ agent stdout/stderr remains under the private runner artifact directory.
 | `<candidate>/preflight.json` | Availability-probe status, timing, **artifact_hash** | Sanitized and reviewable |
 | `run.json` | Candidate identity, agent/runtime, statuses, timestamps, durations, changed files, **artifacts** (file hashes), **artifact_hash** | Sanitized and reviewable |
 | `candidate.diff` | Final Git patch against the baseline | Sanitized and reviewable |
-| `test-result.json` | Public test exit status, timing, stdout, stderr, **artifact_hash** | Sanitized and reviewable |
+| `test-result.json` | Public test exit status, timing, output-limit state, raw-output SHA-256 values, **artifact_hash** | Sanitized and reviewable; raw stdout/stderr stay private |
 | `judges/<id>.json` | Judge identity, scores, confidence, explanation, concerns, timing, **judge_prompt_version**, **judge_prompt_hash**, **artifact_hash** | Sanitized and reviewable |
 | `aggregate.json` / `aggregate.md` | Comparable rows, score averages, **reproducibility metadata** | Generated locally, manually reviewed |
 
@@ -857,7 +1042,10 @@ sanitized evidence.
   from patch quality.
 - Tasks and public tests are visible to candidates by design. Private prompts,
   raw logs, reference solutions, and credentials are not.
-- The pilot currently measures execution time, not token cost or price.
+- The primary displayed task price is provider-reported candidate solution cost
+  when available; provider-reported token counts and candidate total including
+  preflight are secondary telemetry. Unknown solution cost is `null`/`N/A` and
+  is never estimated.
 - Results require manual review before publication; a successful local run is
   not automatically a public benchmark release.
 
@@ -988,12 +1176,12 @@ required judge model is unavailable: hy3-free; no release directory was created
 
 1. **Review the diff:**
    ```bash
-   cat results/benchmark-pilot/<release>/<candidate>/<task>/candidate.diff
+   cat results/benchmark-pilot/<release>/<model>/<nomination>/attempts/attempt-1/candidate.diff
    ```
 
 2. **Check task configuration:**
    ```bash
-   cat config/pilot.json | jq '.tasks[] | {id, allowed_changes}'
+   cat config/pilot.json | jq '.nominations[] | {id, allowed_changes}'
    ```
 
 3. **If `allowed_changes` is too restrictive:**
@@ -1151,7 +1339,7 @@ clean-room account test is active; stop its processes before starting a benchmar
 
 3. **Verify test command in pilot.json:**
    ```bash
-   cat config/pilot.json | jq '.tasks[].test_command'
+   cat config/pilot.json | jq '.nominations[].test_command'
    ```
 
 ---

@@ -7,7 +7,8 @@ export const DEFAULT_ARTIFACT_SCHEMAS = {
   preflight: 1,
   aggregate: 2,
   test_result: 1,
-  candidate_diff: 1
+  candidate_diff: 1,
+  objective_evaluator: 1
 };
 
 export const SCHEMA_REGISTRY_VERSION = 1;

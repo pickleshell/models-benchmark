@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 5571,
+    "usage": {
+      "reported_cost_usd": 0.0131265,
+      "steps": 1,
+      "tokens": {
+        "input": 8301,
+        "output": 9,
+        "reasoning": 81,
+        "total": 8391,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 64356,
+    "usage": {
+      "reported_cost_usd": 0.1632072,
+      "steps": 11,
+      "tokens": {
+        "input": 64654,
+        "output": 979,
+        "reasoning": 6621,
+        "total": 133762,
+        "cache_read": 61508,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 7,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch correctly updates exponential backoff to 1000 * 2^(attempt - 1), enforces integer attempts, caps delays at 300,000ms, and parses ASCII delta-seconds and valid HTTP-dates. However, signed ('+5') and fractional ('5.5') numbers fall through to Date.parse, where V8 interprets them as valid dates rather than returning null as specified.",
+    "concerns": [
+      "Signed and fractional numeric strings (e.g. '+5', '-5', '5.5') are not explicitly rejected and are parsed by Date.parse into valid timestamps instead of returning null."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

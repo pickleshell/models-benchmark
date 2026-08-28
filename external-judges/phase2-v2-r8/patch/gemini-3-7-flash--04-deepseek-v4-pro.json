@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4564,
+    "usage": {
+      "reported_cost_usd": 0.013023,
+      "steps": 1,
+      "tokens": {
+        "input": 8282,
+        "output": 9,
+        "reasoning": 71,
+        "total": 8362,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 73940,
+    "usage": {
+      "reported_cost_usd": 0.17845455,
+      "steps": 11,
+      "tokens": {
+        "input": 77007,
+        "output": 779,
+        "reasoning": 6613,
+        "total": 134426,
+        "cache_read": 50027,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 9,
+      "reliability_edge_cases": 8,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch makes minimal, targeted corrections to retryPolicy.js: using /^\\d+$/ for delta-seconds, Math.max(0, dateMs - nowMs) for HTTP-date calculation, Number.isInteger for attempt validation, and 1000 * 2**(attempt - 1) for base exponential backoff. All public tests pass. A minor edge case remains where certain numeric strings (e.g., '+5', '1.5') are accepted by Date.parse in V8 instead of returning null.",
+    "concerns": [
+      "Date.parse loosely parses certain non-standard numeric strings such as '+5' or '1.5' as valid dates in V8 rather than returning null."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

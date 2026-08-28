@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r6",
+  "candidate": "56-kimi-k3-opencode",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "GPT-5.6 Sol"
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests pass and only the permitted file changed.",
+    "Hidden evaluator fails because parseRetryAfter('+1', nowMs) returns 0 instead of null via permissive Date.parse fallback.",
+    "The implementation is concise and fixes the seeded backoff, integer-attempt, and past-date defects, but does not explicitly reject signed/fractional numeric-like strings before date parsing."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": 4721,
+    "candidate_preflight_cost_usd": 0.022437,
+    "solution_duration_ms": 44445,
+    "solution_cost_usd": 0.0797889,
+    "candidate_total_known_cost_usd": 0.1022259,
+    "total_run_duration_ms": 45398,
+    "public_tests_duration_ms": 595,
+    "objective_evaluator_duration_ms": 178
+  }
+}

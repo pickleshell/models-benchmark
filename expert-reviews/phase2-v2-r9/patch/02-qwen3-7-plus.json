@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r9",
+  "candidate": "02-qwen3-7-plus",
+  "nomination": "patch",
+  "reviewer": {"name": "ChatGPT", "model": "GPT-5.6 Sol"},
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS; only the permitted retryPolicy.js file changed.",
+    "Hidden evaluator fails because parseRetryAfter('+1', nowMs) returns 0 instead of null through permissive Date.parse fallback.",
+    "The patch correctly fixes seeded backoff, past-date clamping, and integer attempt validation, but does not explicitly reject signed/fractional/exponent/hex numeric-like strings before date parsing."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": 4401,
+    "candidate_preflight_cost_usd": 0.0030204,
+    "solution_duration_ms": 72362,
+    "solution_cost_usd": 0.0209556,
+    "candidate_total_known_cost_usd": 0.023976,
+    "total_run_duration_ms": 73328,
+    "public_tests_duration_ms": 601,
+    "objective_evaluator_duration_ms": 181
+  }
+}

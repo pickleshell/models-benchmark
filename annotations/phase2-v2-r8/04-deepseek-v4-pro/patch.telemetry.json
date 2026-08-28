@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "kind": "run_telemetry_annotation",
+  "release": "phase2-v2-r8",
+  "candidate": {
+    "id": "04-deepseek-v4-pro",
+    "model": "opencode-go/deepseek-v4-pro",
+    "reasoning_variant": "provider_default"
+  },
+  "nomination": "patch",
+  "attempt": 1,
+  "candidate_preflight": {
+    "duration_ms": 4382,
+    "usage": {
+      "reported_cost_usd": 0.00490116,
+      "steps": 1,
+      "tokens": {
+        "input": 7420,
+        "output": 2,
+        "reasoning": 0,
+        "cache_read": 0,
+        "cache_write": 0,
+        "total": 7422
+      }
+    }
+  },
+  "solution": {
+    "agent_duration_ms": 43028,
+    "total_run_duration_ms": 43973,
+    "public_tests_duration_ms": 586,
+    "objective_evaluator_duration_ms": 179,
+    "objective_passed": false,
+    "usage": {
+      "reported_cost_usd": 0.013112924,
+      "steps": 6,
+      "tokens": {
+        "input": 10089,
+        "output": 1176,
+        "reasoning": 1310,
+        "cache_read": 69632,
+        "cache_write": 0,
+        "total": 82207
+      }
+    }
+  },
+  "infrastructure_attempts": [
+    {
+      "kind": "BOSgpt Codex gateway invocation",
+      "status": "failed",
+      "error": "OpenCode runtime root not found: /home/test/.opencode",
+      "provider_contacted": false,
+      "reported_cost_usd": null,
+      "is_model_attempt": false,
+      "note": "Earlier wrong gateway invocation; excluded from model-attempt and benchmark-spend accounting."
+    }
+  ],
+  "judge_attempts": [
+    {
+      "judge": "gemini-3-7-flash",
+      "kind": "canonical_runner",
+      "status": "failed",
+      "preflight_duration_ms_observed": 4888,
+      "preflight_cost_usd": null,
+      "review_duration_ms": null,
+      "review": {
+        "reported_cost_usd": null,
+        "steps": 0,
+        "tokens": {
+          "input": 0,
+          "output": 0,
+          "reasoning": 0,
+          "cache_read": 0,
+          "cache_write": 0,
+          "total": 0
+        },
+        "error_ref": "err_696c8a05"
+      },
+      "note": "Canonical transport failure: Unexpected server error. Check server logs for details.; no score."
+    },
+    {
+      "judge": "claude-opus-4-8",
+      "kind": "canonical_runner",
+      "status": "failed",
+      "preflight_duration_ms_observed": 4409,
+      "preflight_cost_usd": null,
+      "review_duration_ms": null,
+      "review": {
+        "reported_cost_usd": null,
+        "steps": 0,
+        "tokens": {
+          "input": 0,
+          "output": 0,
+          "reasoning": 0,
+          "cache_read": 0,
+          "cache_write": 0,
+          "total": 0
+        },
+        "error_ref": "err_c96de9a0"
+      },
+      "note": "Canonical transport failure: Unexpected server error. Check server logs for details.; no score."
+    },
+    {
+      "judge": "gemini-3-7-flash",
+      "kind": "external_blind_retry",
+      "status": "completed",
+      "preflight": {
+        "status": 0,
+        "duration_ms": 4564,
+        "usage": {
+          "reported_cost_usd": 0.013023,
+          "steps": 1,
+          "tokens": {
+            "input": 8282,
+            "output": 9,
+            "reasoning": 71,
+            "total": 8362,
+            "cache_read": 0,
+            "cache_write": 0
+          }
+        }
+      },
+      "review": {
+        "status": 0,
+        "duration_ms": 73940,
+        "usage": {
+          "reported_cost_usd": 0.17845455,
+          "steps": 11,
+          "tokens": {
+            "input": 77007,
+            "output": 779,
+            "reasoning": 6613,
+            "total": 134426,
+            "cache_read": 50027,
+            "cache_write": 0
+          }
+        }
+      },
+      "scores": {
+        "functional_correctness": 9,
+        "reliability_edge_cases": 8,
+        "maintainability_clarity": 10,
+        "scope_discipline": 10
+      },
+      "average": 9.25,
+      "confidence": 0.95,
+      "artifact": {
+        "path": "external-judges/phase2-v2-r8/patch/gemini-3-7-flash--04-deepseek-v4-pro.json",
+        "sha256": "7ff059fd81a3e08a68da4a319ccc6d9e5ac12c0d796552e79717b5bc4e26f6d9"
+      }
+    },
+    {
+      "judge": "claude-opus-4-8",
+      "kind": "external_blind_retry",
+      "status": "completed",
+      "preflight": {
+        "status": 0,
+        "duration_ms": 3558,
+        "usage": {
+          "reported_cost_usd": 0.07015375,
+          "steps": 1,
+          "tokens": {
+            "input": 2,
+            "output": 16,
+            "reasoning": 0,
+            "total": 11177,
+            "cache_read": 0,
+            "cache_write": 11159
+          }
+        }
+      },
+      "review": {
+        "status": 0,
+        "duration_ms": 35800,
+        "usage": {
+          "reported_cost_usd": 0.1659715,
+          "steps": 4,
+          "tokens": {
+            "input": 8,
+            "output": 1892,
+            "reasoning": 0,
+            "total": 58429,
+            "cache_read": 40813,
+            "cache_write": 15716
+          }
+        }
+      },
+      "scores": {
+        "functional_correctness": 10,
+        "reliability_edge_cases": 9,
+        "maintainability_clarity": 10,
+        "scope_discipline": 10
+      },
+      "average": 9.75,
+      "confidence": 0.95,
+      "artifact": {
+        "path": "external-judges/phase2-v2-r8/patch/claude-opus-4-8--04-deepseek-v4-pro.json",
+        "sha256": "ad29446585b345068fc0c150d21db3fa9f7a52a12f0ad93f66d5b6ff396672ac"
+      }
+    }
+  ],
+  "expert_review": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 6,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "average": 8.25,
+    "artifact": {
+      "path": "expert-reviews/phase2-v2-r8/patch/04-deepseek-v4-pro.json",
+      "sha256": "c136687968e04d8158d3459fd11237a0cc5bd664d2f944a4eaa5b8772416b6e5"
+    }
+  },
+  "prompt_v3": {
+    "path": "external-judges/phase2-v2-r8/patch/blind-prompt-v3.txt",
+    "sha256": "d1079ac7ed7543ad2573302c42d6b6e262a73dc477e1772a3fb03171fa2d01ea"
+  },
+  "cost_summary": {
+    "candidate_total_known_usd": 0.018014084,
+    "successful_external_judging_known_usd": 0.4276028,
+    "successful_external_judging_breakdown_usd": {
+      "gemini-3-7-flash": 0.19147755,
+      "claude-opus-4-8": 0.23612525
+    },
+    "known_full_benchmark_spend_usd": 0.445616884,
+    "has_unknown_cost_components": true
+  },
+  "notes": [
+    "Public tests PASS; hidden objective evaluator FAILs exactly because parseRetryAfter('+1', nowMs) returns 0 instead of null.",
+    "The Gemini blind retry independently caught the numeric-like Date.parse issue; the Claude blind retry did not.",
+    "Canonical judge transport failures are preserved separately; their costs are unknown and are not estimated."
+  ]
+}

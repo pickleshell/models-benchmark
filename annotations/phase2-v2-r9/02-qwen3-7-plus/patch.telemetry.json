@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "kind": "run_telemetry_annotation",
+  "release": "phase2-v2-r9",
+  "candidate": {
+    "id": "02-qwen3-7-plus",
+    "model": "opencode-go/qwen3.7-plus",
+    "reasoning_variant": "provider_default"
+  },
+  "nomination": "patch",
+  "candidate_preflight": {
+    "duration_ms": 4401,
+    "reported_cost_usd": 0.0030204
+  },
+  "solution": {
+    "agent_duration_ms": 72362,
+    "total_run_duration_ms": 73328,
+    "public_tests_duration_ms": 601,
+    "objective_evaluator_duration_ms": 181,
+    "objective_passed": false,
+    "reported_cost_usd": 0.0209556,
+    "tokens": {
+      "input": 30557,
+      "output": 1051,
+      "reasoning": 2135,
+      "cache_read": 90880,
+      "cache_write": 0,
+      "total": 124623
+    }
+  },
+  "expert_review": {
+    "reviewer": "GPT-5.6 Sol",
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 6,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "average": 8.25,
+    "note": "Public PASS; hidden FAIL because parseRetryAfter('+1', nowMs) returns 0 instead of null via permissive Date.parse fallback."
+  },
+  "judge_attempts": [
+    {
+      "judge": "gemini-3-7-flash",
+      "kind": "canonical_runner",
+      "status": "failed",
+      "review_duration_ms": 1562,
+      "review_cost_usd": null,
+      "error_ref": "err_25a0e87e"
+    },
+    {
+      "judge": "claude-opus-4-8",
+      "kind": "canonical_runner",
+      "status": "failed",
+      "review_duration_ms": 1569,
+      "review_cost_usd": null,
+      "error_ref": "err_26de3512"
+    },
+    {
+      "judge": "gemini-3-7-flash",
+      "kind": "external_blind_retry",
+      "status": "completed",
+      "preflight": {
+        "duration_ms": 4411,
+        "reported_cost_usd": 0.0128205
+      },
+      "review": {
+        "duration_ms": 63411,
+        "reported_cost_usd": 0.14980545
+      },
+      "scores": {
+        "functional_correctness": 10,
+        "reliability_edge_cases": 10,
+        "maintainability_clarity": 10,
+        "scope_discipline": 10
+      },
+      "average": 10.0,
+      "confidence": 1.0
+    },
+    {
+      "judge": "claude-opus-4-8",
+      "kind": "external_blind_retry",
+      "status": "completed",
+      "preflight": {
+        "duration_ms": 3669,
+        "reported_cost_usd": 0.07015375
+      },
+      "review": {
+        "duration_ms": 54496,
+        "reported_cost_usd": 0.25521975
+      },
+      "scores": {
+        "functional_correctness": 8,
+        "reliability_edge_cases": 6,
+        "maintainability_clarity": 9,
+        "scope_discipline": 10
+      },
+      "average": 8.25,
+      "confidence": 0.9
+    }
+  ],
+  "cost_summary": {
+    "candidate_total_known_usd": 0.023976,
+    "successful_external_judging_known_usd": 0.48799945,
+    "known_full_benchmark_spend_usd": 0.51197545,
+    "has_unknown_cost_components": true
+  },
+  "notes": [
+    "Canonical Gemini and Claude preflights were available but reviews failed with Unexpected server error; zero-token failed attempts kept separately.",
+    "External retries used frozen candidate diff and prompt v3 SHA-256 d1079ac7ed7543ad2573302c42d6b6e262a73dc477e1772a3fb03171fa2d01ea."
+  ]
+}

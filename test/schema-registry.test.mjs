@@ -18,6 +18,7 @@ test('schema registry has expected artifact types and versions', () => {
   assert.equal(registry.artifact_schemas.aggregate, 2);
   assert.equal(registry.artifact_schemas.test_result, 1);
   assert.equal(registry.artifact_schemas.candidate_diff, 1);
+  assert.equal(registry.artifact_schemas.objective_evaluator, 1);
 });
 
 test('getSchemaVersion returns correct version for known artifact types', () => {
@@ -27,6 +28,7 @@ test('getSchemaVersion returns correct version for known artifact types', () => 
   assert.equal(getSchemaVersion('aggregate'), 2);
   assert.equal(getSchemaVersion('test_result'), 1);
   assert.equal(getSchemaVersion('candidate_diff'), 1);
+  assert.equal(getSchemaVersion('objective_evaluator'), 1);
 });
 
 test('getSchemaVersion throws for unknown artifact type', () => {

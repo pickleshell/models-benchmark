@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 3544,
+    "usage": {
+      "reported_cost_usd": 0.07024125,
+      "steps": 1,
+      "tokens": {
+        "input": 2,
+        "output": 16,
+        "reasoning": 0,
+        "total": 11191,
+        "cache_read": 0,
+        "cache_write": 11173
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 33583,
+    "usage": {
+      "reported_cost_usd": 0.16437825,
+      "steps": 4,
+      "tokens": {
+        "input": 8,
+        "output": 1817,
+        "reasoning": 0,
+        "total": 59090,
+        "cache_read": 41564,
+        "cache_write": 15701
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 10,
+      "reliability_edge_cases": 9,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "All 4 public tests pass. The patch correctly implements the full contract: parseRetryAfter uses a strict /^[0-9]+$/ regex so signed, fractional, exponent, hex, empty, and non-string inputs return null; requires finite nowMs before Date.parse for the HTTP-date branch; clamps date delta via Math.max(0, dateMs-nowMs). computeRetryDelay uses Number.isInteger for attempt validation, throws on non-finite nowMs, lets valid Retry-After override backoff, caps both paths at 300000, and uses the correct 1000*2^(attempt-1) formula. Very large attempts yield Infinity from 2**n which Math.min caps to 300000 (finite). Change is minimal, built-ins only, public API unchanged, and git diff shows only the single allowed file modified.",
+    "concerns": [
+      "Public tests are shallow (only 4 cases) and do not exercise many contract edge cases (signed/fractional/hex/exponent rejection, past dates, very large attempts), so correctness for those relies on code inspection rather than test verification",
+      "parseRetryAfter accepts any Date-parseable string including some non-HTTP-date formats since it delegates to Date.parse, slightly broader than a strict HTTP-date parser, though consistent with the stated 'JavaScript Date can parse' allowance"
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

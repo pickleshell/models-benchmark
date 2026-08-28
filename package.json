@@ -3,10 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test test/*.test.mjs",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs",
     "pilot": "node scripts/run-pilot.mjs",
     "pilot:dry-run": "node scripts/run-pilot.mjs --dry-run",
+    "phase2:queue": "node scripts/run-phase2-queue.mjs",
+    "phase2:queue:dry-run": "node scripts/run-phase2-queue.mjs --dry-run",
     "verify:sandbox": "node scripts/verify-sandbox.mjs",
+    "verify:objective-sandbox": "node scripts/verify-objective-sandbox.mjs",
     "aggregate": "node scripts/aggregate-results.mjs"
   }
 }

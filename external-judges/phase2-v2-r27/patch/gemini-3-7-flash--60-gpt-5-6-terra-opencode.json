@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4572,
+    "usage": {
+      "reported_cost_usd": 0.013101,
+      "steps": 1,
+      "tokens": {
+        "input": 8299,
+        "output": 9,
+        "reasoning": 78,
+        "total": 8386,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 70900,
+    "usage": {
+      "reported_cost_usd": 0.140913,
+      "steps": 11,
+      "tokens": {
+        "input": 55570,
+        "output": 764,
+        "reasoning": 5527,
+        "total": 131031,
+        "cache_read": 69170,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 9,
+      "reliability_edge_cases": 8,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch correctly fixes exponential backoff off-by-one indexing (2^(attempt-1)), validates that attempts are positive integers, clamps past HTTP-dates to 0, and restricts delta-seconds parsing to ASCII digits. All public tests pass with minimal targeted edits. However, signed and fractional numeric strings (e.g., '+5', '5.5') fall through to JavaScript's Date.parse, which leniently parses them rather than returning null.",
+    "concerns": [
+      "Signed and fractional numeric strings such as '+5', '-5', or '5.5' are parsed loosely by Date.parse instead of being rejected as null."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

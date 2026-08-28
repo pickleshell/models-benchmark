@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "source_release": "phase2-v2-r6",
+  "candidate": "56-kimi-k3-opencode",
+  "nomination": "patch",
+  "judge": {
+    "id": "gemini-3-7-flash",
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "duration_ms": 4824,
+    "reported_cost_usd": 0.012858
+  },
+  "review": {
+    "duration_ms": 56194,
+    "reported_cost_usd": 0.16719405
+  },
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 7,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.5,
+  "confidence": 0.95,
+  "concerns": [
+    "Signed and fractional numeric strings fall through to Date.parse and may return 0 instead of null."
+  ],
+  "raw_logs": "raw/gemini-3-7-flash--56-kimi-k3-opencode",
+  "notes": [
+    "Blind external retry after canonical judge call returned transient server error."
+  ]
+}

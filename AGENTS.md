@@ -21,11 +21,24 @@ the end of a completed matrix.
 ## Pilot workflow
 
 Run `npm run pilot:dry-run` before any real model invocation. The pilot runner
-uses the public tasks and three candidates in `config/pilot.json`. It runs
-candidates sequentially and starts a new agent session for every candidate/task
-pair.
+uses the public nominations and three candidates in `config/pilot.json`. It
+runs selected models sequentially and starts a new agent session for every
+Run Attempt.
 
-The runner probes each configured model before assigning any task. A model is
+The runner has append-only stages. `--phase candidates` preflights only selected
+candidates and freezes candidate evidence without invoking judges. `--phase
+judges` preflights only selected judges, verifies the saved candidate hashes,
+and rebuilds an anonymous workspace from the trusted baseline plus immutable
+`candidate.diff`; it never invokes candidates. Selectors accept repeatable or
+comma-separated `--candidate`, canonical `--nomination`, and `--judge` values;
+`--task` is a deprecated compatibility alias. A Benchmark is the frozen release,
+a Nomination is one task/category instance, a Run is `(release, model, nomination)`,
+and an Attempt is its immutable execution. Existing primary Attempt artifacts
+fail closed unless `--resume` can verify and skip a complete compatible artifact.
+The release manifest freezes the benchmark specification; aggregate
+files are derived and may be regenerated. Manual publication remains required.
+
+The runner probes each selected model before assigning any task. A model is
 available only after a harmless request produces a recognised model response;
 a provider diagnostic or zero exit code alone is not evidence of availability.
 An unavailable model receives `preflight.json` and `unavailable` task records,
@@ -67,9 +80,9 @@ candidate patch; never copy candidate `.git` metadata and never give the judge
 a writable bind for the original candidate workspace. Candidate association belongs only in runner-side artifacts after judging;
 stylistic inference by a judge is an acknowledged residual risk.
 
-Benchmark release directories are immutable. A real run must stop before any
-work if either the private or sanitized public directory for its release ID
-already exists. Use a new release ID for every rerun.
+Benchmark primary artifacts are immutable and append-only, while a release
+directory may persist across staged invocations. Never overwrite candidate,
+preflight, or judge artifacts; use a new release ID for incompatible specs.
 
 ## Experimental Cleanliness Invariants
 

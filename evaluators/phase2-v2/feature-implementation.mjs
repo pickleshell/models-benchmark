@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import { pathToFileURL } from 'node:url';
+const source = process.argv[process.argv.indexOf('--source') + 1];
+const { resolveFeature } = await import(pathToFileURL(source).href);
+const vectors = [['a', 50, false], ['b', 50, false], ['user-42', 37, false], ['Ω', 71, true]];
+for (const [userId, rollout, expected] of vectors) assert.equal(resolveFeature({ f: { enabled: true, rollout } }, { feature: 'f', userId }), expected);
+assert.equal(resolveFeature({ f: true }, { feature: 'f', overrides: { f: false } }), false);
+assert.equal(resolveFeature({ f: false }, { feature: 'f', overrides: { f: true } }), true);
+assert.equal(resolveFeature({ f: { enabled: true } }, { feature: 'f' }), true);
+for (const value of [-1, 1.2, 101, '50', null]) assert.equal(resolveFeature({ f: { enabled: true, rollout: value } }, { feature: 'f', userId: 'x' }), false);
+for (const context of [null, {}, { feature: '' }, { feature: 'f', userId: '' }]) assert.equal(resolveFeature({ f: { enabled: true, rollout: 50 } }, context), false);
+const config = { f: { enabled: true, rollout: 50 } }; const context = { feature: 'f', userId: 'a', overrides: { f: 'true' } };
+const configBefore = JSON.stringify(config), contextBefore = JSON.stringify(context); resolveFeature(config, context);
+assert.equal(JSON.stringify(config), configBefore); assert.equal(JSON.stringify(context), contextBefore);

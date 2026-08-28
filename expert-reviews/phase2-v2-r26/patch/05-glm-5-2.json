@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r26",
+  "candidate": "05-glm-5-2",
+  "nomination": "patch",
+  "reviewer": {"name": "ChatGPT", "model": "gpt-5.6-sol"},
+  "scores": {
+    "functional_correctness": 8,
+    "reliability_edge_cases": 6,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 8.25,
+  "objective_evaluator": "FAIL",
+  "notes": [
+    "Public tests PASS and only the permitted retryPolicy.js changed.",
+    "Hidden evaluator exact defect: must reject \"+1\", actual 0, expected null.",
+    "The patch fixes positive-integer attempts, base-1 fallback, and past-date clamping but leaves non-digit strings to permissive Date.parse."
+  ]
+}

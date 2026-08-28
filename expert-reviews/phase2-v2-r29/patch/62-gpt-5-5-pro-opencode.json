@@ -1,0 +1,16 @@
+{
+  "schema_version":1,
+  "kind":"expert_review",
+  "release":"phase2-v2-r29",
+  "candidate":"62-gpt-5-5-pro-opencode",
+  "nomination":"patch",
+  "reviewer":{"name":"ChatGPT","model":"gpt-5.6-sol"},
+  "scores":{"functional_correctness":10,"reliability_edge_cases":10,"maintainability_clarity":9,"scope_discipline":10},
+  "average":9.75,
+  "objective_evaluator":"PASS",
+  "notes":[
+    "Public and hidden objective tests PASS; only the permitted retryPolicy.js changed.",
+    "The patch rejects signed, fractional, exponent, and hex numeric-like inputs before Date.parse while preserving date strings.",
+    "Attempt validation, base-1 exponential fallback, and past-date clamping are all corrected with a focused change."
+  ]
+}

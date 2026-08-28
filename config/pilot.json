@@ -1,16 +1,19 @@
 {
   "schema_version": 1,
-  "release": "pilot-2-tasks-r5",
+  "release": "pilot-patch-r3",
+  "retry_policy": { "canonical_attempt": 1, "allow_retries": false },
   "models_test": "/home/gpt/models-test",
   "results_dir": "results/benchmark-pilot",
   "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
   "artifact_schemas": {
     "run": 1,
     "judge": 1,
     "preflight": 1,
     "aggregate": 2,
     "test_result": 1,
-    "candidate_diff": 1
+    "candidate_diff": 1,
+    "objective_evaluator": 1
   },
   "clean_room": {
     "user": "test",
@@ -21,37 +24,21 @@
     "workspace": "/home/test/.models-benchmark/workspace",
     "agent_home": "/home/test/.models-benchmark/agent-home"
   },
-  "tasks": [
+  "nominations": [
     {
-      "id": "feature-implementation",
-      "fixture": "fixtures/phase2/feature-implementation",
-      "prompt": "benchmarks/phase2/prompts/feature-implementation.md",
+      "id": "patch",
+      "fixture": "fixtures/phase1-ledger",
+      "prompt": "fixtures/phase1-ledger/PROMPT.md",
       "test_command": ["npm", "test"],
-      "allowed_changes": ["fixtures/phase2/feature-implementation/src/featureFlags.js"]
-    },
-    {
-      "id": "refactoring",
-      "fixture": "fixtures/phase2/refactoring",
-      "prompt": "benchmarks/phase2/prompts/refactoring.md",
-      "test_command": ["npm", "test"],
-      "allowed_changes": ["fixtures/phase2/refactoring/src/events.js"]
+      "allowed_changes": ["fixtures/phase1-ledger/src/reconcile.js"],
+      "objective_evaluator": {
+        "id": "phase2-bug-fix-v1",
+        "path": "phase2-v2/bug-fix-ledger.mjs",
+        "source": "fixtures/phase1-ledger/src/reconcile.js"
+      }
     }
   ],
   "candidates": [
-    {
-      "id": "big-pickle",
-      "agent": "opencode",
-      "runtime": "opencode",
-      "model": "opencode/big-pickle",
-      "subscription": "free"
-    },
-    {
-      "id": "deepseek-v4-flash-free",
-      "agent": "opencode",
-      "runtime": "opencode",
-      "model": "opencode/deepseek-v4-flash-free",
-      "subscription": "free"
-    },
     {
       "id": "mimo-v2-5-free",
       "agent": "opencode",
@@ -61,8 +48,8 @@
     }
   ],
   "judges": [
-    {"id": "hy3-free", "agent": "opencode", "provider": "opencode", "model": "opencode/hy3-free", "subscription": "free"},
-    {"id": "nemotron-3-5-lightning-free", "agent": "opencode", "provider": "opencode", "model": "opencode/nemotron-3.5-lightning-free", "subscription": "free"}
+    {"id": "gemini-3-flash", "agent": "opencode", "provider": "opencode", "model": "opencode/gemini-3-flash", "subscription": "paid-low-cost"},
+    {"id": "gpt-5-nano", "agent": "opencode", "provider": "opencode", "model": "opencode/gpt-5-nano", "subscription": "paid-low-cost"}
   ],
   "criteria": [
     "functional_correctness",

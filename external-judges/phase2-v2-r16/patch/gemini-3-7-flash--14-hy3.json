@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4497,
+    "usage": {
+      "reported_cost_usd": 0.0130965,
+      "steps": 1,
+      "tokens": {
+        "input": 8296,
+        "output": 9,
+        "reasoning": 78,
+        "total": 8383,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 58545,
+    "usage": {
+      "reported_cost_usd": 0.1308807,
+      "steps": 10,
+      "tokens": {
+        "input": 54612,
+        "output": 1060,
+        "reasoning": 4235,
+        "total": 121575,
+        "cache_read": 61668,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 8,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch correctly fixes the exponential backoff formula (1000 * 2^(attempt - 1)), strictly validates attempt as a positive integer and nowMs as finite, clamps past HTTP-dates to 0, and parses ASCII decimal delta-seconds. However, falling through to Date.parse allows signed and fractional numeric strings (such as '+5' or '1.5') to be parsed as dates in JavaScript instead of returning null as specified in the contract.",
+    "concerns": [
+      "Signed numbers like '+5' or '-5' and fractional numbers like '1.5' are accepted by Date.parse as legacy date strings instead of returning null."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

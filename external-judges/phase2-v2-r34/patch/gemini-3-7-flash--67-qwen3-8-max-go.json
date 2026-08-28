@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4574,
+    "usage": {
+      "reported_cost_usd": 0.012975,
+      "steps": 1,
+      "tokens": {
+        "input": 8300,
+        "output": 9,
+        "reasoning": 61,
+        "total": 8370,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 43273,
+    "usage": {
+      "reported_cost_usd": 0.1236411,
+      "steps": 8,
+      "tokens": {
+        "input": 56149,
+        "output": 529,
+        "reasoning": 4033,
+        "total": 95395,
+        "cache_read": 34684,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 10,
+      "reliability_edge_cases": 10,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 1.0,
+    "explanation": "The patch precisely fulfills all contract requirements with a minimal 5-line diff: regex validation ensures only whole ASCII decimal digits are treated as delta-seconds while invalid numeric formats return null; HTTP-dates are parsed and clamped to non-negative delays; attempt is strictly checked with Number.isInteger; and exponential backoff correctly follows 1000 * 2 ** (attempt - 1) with capping at 300000 ms.",
+    "concerns": []
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r14",
+  "candidate": "11-deepseek-v4-flash",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "GPT-5.6 Sol"
+  },
+  "scores": {
+    "functional_correctness": 10,
+    "reliability_edge_cases": 10,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 9.75,
+  "objective_evaluator": "PASS",
+  "notes": [
+    "Public tests PASS; hidden objective evaluator PASS; only the permitted retryPolicy.js file changed.",
+    "The patch explicitly rejects non-HTTP-date numeric-like strings before Date.parse, closing the signed/fractional fallthrough class while preserving the three standard HTTP-date forms.",
+    "Backoff exponent, positive-integer attempt validation, past-date clamp, finite nowMs handling, and 300000 ms cap are implemented correctly. The only minor maintainability cost is a large explicit HTTP-date regular expression."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": 3270,
+    "candidate_preflight_cost_usd": 0.001261484,
+    "solution_duration_ms": 203012,
+    "solution_cost_usd": 0.010074088,
+    "candidate_total_known_cost_usd": 0.011335572,
+    "public_tests_duration_ms": 594,
+    "objective_evaluator_duration_ms": 179
+  }
+}

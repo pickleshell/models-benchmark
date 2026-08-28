@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/claude-opus-4-8",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 3638,
+    "usage": {
+      "reported_cost_usd": 0.070235,
+      "steps": 1,
+      "tokens": {
+        "input": 2,
+        "output": 16,
+        "reasoning": 0,
+        "total": 11190,
+        "cache_read": 0,
+        "cache_write": 11172
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 56535,
+    "usage": {
+      "reported_cost_usd": 0.259309,
+      "steps": 10,
+      "tokens": {
+        "input": 20,
+        "output": 3058,
+        "reasoning": 0,
+        "total": 154397,
+        "cache_read": 132693,
+        "cache_write": 18626
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 10,
+      "reliability_edge_cases": 9,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "confidence": 0.92,
+    "explanation": "The patch fixes all seeded defects and satisfies the contract. parseRetryAfter now uses /^\\d+$/ to accept only ASCII-digit delta-seconds (correctly rejecting signed +5/-5, fractional 5.5, exponent 1e3, hex 0x10, empty, and non-string inputs), returns null before Date.parse for those cases, applies Math.max(0, dateMs-nowMs) for HTTP-dates, and requires finite nowMs for dates. computeRetryDelay now uses Number.isInteger for positive-integer attempt validation, checks finite nowMs, lets valid Retry-After override backoff, uses 1000*2^(attempt-1) fallback, and caps all delays at 300000ms (Math.min with Infinity yields a finite cap for very large attempts). All 4 public tests pass and 20 additional edge-case probes pass. Only the changed file was modified (git status confirms single M). Minor: the added HTTP_DATE_RE is stricter than a literal 'anything Date can parse' reading (e.g. it rejects ISO-8601 strings that Date.parse would accept), which is a small deviation but is a reasonable, safer interpretation aligned with RFC HTTP-date formats and prevents Date.parse from silently accepting non-HTTP-date strings.",
+    "concerns": [
+      "HTTP_DATE_RE is stricter than raw Date.parse; valid non-RFC date strings JS Date could parse (e.g. ISO-8601) return null, a slight deviation from the literal 'JavaScript Date can parse' wording",
+      "The long regex is the least readable part of the otherwise minimal patch, though it is well-structured for the three RFC HTTP-date formats"
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4628,
+    "usage": {
+      "reported_cost_usd": 0.0133065,
+      "steps": 1,
+      "tokens": {
+        "input": 8301,
+        "output": 9,
+        "reasoning": 105,
+        "total": 8415,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 43305,
+    "usage": {
+      "reported_cost_usd": 0.10480125,
+      "steps": 7,
+      "tokens": {
+        "input": 46020,
+        "output": 403,
+        "reasoning": 3750,
+        "total": 80998,
+        "cache_read": 30825,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 10,
+      "reliability_edge_cases": 10,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 1,
+    "explanation": "The patch precisely implements all requirements in retryPolicy.js: strict ASCII decimal validation for delta-seconds, RFC HTTP-date parsing with non-negative clamping against nowMs, integer and finiteness validation on inputs, proper exponential backoff formula, and delay capping at 300,000 ms. Only the targeted file was modified, and all tests pass.",
+    "concerns": []
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "kind": "expert_review",
+  "release": "phase2-v2-r7",
+  "candidate": "57-qwen3-8-27b-openrouter",
+  "nomination": "patch",
+  "reviewer": {
+    "name": "ChatGPT",
+    "model": "GPT-5.6 Sol"
+  },
+  "scores": {
+    "functional_correctness": 10,
+    "reliability_edge_cases": 10,
+    "maintainability_clarity": 9,
+    "scope_discipline": 10
+  },
+  "average": 9.75,
+  "objective_evaluator": "PASS",
+  "notes": [
+    "Public tests PASS; hidden objective evaluator PASS.",
+    "Additional adversarial probes for signed/fractional/exponent/hex numeric-like values, huge attempts, and invalid attempts all passed.",
+    "Maintainability reduced by one point because three regex guards are slightly denser than the surrounding function."
+  ],
+  "telemetry_snapshot": {
+    "reasoning_variant": "provider_default",
+    "candidate_preflight_duration_ms": 6038,
+    "candidate_preflight_cost_usd": 0.003264,
+    "solution_duration_ms": 226026,
+    "solution_cost_usd": 0.091643175,
+    "candidate_total_known_cost_usd": 0.094907175,
+    "total_run_duration_ms": 226984,
+    "public_tests_duration_ms": 601,
+    "objective_evaluator_duration_ms": 175
+  }
+}

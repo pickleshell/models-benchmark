@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "release": "phase2-v2-r4",
+  "candidate": "54-inkling-openrouter",
+  "nomination": "patch",
+  "reasoning_variant": "provider_default",
+  "basis": "The recorded OpenCode invocation omitted --variant; the immutable r4 run artifact is not rewritten."
+}

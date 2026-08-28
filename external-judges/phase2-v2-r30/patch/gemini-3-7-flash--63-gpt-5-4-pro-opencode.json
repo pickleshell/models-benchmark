@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4338,
+    "usage": {
+      "reported_cost_usd": 0.012816,
+      "steps": 1,
+      "tokens": {
+        "input": 8299,
+        "output": 9,
+        "reasoning": 40,
+        "total": 8348,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 53811,
+    "usage": {
+      "reported_cost_usd": 0.1331895,
+      "steps": 10,
+      "tokens": {
+        "input": 51027,
+        "output": 853,
+        "reasoning": 5390,
+        "total": 122780,
+        "cache_read": 65510,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 7,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch correctly updates delta-seconds matching, fixes the backoff exponent to (attempt - 1), validates integer attempts, and clamps past dates to 0. However, signed and fractional numeric strings (e.g., '+1', '1.5') bypass the integer regex and fall through to Date.parse, which V8 treats as valid dates instead of returning null as required by the specification. Scope discipline is perfect and all public tests pass.",
+    "concerns": [
+      "Signed and fractional numeric strings fall through to Date.parse, which parses them into valid timestamps instead of returning null."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

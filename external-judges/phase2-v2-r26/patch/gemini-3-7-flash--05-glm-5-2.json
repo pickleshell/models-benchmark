@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4262,
+    "usage": {
+      "reported_cost_usd": 0.013017,
+      "steps": 1,
+      "tokens": {
+        "input": 8298,
+        "output": 9,
+        "reasoning": 67,
+        "total": 8374,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 47936,
+    "usage": {
+      "reported_cost_usd": 0.0982014,
+      "steps": 9,
+      "tokens": {
+        "input": 36606,
+        "output": 776,
+        "reasoning": 3687,
+        "total": 106535,
+        "cache_read": 65466,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 7,
+      "maintainability_clarity": 9,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The solution implements the required exponential backoff calculation with attempt-1 exponent, enforces integer checks on attempt, clamps delays to 300,000 ms, and parses digit-only delta-seconds. However, parseRetryAfter falls through to Date.parse for signed numbers (e.g., '+5', '-5') and fractional numbers (e.g., '1.5'), which Date.parse parses as timestamps rather than returning null as required by the specification.",
+    "concerns": [
+      "parseRetryAfter falls through to Date.parse for signed and fractional numbers (e.g., '+5', '1.5'), returning non-null values instead of null as required."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

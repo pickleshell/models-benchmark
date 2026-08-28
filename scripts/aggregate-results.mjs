@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { validateJudgePayload } from './lib/runner-utils.mjs';
-import { getSchemaVersion, getRegistry, loadSchemaRegistry } from './lib/schema-registry.mjs';
-import { computeFileHash } from './lib/artifact-hash.mjs';
+import { getSchemaVersion, getRegistry, loadSchemaRegistry, validateSchemaVersion } from './lib/schema-registry.mjs';
+import { computeFileHash, computeArtifactHash, verifyFileHash } from './lib/artifact-hash.mjs';
 import { getJudgePromptMetadata } from './lib/blind-judging.mjs';
 
 const repo = path.resolve(new URL('..', import.meta.url).pathname);
@@ -14,6 +15,16 @@ const config = JSON.parse(await readFile(configPath, 'utf8'));
 const schemaRegistry = await loadSchemaRegistry(configPath);
 const release = process.argv[2] || config.release;
 const root = path.resolve(config.models_test, config.results_dir, release);
+const strictArtifacts = config.strict_artifacts === true;
+const nominations = config.nominations ?? config.tasks ?? [];
+const canonicalAttempt = config.retry_policy?.canonical_attempt ?? 1;
+if (!Number.isInteger(canonicalAttempt) || canonicalAttempt < 1) throw new Error('retry_policy.canonical_attempt must be a positive integer');
+
+function assertArtifact(artifact, type, identity) {
+  if (!strictArtifacts) return;
+  validateSchemaVersion(type, artifact.schema_version, schemaRegistry.artifact_schemas);
+  if (!artifact.artifact_hash?.sha256 || computeArtifactHash(artifact) !== artifact.artifact_hash.sha256) throw new Error(`invalid ${type} artifact: ${identity}`);
+}
 
 async function getRepoCommit() {
   try {
@@ -83,27 +94,63 @@ function sumJudgeDuration(taskResults, judgeId) {
     : null;
 }
 
+async function readObjectiveEvaluator(taskDir, run) {
+  const evidence = run.artifacts?.objective_evaluator;
+  if (!evidence) return null;
+  const file = path.join(taskDir, evidence.path);
+  try {
+    if (!(await verifyFileHash(file, evidence.sha256))) throw new Error('file hash mismatch');
+    const artifact = JSON.parse(await readFile(file, 'utf8'));
+    assertArtifact(artifact, 'objective_evaluator', evidence.path);
+    if (artifact.status !== 'completed' || typeof artifact.passed !== 'boolean') throw new Error('invalid evaluator artifact');
+    return { id: artifact.evaluator?.id ?? null, status: artifact.status, passed: artifact.passed };
+  } catch {
+    return { status: 'invalid', passed: null };
+  }
+}
+
 const rows = [];
 for (const candidate of config.candidates) {
   const taskResults = [];
   const judges = [];
-  for (const task of config.tasks) {
-    const taskDir = path.join(root, candidate.id, task.id);
+  for (const task of nominations) {
+    const legacyTaskDir = path.join(root, candidate.id, task.id);
+    const taskDir = path.join(legacyTaskDir, 'attempts', `attempt-${canonicalAttempt}`);
+    const hasAttemptLayout = existsSync(path.join(legacyTaskDir, 'attempts'));
+    const artifactDir = hasAttemptLayout ? taskDir : legacyTaskDir;
     let run;
     try {
-      run = JSON.parse(await readFile(path.join(taskDir, 'run.json'), 'utf8'));
+      run = JSON.parse(await readFile(path.join(artifactDir, 'run.json'), 'utf8'));
     } catch {
-      taskResults.push({ task: task.id, outcome: 'missing_artifacts', judge_count: 0, judge_invocation_count: 0, judge_durations: [], judge_duration_ms: null, agent_duration_ms: null, test_duration_ms: null, duration_ms: null });
+      taskResults.push({ nomination: task.id, attempt: canonicalAttempt, outcome: 'missing_artifacts', judge_count: 0, judge_scores: {}, judge_invocation_count: 0, judge_durations: [], judge_duration_ms: null, agent_duration_ms: null, test_duration_ms: null, duration_ms: null });
       continue;
     }
+    try {
+      assertArtifact(run, 'run', `${candidate.id}/${task.id}/attempt-${canonicalAttempt}`);
+      const artifactNomination = run.nomination ?? run.task;
+      if (run.release !== release || artifactNomination !== task.id || run.candidate?.id !== candidate.id || (hasAttemptLayout && (run.run_id !== `${release}:${candidate.id}:${task.id}` || run.attempt !== canonicalAttempt))) throw new Error('identity mismatch');
+      for (const key of ['candidate_diff', 'test_result', 'objective_evaluator']) {
+        const evidence = run.artifacts?.[key]; if (!evidence) continue;
+        if (!(await verifyFileHash(path.join(artifactDir, evidence.path), evidence.sha256))) throw new Error(`${key} hash mismatch`);
+      }
+    } catch (error) {
+      if (strictArtifacts) throw new Error(`aggregate refused corrupt candidate artifact ${candidate.id}/${task.id}/attempt-${canonicalAttempt}: ${error.message}`);
+    }
     const outcome = inferOutcome(run);
+    const objective = await readObjectiveEvaluator(artifactDir, run);
     let taskJudgeCount = 0;
     const taskJudges = [];
+    const taskJudgeScores = {};
     if (!['agent_failure', 'unavailable', 'forbidden_changes'].includes(outcome)) {
       try {
-        for (const file of await readdir(path.join(taskDir, 'judges'))) {
-          if (!file.endsWith('.json')) continue;
-          const result = JSON.parse(await readFile(path.join(taskDir, 'judges', file), 'utf8'));
+        for (const judge of config.judges ?? []) {
+          const file = `${judge.id}.json`;
+          let result;
+          try { result = JSON.parse(await readFile(path.join(artifactDir, 'judges', file), 'utf8')); } catch { continue; }
+          if (result.judge?.id !== judge.id) { if (strictArtifacts) throw new Error(`aggregate refused judge identity mismatch: ${candidate.id}/${task.id}/${judge.id}`); continue; }
+          assertArtifact(result, 'judge', `${candidate.id}/${task.id}/${judge.id}`);
+          const judgeNomination = result.nomination ?? result.task;
+          if (strictArtifacts && (result.candidate !== candidate.id || judgeNomination !== task.id || (hasAttemptLayout && (result.run_id !== `${release}:${candidate.id}:${task.id}` || result.attempt !== canonicalAttempt)))) throw new Error(`aggregate refused judge artifact identity mismatch: ${candidate.id}/${task.id}/${judge.id}`);
           taskJudges.push({
             id: result.judge?.id ?? file.slice(0, -'.json'.length),
             status: result.status ?? 'unknown',
@@ -112,13 +159,17 @@ for (const candidate of config.candidates) {
           const valid = result.status === 'completed' ? validateJudgePayload(result, config.criteria) : null;
           if (valid) {
             judges.push(valid);
+            taskJudgeScores[judge.id] = valid;
             taskJudgeCount += 1;
           }
         }
-      } catch {}
+      } catch (error) {
+        if (strictArtifacts) throw error;
+      }
     }
     taskResults.push({
-      task: task.id,
+      nomination: task.id,
+      attempt: hasAttemptLayout ? canonicalAttempt : null,
       outcome,
       agent: run.agent,
       tests: run.tests,
@@ -126,11 +177,13 @@ for (const candidate of config.candidates) {
       test_duration_ms: run.tests?.duration_ms ?? null,
       duration_ms: run.duration_ms ?? null,
       judge_count: taskJudgeCount,
+      judge_scores: taskJudgeScores,
       judge_invocation_count: taskJudges.length,
       judge_durations: taskJudges,
       judge_duration_ms: taskJudges.every((judge) => Number.isFinite(judge.duration_ms))
         ? taskJudges.reduce((sum, judge) => sum + judge.duration_ms, 0)
-        : taskJudges.length ? null : 0
+        : taskJudges.length ? null : 0,
+      objective_evaluator: objective
     });
   }
   const judgeAverage = {};
@@ -139,26 +192,43 @@ for (const candidate of config.candidates) {
     if (values.length) judgeAverage[criterion] = values.reduce((sum, value) => sum + value, 0) / values.length;
   }
   const scoreValues = config.criteria.map((criterion) => judgeAverage[criterion]).filter(Number.isFinite);
+  const judgeAverageById = {};
+  for (const judge of config.judges ?? []) {
+    const entries = taskResults.map((task) => task.judge_scores[judge.id]).filter(Boolean);
+    const values = entries.flatMap((entry) => config.criteria.map((criterion) => entry.scores[criterion]));
+    judgeAverageById[judge.id] = values.length === entries.length * config.criteria.length && values.length
+      ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+  }
   const judgeDurationById = Object.fromEntries((config.judges ?? []).map((judge) => [judge.id, sumJudgeDuration(taskResults, judge.id)]));
+  const objectiveTasks = taskResults.filter((task) => task.objective_evaluator?.status === 'completed');
+  const objectivePassCount = objectiveTasks.filter((task) => task.objective_evaluator.passed).length;
   rows.push({
     candidate,
     task_count: taskResults.length,
+    nominations: taskResults,
+    // Compatibility projection for aggregate schema v2 consumers. New
+    // consumers must use `nominations`, which names the selected attempt.
     tasks: taskResults,
     outcome: combineOutcome(taskResults),
     agent_duration_ms: sumDuration(taskResults, 'agent_duration_ms'),
     test_duration_ms: sumDuration(taskResults, 'test_duration_ms'),
     duration_ms: sumDuration(taskResults, 'duration_ms'),
     judge_count: judges.length,
+    judge_average_by_id: judgeAverageById,
     judge_duration_by_id: judgeDurationById,
     judge_duration_ms: sumDuration(taskResults, 'judge_duration_ms'),
     judge_average: judgeAverage,
+    objective_pass_count: objectiveTasks.length ? objectivePassCount : null,
+    objective_total: objectiveTasks.length || null,
+    objective_pass_rate: objectiveTasks.length ? objectivePassCount / objectiveTasks.length : null,
     overall_average: scoreValues.length === config.criteria.length
       ? scoreValues.reduce((sum, value) => sum + value, 0) / scoreValues.length
       : null
   });
 }
 
-rows.sort((a, b) => (b.overall_average ?? -Infinity) - (a.overall_average ?? -Infinity));
+rows.sort((a, b) => (b.overall_average ?? -Infinity) - (a.overall_average ?? -Infinity)
+  || (b.objective_pass_rate ?? -Infinity) - (a.objective_pass_rate ?? -Infinity));
 
 const repoCommit = await getRepoCommit();
 const configHash = await getConfigHash();
@@ -171,7 +241,8 @@ const outcomeSummary = {};
 for (const row of rows) {
   outcomeSummary[row.candidate.id] = {
     overall: row.outcome,
-    tasks: row.tasks.map(t => ({ task: t.task, outcome: t.outcome }))
+    nominations: row.nominations.map(t => ({ nomination: t.nomination, attempt: t.attempt, outcome: t.outcome })),
+    tasks: row.nominations.map(t => ({ task: t.nomination, outcome: t.outcome }))
   };
 }
 
@@ -193,15 +264,13 @@ const output = {
 };
 await mkdir(root, { recursive: true });
 await writeFile(path.join(root, 'aggregate.json'), `${JSON.stringify(output, null, 2)}\n`);
-const judgeColumns = (config.judges ?? []).map((judge) => `Judge: ${judge.id} (s)`);
-const lines = [`# ${release}`, '', `| Candidate | Agent | Model | Tasks | Outcome | Agent time (s) | Candidate + tests (s) | Judge time (s) | ${judgeColumns.join(' | ')} | Judges | Average |`, `|---|---|---|---:|---|---:|---:|---:|${judgeColumns.map(() => '---:').join('|')}|---:|---:|`];
+const judgeColumns = (config.judges ?? []).map((judge) => `Judge: ${judge.id}`);
+const lines = [`# ${release}`, '', 'Ranking policy is decided separately; objective evaluator results are reported independently and are not blended into judge scores.', '', `| Candidate | Agent | Model | Tasks | Outcome | Objective | ${judgeColumns.join(' | ')} | Combined average | Judges |`, `|---|---|---|---:|---|---:|${judgeColumns.map(() => '---:').join('|')}|---:|---:|`];
 for (const row of rows) {
   const average = Number.isFinite(row.overall_average) ? row.overall_average.toFixed(2) : 'N/A';
-  const agentDuration = Number.isFinite(row.agent_duration_ms) ? (row.agent_duration_ms / 1000).toFixed(2) : 'N/A';
-  const totalDuration = Number.isFinite(row.duration_ms) ? (row.duration_ms / 1000).toFixed(2) : 'N/A';
-  const judgeDuration = Number.isFinite(row.judge_duration_ms) ? (row.judge_duration_ms / 1000).toFixed(2) : 'N/A';
-  const perJudge = (config.judges ?? []).map((judge) => Number.isFinite(row.judge_duration_by_id[judge.id]) ? (row.judge_duration_by_id[judge.id] / 1000).toFixed(2) : 'N/A');
-  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.task_count} | ${row.outcome} | ${agentDuration} | ${totalDuration} | ${judgeDuration} | ${perJudge.join(' | ')} | ${row.judge_count} | ${average} |`);
+  const perJudge = (config.judges ?? []).map((judge) => Number.isFinite(row.judge_average_by_id[judge.id]) ? row.judge_average_by_id[judge.id].toFixed(2) : 'N/A');
+  const objective = row.objective_total ? `${row.objective_pass_count}/${row.objective_total} (${Math.round(row.objective_pass_rate * 100)}%)` : 'N/A';
+  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.task_count} | ${row.outcome} | ${objective} | ${perJudge.join(' | ')} | ${average} | ${row.judge_count} |`);
 }
 await writeFile(path.join(root, 'aggregate.md'), `${lines.join('\n')}\n`);
-process.stdout.write(`${JSON.stringify({ release, candidates: rows.length, tasks: config.tasks.length, output: root })}\n`);
+process.stdout.write(`${JSON.stringify({ release, candidates: rows.length, nominations: nominations.length, canonical_attempt: canonicalAttempt, output: root })}\n`);

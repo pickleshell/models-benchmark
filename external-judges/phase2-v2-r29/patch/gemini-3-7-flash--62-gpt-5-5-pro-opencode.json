@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 5188,
+    "usage": {
+      "reported_cost_usd": 0.0131595,
+      "steps": 1,
+      "tokens": {
+        "input": 8298,
+        "output": 9,
+        "reasoning": 86,
+        "total": 8393,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 42272,
+    "usage": {
+      "reported_cost_usd": 0.1369293,
+      "steps": 7,
+      "tokens": {
+        "input": 68546,
+        "output": 448,
+        "reasoning": 3946,
+        "total": 80642,
+        "cache_read": 7702,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 10,
+      "reliability_edge_cases": 10,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 1.0,
+    "explanation": "The patch cleanly and accurately satisfies all requirements: delta-seconds parsing with regex validation, explicit rejection of signed/hex/exponential/fractional numbers, HTTP-date parsing with max(0, dateMs - nowMs), integer check on attempt, exponential backoff starting at 1000ms for attempt 1, and 300000ms cap handling even large attempt values. Public tests pass and changes are strictly confined to the targeted file.",
+    "concerns": []
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}

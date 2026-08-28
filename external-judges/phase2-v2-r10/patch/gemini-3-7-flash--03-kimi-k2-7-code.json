@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "external_blind_judge",
+  "judge": {
+    "model": "opencode/gemini-3.7-flash",
+    "reasoning_variant": "provider_default"
+  },
+  "preflight": {
+    "status": 0,
+    "duration_ms": 4452,
+    "usage": {
+      "reported_cost_usd": 0.0127935,
+      "steps": 1,
+      "tokens": {
+        "input": 8299,
+        "output": 9,
+        "reasoning": 37,
+        "total": 8345,
+        "cache_read": 0,
+        "cache_write": 0
+      }
+    }
+  },
+  "review": {
+    "status": 0,
+    "duration_ms": 59006,
+    "usage": {
+      "reported_cost_usd": 0.16390305,
+      "steps": 11,
+      "tokens": {
+        "input": 71439,
+        "output": 1198,
+        "reasoning": 5213,
+        "total": 135597,
+        "cache_read": 57747,
+        "cache_write": 0
+      }
+    }
+  },
+  "payload": {
+    "scores": {
+      "functional_correctness": 8,
+      "reliability_edge_cases": 7,
+      "maintainability_clarity": 10,
+      "scope_discipline": 10
+    },
+    "confidence": 0.95,
+    "explanation": "The patch correctly implements the exponential backoff formula (2^(attempt - 1)), validates attempt as a positive integer, checks finite nowMs, and caps delays at 300,000 ms. All public tests pass and changes are strictly scoped to the specified file. However, parseRetryAfter only checks /^\\d+$/ before falling through to Date.parse(), which in JS parses signed (e.g. '+5', '-5') and fractional (e.g. '1.5') strings as valid dates in the past, returning 0 instead of null as required.",
+    "concerns": [
+      "parseRetryAfter does not reject signed or fractional numeric strings (+5, -5, 1.5), which Date.parse parses as dates in the past, returning 0 instead of null."
+    ]
+  },
+  "notes": [
+    "Fresh anonymous systemd-hardened workspace; frozen candidate diff; prompt v3; no candidate identity, prior scores, or hidden evaluator status provided."
+  ]
+}
