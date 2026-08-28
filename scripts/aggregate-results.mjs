@@ -275,14 +275,17 @@ const output = {
 await mkdir(root, { recursive: true });
 await writeFile(path.join(root, 'aggregate.json'), `${JSON.stringify(output, null, 2)}\n`);
 const judgeColumns = (config.judges ?? []).map((judge) => `Judge: ${judge.id}`);
-const lines = [`# ${release}`, '', 'Ranking policy is decided separately; objective evaluator results are reported independently and are not blended into judge scores.', '', `| Candidate | Agent | Model | Tasks | Outcome | Test time | Test price (USD) | Objective | ${judgeColumns.join(' | ')} | Combined average | Judges |`, `|---|---|---|---:|---|---:|---:|---:|${judgeColumns.map(() => '---:').join('|')}|---:|---:|`];
+const judgeHeader = judgeColumns.length ? ` ${judgeColumns.join(' | ')} |` : '';
+const judgeSeparator = judgeColumns.length ? `${judgeColumns.map(() => '---:').join('|')}|` : '';
+const lines = [`# ${release}`, '', 'Ranking policy is decided separately; objective evaluator results are reported independently and are not blended into judge scores.', '', `| Candidate | Agent | Model | Tasks | Outcome | Test time | Test price (USD) | Objective |${judgeHeader} Combined average | Judges |`, `|---|---|---|---:|---|---:|---:|---:|${judgeSeparator}---:|---:|`];
 for (const row of rows) {
   const average = Number.isFinite(row.overall_average) ? row.overall_average.toFixed(2) : 'N/A';
   const perJudge = (config.judges ?? []).map((judge) => Number.isFinite(row.judge_average_by_id[judge.id]) ? row.judge_average_by_id[judge.id].toFixed(2) : 'N/A');
   const objective = row.objective_total ? `${row.objective_pass_count}/${row.objective_total} (${Math.round(row.objective_pass_rate * 100)}%)` : 'N/A';
   const duration = Number.isFinite(row.duration_ms) ? `${(row.duration_ms / 1000).toFixed(3)} s` : 'N/A';
   const cost = Number.isFinite(row.cost_usd) ? row.cost_usd.toFixed(6) : 'N/A';
-  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.task_count} | ${row.outcome} | ${duration} | ${cost} | ${objective} | ${perJudge.join(' | ')} | ${average} | ${row.judge_count} |`);
+  const perJudgeCells = perJudge.length ? ` ${perJudge.join(' | ')} |` : '';
+  lines.push(`| ${row.candidate.id} | ${row.candidate.agent} | ${row.candidate.model} | ${row.task_count} | ${row.outcome} | ${duration} | ${cost} | ${objective} |${perJudgeCells} ${average} | ${row.judge_count} |`);
 }
 await writeFile(path.join(root, 'aggregate.md'), `${lines.join('\n')}\n`);
 process.stdout.write(`${JSON.stringify({ release, candidates: rows.length, nominations: nominations.length, canonical_attempt: canonicalAttempt, output: root })}\n`);

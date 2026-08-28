@@ -77,6 +77,8 @@ test('aggregate preserves unavailable candidates without inventing scores', asyn
   assert.equal(aggregate.candidates[0].outcome, 'unavailable');
   assert.equal(aggregate.candidates[0].judge_count, 0);
   assert.equal(aggregate.candidates[0].overall_average, null);
+  const markdown = await readFile(path.join(modelsTest, 'results', 'availability', 'aggregate.md'), 'utf8');
+  assert.doesNotMatch(markdown, /Objective \|\s+\| Combined average/);
 });
 
 test('aggregate ignores stale judge files and reports partial configured coverage', async () => {
