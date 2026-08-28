@@ -173,6 +173,7 @@ function run(command, args, options = {}) {
     };
     const timer = setTimeout(() => {
       options.timedOut = true;
+      try { options.onTimeout?.(); } catch {}
       try { process.kill(-child.pid, 'SIGTERM'); } catch {}
       setTimeout(() => { try { process.kill(-child.pid, 'SIGKILL'); } catch {} }, 2000).unref();
     }, options.timeoutMs ?? timeoutMs);
@@ -313,6 +314,10 @@ function runAsCandidate(command, args, options = {}) {
   ], {
     ...runOptions,
     timeoutMs: (options.timeoutMs ?? timeoutMs) + 5000,
+    onTimeout: () => {
+      const killer = spawn('sudo', ['systemctl', 'kill', '--kill-whom=all', unit], { stdio: 'ignore' });
+      killer.unref();
+    },
     onOutputLimit: () => {
       const killer = spawn('sudo', ['systemctl', 'kill', '--kill-whom=all', unit], { stdio: 'ignore' });
       killer.unref();

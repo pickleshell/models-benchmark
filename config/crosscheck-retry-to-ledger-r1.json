@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "release": "crosscheck-retry-to-ledger-r1",
+  "retry_policy": { "canonical_attempt": 1, "allow_retries": false },
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/benchmark-crosscheck",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "artifact_schemas": {
+    "run": 1, "judge": 1, "preflight": 1, "aggregate": 2,
+    "test_result": 1, "candidate_diff": 1, "objective_evaluator": 1
+  },
+  "clean_room": {
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home"
+  },
+  "nominations": [{
+    "id": "ledger",
+    "fixture": "fixtures/phase1-ledger",
+    "prompt": "fixtures/phase1-ledger/PROMPT.md",
+    "test_command": ["npm", "test", "--prefix", "fixtures/phase1-ledger"],
+    "allowed_changes": ["fixtures/phase1-ledger/src/reconcile.js"],
+    "objective_evaluator": {
+      "id": "phase2-v2-bug-fix-ledger-v1",
+      "path": "phase2-v2/bug-fix-ledger.mjs",
+      "source": "fixtures/phase1-ledger/src/reconcile.js"
+    }
+  }],
+  "candidates": [
+    { "id": "glm-5-3-go", "agent": "opencode", "model": "opencode-go/glm-5.3", "reasoning_variant": "provider_default" },
+    { "id": "qwen3-8-max-go", "agent": "opencode", "model": "opencode-go/qwen3.8-max", "reasoning_variant": "provider_default" },
+    { "id": "gpt-5-3-codex-opencode", "agent": "opencode", "model": "opencode/gpt-5.3-codex", "reasoning_variant": "provider_default" },
+    { "id": "gpt-5-5-pro-opencode", "agent": "opencode", "model": "opencode/gpt-5.5-pro", "reasoning_variant": "provider_default" }
+  ],
+  "judges": [],
+  "criteria": ["functional_correctness", "reliability_edge_cases", "maintainability_clarity", "scope_discipline"]
+}
