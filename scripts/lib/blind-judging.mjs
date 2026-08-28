@@ -86,10 +86,12 @@ export function buildJudgeInvocation({ judge, judgeWorkspace, prompt }) {
   };
 }
 
-export function buildJudgeEnvironment({ agentHome, opencodeRoot }) {
+export function buildJudgeEnvironment({ agentHome, opencodeRoot, codexRoot = null }) {
+  const runtimeBins = [opencodeRoot && path.join(opencodeRoot, 'bin'), codexRoot && path.join(codexRoot, 'bin')].filter(Boolean);
   return {
     HOME: agentHome,
-    PATH: `${opencodeRoot}/bin:/usr/local/bin:/usr/bin:/bin`,
+    PATH: `${runtimeBins.join(':')}:/usr/local/bin:/usr/bin:/bin`,
+    CODEX_HOME: path.join(agentHome, '.codex'),
     XDG_CONFIG_HOME: path.join(agentHome, '.config'),
     XDG_DATA_HOME: path.join(agentHome, '.local', 'share'),
     TMPDIR: '/tmp'

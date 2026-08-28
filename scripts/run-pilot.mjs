@@ -83,6 +83,7 @@ const agentHome = path.resolve(expandHome(config.clean_room.agent_home));
 const candidateUser = config.clean_room.user;
 const cleanRoomHome = path.resolve(config.clean_room.home);
 const cleanRoomAuthFile = path.join(cleanRoomHome, '..', '.local', 'share', 'opencode', 'auth.json');
+const codexAuthFile = path.resolve(expandHome(config.clean_room.codex_auth_file || '~/.codex/auth.json'));
 const resetScript = path.resolve(config.clean_room.reset_script);
 const archiveRoot = path.join(cleanRoomHome, 'task-archive');
 const judgeRoot = path.join(cleanRoomHome, 'judge');
@@ -96,6 +97,7 @@ const cleanRoomLockPath = config.clean_room.lock_path
 const publicReleaseDir = path.join(resultsDir, config.release);
 const releaseManifestPath = path.join(publicReleaseDir, 'manifest.json');
 const opencodeRoot = path.resolve(config.clean_room.opencode_root);
+const codexRoot = config.clean_room.codex_root ? path.resolve(expandHome(config.clean_room.codex_root)) : null;
 let sandboxSequence = 0;
 let cleanRoomTouched = false;
 let knownCredentials = new Set();
@@ -122,15 +124,18 @@ async function writeJson(file, value) {
 }
 
 async function loadKnownCredentials() {
-  if (!existsSync(cleanRoomAuthFile)) return new Set();
-  try {
-    const auth = JSON.parse(await readFile(cleanRoomAuthFile, 'utf8'));
-    return new Set(collectSecretLikeStrings(auth));
-  } catch {
-    // This guard is deliberately best-effort. Authentication setup retains its
-    // existing behavior; a malformed optional auth file must never be echoed.
-    return new Set();
+  const credentials = new Set();
+  for (const authFile of [cleanRoomAuthFile, codexAuthFile]) {
+    if (!existsSync(authFile)) continue;
+    try {
+      const auth = JSON.parse(await readFile(authFile, 'utf8'));
+      for (const secret of collectSecretLikeStrings(auth)) credentials.add(secret);
+    } catch {
+      // Authentication setup retains its existing behavior; malformed
+      // optional auth must never be echoed.
+    }
   }
+  return credentials;
 }
 
 function run(command, args, options = {}) {
@@ -184,7 +189,14 @@ function run(command, args, options = {}) {
 
 function commandFor(candidate, prompt) {
   if (candidate.agent === 'codex') {
-    return { command: 'codex', args: ['exec', '--model', candidate.model, '--cd', cleanWorkspace, '--approve-for-me', prompt] };
+    return {
+      command: 'codex',
+      args: [
+        'exec', '--model', candidate.model, '--cd', cleanWorkspace,
+        '--ephemeral', '--ignore-user-config', '--ignore-rules', '--json',
+        '--dangerously-bypass-approvals-and-sandbox', prompt
+      ]
+    };
   }
   const args = ['run', '--model', candidate.model];
   if (candidate.reasoning_variant && candidate.reasoning_variant !== 'provider_default') args.push('--variant', candidate.reasoning_variant);
@@ -246,13 +258,13 @@ async function installResetScript() {
 }
 
 function cleanRoomEnv() {
-  return buildJudgeEnvironment({ agentHome, opencodeRoot });
+  return buildJudgeEnvironment({ agentHome, opencodeRoot, codexRoot });
 }
 
 function runtimeProbeEnv() {
   return {
     HOME: '/tmp',
-    PATH: `${opencodeRoot}/bin:/usr/local/bin:/usr/bin:/bin`,
+    PATH: `${[opencodeRoot && path.join(opencodeRoot, 'bin'), codexRoot && path.join(codexRoot, 'bin')].filter(Boolean).join(':')}:/usr/local/bin:/usr/bin:/bin`,
     XDG_CONFIG_HOME: '/tmp/.config',
     XDG_DATA_HOME: '/tmp/.local/share',
     TMPDIR: '/tmp'
@@ -303,7 +315,7 @@ function runAsCandidate(command, args, options = {}) {
     '--property=KillMode=control-group',
     '--property=TimeoutStopSec=2s',
     '--property=SendSIGKILL=yes',
-    `--property=BindReadOnlyPaths=${opencodeRoot}`,
+    ...[opencodeRoot, codexRoot].filter(Boolean).map((runtimeRoot) => `--property=BindReadOnlyPaths=${runtimeRoot}`),
     `--property=WorkingDirectory=${targetCwd}`,
     `--property=TimeoutStartSec=${Math.ceil((options.timeoutMs ?? timeoutMs) / 1000)}s`,
     ...writablePaths.map((item) => `--property=BindPaths=${item}`)
@@ -355,6 +367,13 @@ async function resetRoom(task) {
     const authTarget = path.join(agentHome, '.local', 'share', 'opencode', 'auth.json');
     const auth = await runAsCleanRoomHost('install', ['-D', '-m', '0600', cleanRoomAuthFile, authTarget], { timeoutMs: 30000 });
     if (auth.status !== 0) throw new Error(`cannot install clean-room OpenCode credentials: ${auth.stderr}`);
+  }
+  if (selectedCandidates.some((candidate) => candidate.agent === 'codex')) {
+    const authTarget = path.join(agentHome, '.codex', 'auth.json');
+    const authDirectory = await runAsCleanRoomHost('mkdir', ['-p', path.dirname(authTarget)], { timeoutMs: 30000 });
+    if (authDirectory.status !== 0) throw new Error(`cannot prepare clean-room Codex home: ${authDirectory.stderr}`);
+    const auth = await run('sudo', ['install', '-D', '-o', candidateUser, '-g', candidateUser, '-m', '0600', codexAuthFile, authTarget], { timeoutMs: 30000 });
+    if (auth.status !== 0) throw new Error(`cannot install clean-room Codex credentials: ${auth.stderr}`);
   }
   await assertPreparedWorkspace(task);
   emit('reset_completed', { nomination: task.id });
@@ -896,16 +915,29 @@ try {
   const account = await run('getent', ['passwd', candidateUser], { timeoutMs: 5000 });
   if (account.status !== 0) throw new Error(`clean-room account not found: ${candidateUser}`);
   await assertCleanRoomUserIsIdle();
-  if (!existsSync(opencodeRoot)) throw new Error(`OpenCode runtime root not found: ${opencodeRoot}`);
-  const opencode = await runAsCandidate('opencode', ['--version'], {
-    cwd: '/tmp',
-    sandboxEnv: runtimeProbeEnv(),
-    includeCleanWorkspace: false,
-    includeAgentHome: false,
-    timeoutMs: 10000
-  });
-  if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
-  emit('preflight_ok', { candidate_user: candidateUser, opencode_version: opencode.stdout.trim() });
+  const requiredAgents = new Set([...selectedCandidates, ...selectedJudges].map((model) => model.agent));
+  if (!requiredAgents.size) requiredAgents.add('opencode');
+  const runtimeVersions = {};
+  if (requiredAgents.has('opencode')) {
+    if (!existsSync(opencodeRoot)) throw new Error(`OpenCode runtime root not found: ${opencodeRoot}`);
+    const opencode = await runAsCandidate('opencode', ['--version'], {
+      cwd: '/tmp', sandboxEnv: runtimeProbeEnv(), includeCleanWorkspace: false,
+      includeAgentHome: false, timeoutMs: 10000
+    });
+    if (opencode.status !== 0) throw new Error(`OpenCode is unavailable for ${candidateUser}: ${opencode.stderr}`);
+    runtimeVersions.opencode = opencode.stdout.trim();
+  }
+  if (requiredAgents.has('codex')) {
+    if (!codexRoot || !existsSync(codexRoot)) throw new Error('Codex runtime root is required for Codex candidates');
+    if (!existsSync(codexAuthFile)) throw new Error('Codex authentication file is required for Codex candidates');
+    const codex = await runAsCandidate('codex', ['--version'], {
+      cwd: '/tmp', sandboxEnv: runtimeProbeEnv(), includeCleanWorkspace: false,
+      includeAgentHome: false, timeoutMs: 10000
+    });
+    if (codex.status !== 0) throw new Error(`Codex is unavailable for ${candidateUser}: ${codex.stderr}`);
+    runtimeVersions.codex = codex.stdout.trim();
+  }
+  emit('preflight_ok', { candidate_user: candidateUser, runtime_versions: runtimeVersions });
 
   await mkdir(resultsDir, { recursive: true });
   await ensureReleaseManifest();

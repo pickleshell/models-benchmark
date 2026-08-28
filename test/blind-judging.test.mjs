@@ -41,10 +41,15 @@ test('judge prompt and invocation contain no candidate identity', () => {
   assert.deepEqual(environment, {
     HOME: '/room/agent-home',
     PATH: '/room/.opencode/bin:/usr/local/bin:/usr/bin:/bin',
+    CODEX_HOME: '/room/agent-home/.codex',
     XDG_CONFIG_HOME: '/room/agent-home/.config',
     XDG_DATA_HOME: '/room/agent-home/.local/share',
     TMPDIR: '/tmp'
   });
+  assert.equal(
+    buildJudgeEnvironment({ agentHome: '/room/agent-home', opencodeRoot: '/room/.opencode', codexRoot: '/room/.codex-runtime' }).PATH,
+    '/room/.opencode/bin:/room/.codex-runtime/bin:/usr/local/bin:/usr/bin:/bin'
+  );
   assert.match(workspace, /^\/tmp\/judge\/submission-[0-9a-f-]{36}$/);
   assert.equal(invocation.cwd, workspace);
   assert.deepEqual(buildJudgeWritablePaths({ agentHome: '/room/agent-home', judgeWorkspace: workspace }), [

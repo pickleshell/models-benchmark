@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "release": "crosscheck-codex-spark-r2",
+  "retry_policy": { "canonical_attempt": 1, "allow_retries": false },
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/benchmark-crosscheck",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "artifact_schemas": {
+    "run": 1, "judge": 1, "preflight": 1, "aggregate": 2,
+    "test_result": 1, "candidate_diff": 1, "objective_evaluator": 1
+  },
+  "clean_room": {
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
+    "codex_root": "/home/test/.codex-runtime",
+    "codex_auth_file": "~/.codex/auth.json",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home"
+  },
+  "nominations": [{
+    "id": "retry-policy",
+    "fixture": "fixtures/phase2-v2/patch-retry-policy",
+    "prompt": "benchmarks/phase2-v2/prompts/patch.md",
+    "test_command": ["npm", "test", "--prefix", "fixtures/phase2-v2/patch-retry-policy"],
+    "allowed_changes": ["fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js"],
+    "objective_evaluator": {
+      "id": "phase2-v2-patch-retry-policy-v1",
+      "path": "phase2-v2/patch.mjs",
+      "source": "fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js"
+    }
+  }],
+  "candidates": [
+    { "id": "gpt-5-3-codex-spark", "agent": "codex", "model": "gpt-5.3-codex-spark", "reasoning_variant": "provider_default" }
+  ],
+  "judges": [],
+  "criteria": ["functional_correctness", "reliability_edge_cases", "maintainability_clarity", "scope_discipline"]
+}
