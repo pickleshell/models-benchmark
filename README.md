@@ -19,7 +19,7 @@ deliver when asked to modify a real repository?** Availability failures,
 infrastructure failures, test failures, forbidden changes, and code quality are
 kept separate so a provider outage is not presented as a bad solution.
 
-This private repository contains orchestration, private evaluators, and raw
+This repository contains orchestration, private evaluators, and raw
 runner artifacts. Public fixtures and sanitized results live in the adjacent
 `models-test` checkout.
 
