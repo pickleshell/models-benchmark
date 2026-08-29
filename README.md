@@ -7,6 +7,8 @@
 [![Runtimes](https://img.shields.io/badge/runtimes-OpenCode%20%7C%20Codex-6f42c1)](#agent-runtimes)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+**[Open the interactive model benchmark](https://pickleshell.github.io/model-benchmarks.html).**
+
 Models Benchmark compares coding models on the same repository tasks under the
 same execution contract. Each candidate receives a clean workspace, a fresh
 agent home, the same prompt and public tests, and one immutable attempt. The
