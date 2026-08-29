@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "release": "bug-fix-ledger-completion-r1",
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/benchmark-bug-fixing",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "artifact_schemas": {"run":1,"judge":1,"preflight":1,"aggregate":2,"test_result":1,"candidate_diff":1,"objective_evaluator":1},
+  "clean_room": {
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
+    "codex_root": "/home/test/.codex-runtime",
+    "codex_auth_file": "~/.codex/auth.json",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home"
+  },
+  "nominations": [{
+    "id": "bug-fix-ledger",
+    "fixture": "fixtures/phase2-v2/bug-fix-ledger",
+    "prompt": "benchmarks/phase2-v2/prompts/bug-fix-ledger.md",
+    "test_command": ["npm","test","--prefix","fixtures/phase2-v2/bug-fix-ledger"],
+    "allowed_changes": ["fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"],
+    "objective_evaluator": {"id":"phase2-v2-bug-fix-ledger-v1","path":"phase2-v2/bug-fix-ledger.mjs","source":"fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"}
+  }],
+  "candidates": [
+    {"id":"54-inkling-openrouter","agent":"opencode","model":"openrouter/thinkingmachines/inkling","subscription":"paid","reasoning_variant":"provider_default"},
+    {"id":"27-hy3-free","agent":"opencode","model":"opencode/hy3-free","reasoning_variant":"provider_default"},
+    {"id":"18-gpt-5-3-codex-spark","agent":"codex","model":"gpt-5.3-codex-spark","reasoning_variant":"provider_default"},
+    {"id":"49-gpt-5-4","agent":"codex","model":"gpt-5.4","reasoning_variant":"provider_default"},
+    {"id":"50-gpt-5-4-mini","agent":"codex","model":"gpt-5.4-mini","reasoning_variant":"provider_default"},
+    {"id":"46-gpt-5-6-luna","agent":"codex","model":"gpt-5.6-luna","reasoning_variant":"provider_default"},
+    {"id":"47-gpt-5-6-sol","agent":"codex","model":"gpt-5.6-sol","reasoning_variant":"provider_default"},
+    {"id":"48-gpt-5-6-terra","agent":"codex","model":"gpt-5.6-terra","reasoning_variant":"provider_default"}
+  ],
+  "judges": [],
+  "criteria": ["functional_correctness","reliability_edge_cases","maintainability_clarity","scope_discipline"],
+  "retry_policy": {"canonical_attempt":1,"allow_retries":false}
+}
