@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 > [!NOTE]
-> This is an independent open-source benchmark created and maintained by an individual developer for personal purposes and shared with the public. It is not an official test suite from OpenAI, OpenCode, or any model provider.
+> This is an independent open-source benchmark created and maintained by an individual developer for personal purposes and shared with the public. Anyone can use it, run tests, and share it. It is not an official test suite from OpenAI, OpenCode, or any model provider.
 >
 > Results produced by this benchmark are published on the [interactive benchmark website](https://pickleshell.github.io/model-benchmarks.html) and in the [models-test repository](https://github.com/pickleshell/models-test), which contains the public fixtures, patches, execution records, and sanitized results.
 
