@@ -2,7 +2,7 @@
 
 ## Scope
 
-This private repository contains the benchmark runner and orchestration. Public
+This public repository contains the benchmark runner and orchestration. Public
 tasks and public test results belong in `/home/gpt/models-test`.
 
 ## Required reading and deployment
