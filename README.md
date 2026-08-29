@@ -357,3 +357,15 @@ These verification commands do not invoke candidate models. A real
 - Identity-blind judging removes explicit identity, not stylistic inference.
 - Network egress to model providers remains available.
 - Publication is manual; the runner never commits or pushes `models-test`.
+
+## Contact
+
+Open a GitHub issue to report a bug, suggest an improvement, or ask for help.
+
+- [Create an issue](https://github.com/pickleshell/models-benchmark/issues/new)
+- [Browse existing issues](https://github.com/pickleshell/models-benchmark/issues)
+- Email: [pickleshell.plugin@gmail.com](mailto:pickleshell.plugin@gmail.com)
+
+## License
+
+Models Benchmark is available under the [MIT License](LICENSE).
