@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "release": "bug-fix-zen-non-gpt-completion-r1",
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/benchmark-bug-fixing",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "artifact_schemas": {
+    "run": 1,
+    "judge": 1,
+    "preflight": 1,
+    "aggregate": 2,
+    "test_result": 1,
+    "candidate_diff": 1,
+    "objective_evaluator": 1
+  },
+  "clean_room": {
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
+    "codex_root": "/home/test/.codex-runtime",
+    "codex_auth_file": "~/.codex/auth.json",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home"
+  },
+  "nominations": [
+    {
+      "id": "bug-fix-ledger",
+      "fixture": "fixtures/phase2-v2/bug-fix-ledger",
+      "prompt": "benchmarks/phase2-v2/prompts/bug-fix-ledger.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/bug-fix-ledger"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-bug-fix-ledger-v1",
+        "path": "phase2-v2/bug-fix-ledger.mjs",
+        "source": "fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "id": "205-claude-haiku-4-5",
+      "agent": "opencode",
+      "model": "opencode/claude-haiku-4-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "206-claude-sonnet-5",
+      "agent": "opencode",
+      "model": "opencode/claude-sonnet-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "207-claude-opus-5",
+      "agent": "opencode",
+      "model": "opencode/claude-opus-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "208-kimi-k3",
+      "agent": "opencode",
+      "model": "opencode/kimi-k3",
+      "reasoning_variant": "provider_default"
+    }
+  ],
+  "judges": [],
+  "criteria": [
+    "functional_correctness",
+    "reliability_edge_cases",
+    "maintainability_clarity",
+    "scope_discipline"
+  ],
+  "retry_policy": {
+    "canonical_attempt": 1,
+    "allow_retries": false
+  }
+}
