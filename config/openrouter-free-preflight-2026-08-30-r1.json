@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "release": "openrouter-free-preflight-2026-08-30-r1",
+  "retry_policy": { "canonical_attempt": 1, "allow_retries": false },
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/availability",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "artifact_schemas": { "run": 1, "judge": 1, "preflight": 1, "aggregate": 2, "test_result": 1, "candidate_diff": 1, "objective_evaluator": 1 },
+  "clean_room": {
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home"
+  },
+  "nominations": [{
+    "id": "patch",
+    "fixture": "fixtures/phase2-v2/patch-retry-policy",
+    "prompt": "benchmarks/phase2-v2/prompts/patch.md",
+    "test_command": ["npm", "test", "--prefix", "fixtures/phase2-v2/patch-retry-policy"],
+    "allowed_changes": ["fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js"],
+    "objective_evaluator": { "id": "phase2-v2-patch-retry-policy-v1", "path": "phase2-v2/patch.mjs", "source": "fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js" }
+  }],
+  "candidates": [
+    {"id":"or-inkling-free","label":"Inkling Free","agent":"opencode","model":"openrouter/thinkingmachines/inkling:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-inkling-small-free","label":"Inkling Small Free","agent":"opencode","model":"openrouter/thinkingmachines/inkling-small:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-nemotron-3-ultra-free","label":"Nemotron 3 Ultra 550B Free","agent":"opencode","model":"openrouter/nvidia/nemotron-3-ultra-550b-a55b:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-nemotron-3-super-free","label":"Nemotron 3 Super 120B Free","agent":"opencode","model":"openrouter/nvidia/nemotron-3-super-120b-a12b:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-dots-3-note-free","label":"Dots 3 Note Preview Free","agent":"opencode","model":"openrouter/dots-studio/dots-3-note-preview:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-laguna-s-2-1-free","label":"Laguna S 2.1 Free","agent":"opencode","model":"openrouter/poolside/laguna-s-2.1:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-minimax-m3-free","label":"MiniMax M3 Free","agent":"opencode","model":"openrouter/minimax/minimax-m3:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-minimax-m2-7-free","label":"MiniMax M2.7 Free","agent":"opencode","model":"openrouter/minimax/minimax-m2.7:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-glm-5-2-free","label":"GLM-5.2 Free","agent":"opencode","model":"openrouter/z-ai/glm-5.2:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-gemma-4-31b-free","label":"Gemma 4 31B IT Free","agent":"opencode","model":"openrouter/google/gemma-4-31b-it:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-gemma-4-26b-free","label":"Gemma 4 26B A4B IT Free","agent":"opencode","model":"openrouter/google/gemma-4-26b-a4b-it:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-laguna-xs-2-1-free","label":"Laguna XS 2.1 Free","agent":"opencode","model":"openrouter/poolside/laguna-xs-2.1:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-north-mini-code-free","label":"North Mini Code Free","agent":"opencode","model":"openrouter/cohere/north-mini-code:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-nemotron-3-nano-omni-free","label":"Nemotron 3 Nano Omni Reasoning Free","agent":"opencode","model":"openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-nemotron-3-5-lightning-free","label":"Nemotron 3.5 Lightning Free","agent":"opencode","model":"openrouter/nvidia/nemotron-3.5-lightning:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-nemotron-3-5-content-safety-free","label":"Nemotron 3.5 Content Safety Free","agent":"opencode","model":"openrouter/nvidia/nemotron-3.5-content-safety:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"or-lfm-2-5-2-6b-free","label":"LFM 2.5 2.6B Free","agent":"opencode","model":"openrouter/liquid/lfm-2.5-2.6b:free","subscription":"free","reasoning_variant":"provider_default"}
+  ],
+  "judges": [],
+  "criteria": ["functional_correctness", "reliability_edge_cases", "maintainability_clarity", "scope_discipline"]
+}

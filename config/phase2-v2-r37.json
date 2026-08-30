@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "release": "phase2-v2-r37",
+  "retry_policy": {"canonical_attempt":1,"allow_retries":false},
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/benchmark-phase2-v2",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "artifact_schemas": {"run":1,"judge":1,"preflight":1,"aggregate":2,"test_result":1,"candidate_diff":1,"objective_evaluator":1},
+  "clean_room": {"user":"test","home":"/home/test/.models-benchmark","opencode_root":"/home/test/.opencode","lock_path":"~/.models-benchmark/clean-room.lock","reset_script":"/home/test/.models-benchmark/reset-room.mjs","workspace":"/home/test/.models-benchmark/workspace","agent_home":"/home/test/.models-benchmark/agent-home"},
+  "nominations": [
+    {"id":"patch","fixture":"fixtures/phase2-v2/patch-retry-policy","prompt":"benchmarks/phase2-v2/prompts/patch.md","test_command":["npm","test","--prefix","fixtures/phase2-v2/patch-retry-policy"],"allowed_changes":["fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js"],"objective_evaluator":{"id":"phase2-v2-patch-retry-policy-v1","path":"phase2-v2/patch.mjs","source":"fixtures/phase2-v2/patch-retry-policy/src/retryPolicy.js"}},
+    {"id":"bug-fix-ledger","fixture":"fixtures/phase2-v2/bug-fix-ledger","prompt":"benchmarks/phase2-v2/prompts/bug-fix-ledger.md","test_command":["npm","test","--prefix","fixtures/phase2-v2/bug-fix-ledger"],"allowed_changes":["fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"],"objective_evaluator":{"id":"phase2-v2-bug-fix-ledger-v1","path":"phase2-v2/bug-fix-ledger.mjs","source":"fixtures/phase2-v2/bug-fix-ledger/src/reconcile.js"}},
+    {"id":"feature-implementation","fixture":"fixtures/phase2-v2/feature-implementation","prompt":"benchmarks/phase2-v2/prompts/feature-implementation.md","test_command":["npm","test","--prefix","fixtures/phase2-v2/feature-implementation"],"allowed_changes":["fixtures/phase2-v2/feature-implementation/src/featureFlags.js"],"objective_evaluator":{"id":"phase2-v2-feature-implementation-v1","path":"phase2-v2/feature-implementation.mjs","source":"fixtures/phase2-v2/feature-implementation/src/featureFlags.js"}},
+    {"id":"refactoring","fixture":"fixtures/phase2-v2/refactoring","prompt":"benchmarks/phase2-v2/prompts/refactoring.md","test_command":["npm","test","--prefix","fixtures/phase2-v2/refactoring"],"allowed_changes":["fixtures/phase2-v2/refactoring/src/events.js"],"objective_evaluator":{"id":"phase2-v2-refactoring-v1","path":"phase2-v2/refactoring.mjs","source":"fixtures/phase2-v2/refactoring/src/events.js"}},
+    {"id":"repository-navigation","fixture":"fixtures/phase2-v2/repository-navigation","prompt":"benchmarks/phase2-v2/prompts/repository-navigation.md","test_command":["npm","test","--prefix","fixtures/phase2-v2/repository-navigation"],"allowed_changes":["fixtures/phase2-v2/repository-navigation/src/labels/statusLabel.js"],"objective_evaluator":{"id":"phase2-v2-repository-navigation-v1","path":"phase2-v2/repository-navigation.mjs","source":"fixtures/phase2-v2/repository-navigation/src/labels/statusLabel.js"}},
+    {"id":"tests-edge-cases","fixture":"fixtures/phase2-v2/tests-edge-cases","prompt":"benchmarks/phase2-v2/prompts/tests-edge-cases.md","test_command":["npm","test","--prefix","fixtures/phase2-v2/tests-edge-cases"],"allowed_changes":["fixtures/phase2-v2/tests-edge-cases/src/range.js","fixtures/phase2-v2/tests-edge-cases/test/range.test.mjs"],"objective_evaluator":{"id":"phase2-v2-tests-edge-cases-v1","path":"phase2-v2/tests-edge-cases.mjs","source":"fixtures/phase2-v2/tests-edge-cases/src/range.js"}}
+  ],
+  "candidates": [
+    {"id":"71-or-inkling-free","label":"Inkling Free (OpenRouter)","agent":"opencode","model":"openrouter/thinkingmachines/inkling:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"72-or-inkling-small-free","label":"Inkling Small Free (OpenRouter)","agent":"opencode","model":"openrouter/thinkingmachines/inkling-small:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"73-or-nemotron-3-ultra-free","label":"Nemotron 3 Ultra 550B Free (OpenRouter)","agent":"opencode","model":"openrouter/nvidia/nemotron-3-ultra-550b-a55b:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"74-or-nemotron-3-super-free","label":"Nemotron 3 Super 120B Free (OpenRouter)","agent":"opencode","model":"openrouter/nvidia/nemotron-3-super-120b-a12b:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"75-or-dots-3-note-free","label":"Dots 3 Note Preview Free (OpenRouter)","agent":"opencode","model":"openrouter/dots-studio/dots-3-note-preview:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"76-or-laguna-s-2-1-free","label":"Laguna S 2.1 Free (OpenRouter)","agent":"opencode","model":"openrouter/poolside/laguna-s-2.1:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"77-or-minimax-m3-free","label":"MiniMax M3 Free (OpenRouter)","agent":"opencode","model":"openrouter/minimax/minimax-m3:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"78-or-minimax-m2-7-free","label":"MiniMax M2.7 Free (OpenRouter)","agent":"opencode","model":"openrouter/minimax/minimax-m2.7:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"79-or-laguna-xs-2-1-free","label":"Laguna XS 2.1 Free (OpenRouter)","agent":"opencode","model":"openrouter/poolside/laguna-xs-2.1:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"80-or-north-mini-code-free","label":"North Mini Code Free (OpenRouter)","agent":"opencode","model":"openrouter/cohere/north-mini-code:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"81-or-nemotron-3-nano-omni-free","label":"Nemotron 3 Nano Omni Reasoning Free (OpenRouter)","agent":"opencode","model":"openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"82-or-nemotron-3-5-lightning-free","label":"Nemotron 3.5 Lightning Free (OpenRouter)","agent":"opencode","model":"openrouter/nvidia/nemotron-3.5-lightning:free","subscription":"free","reasoning_variant":"provider_default"},
+    {"id":"83-or-lfm-2-5-2-6b-free","label":"LFM 2.5 2.6B Free (OpenRouter)","agent":"opencode","model":"openrouter/liquid/lfm-2.5-2.6b:free","subscription":"free","reasoning_variant":"provider_default"}
+  ],
+  "judges": [],
+  "criteria": ["functional_correctness","reliability_edge_cases","maintainability_clarity","scope_discipline"]
+}

@@ -47,6 +47,7 @@ const schemaRegistry = await loadSchemaRegistry(configPath);
 const argv = process.argv.slice(2);
 const dryRun = argv.includes('--dry-run');
 const resume = argv.includes('--resume');
+const preflightOnly = argv.includes('--preflight-only');
 function optionValues(name) {
   const values = [];
   for (let i = 0; i < argv.length; i += 1) {
@@ -59,6 +60,7 @@ function optionValues(name) {
 // quota or mixes assessment with candidate evidence collection.
 const phase = optionValues('--phase')[0] || 'candidates';
 if (!['all', 'candidates', 'judges'].includes(phase)) throw new Error(`invalid --phase: ${phase}`);
+if (preflightOnly && phase !== 'candidates') throw new Error('--preflight-only is supported only for the candidates phase');
 const nominations = config.nominations ?? config.tasks ?? [];
 const nominationValues = optionValues('--nomination');
 const legacyTaskValues = optionValues('--task');
@@ -896,6 +898,7 @@ if (dryRun) {
     planned_Runs: plannedRuns,
     Attempts: [selectedAttempt],
     phase,
+    preflight_only: preflightOnly,
     resume,
     judges: phase === 'judges' || phase === 'all'
       ? selectedJudges.map(({ id, model }) => ({ id, model }))
@@ -972,6 +975,7 @@ try {
       const preflight = existingPreflight
         ? { available: existingPreflight.status === 'available', reason: existingPreflight.reason, result: existingPreflight }
         : await preflightCandidate(candidate, pending[0]);
+      if (preflightOnly) continue;
       if (!preflight.available) {
         for (const task of pending) await recordUnavailableCandidate(candidate, task, preflight);
         continue;
