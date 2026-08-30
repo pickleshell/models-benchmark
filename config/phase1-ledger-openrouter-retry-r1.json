@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "release": "phase1-ledger-openrouter-retry-r1",
+  "retry_policy": {
+    "canonical_attempt": 1,
+    "allow_retries": false
+  },
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/benchmark-candidates",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "artifact_schemas": {
+    "run": 1,
+    "judge": 1,
+    "preflight": 1,
+    "aggregate": 2,
+    "test_result": 1,
+    "candidate_diff": 1,
+    "objective_evaluator": 1
+  },
+  "clean_room": {
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home"
+  },
+  "nominations": [
+    {
+      "id": "patch",
+      "fixture": "fixtures/phase1-ledger",
+      "prompt": "fixtures/phase1-ledger/PROMPT.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase1-ledger"
+      ],
+      "allowed_changes": [
+        "fixtures/phase1-ledger/src/reconcile.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-bug-fix-v1",
+        "path": "phase2-v2/bug-fix-ledger.mjs",
+        "source": "fixtures/phase1-ledger/src/reconcile.js"
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "id": "or-qwen3-6-plus",
+      "label": "Qwen 3.6 Plus",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/qwen/qwen3.6-plus",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-kimi-k2-5",
+      "label": "Kimi K2.5",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/moonshotai/kimi-k2.5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-glm-5",
+      "label": "GLM-5",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/z-ai/glm-5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-hy3-preview",
+      "label": "Hy3 Preview",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/tencent/hy3-preview",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-mimo-v2-5-pro",
+      "label": "MiMo V2.5 Pro",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/xiaomi/mimo-v2.5-pro",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-minimax-m3-free",
+      "label": "MiniMax M3 Free",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/minimax/minimax-m3:free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-north-mini-code-free",
+      "label": "North Mini Code Free",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/cohere/north-mini-code:free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-longcat-2-0",
+      "label": "LongCat 2.0",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/meituan/longcat-2.0",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-nemotron-3-super-free",
+      "label": "Nemotron 3 Super Free",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-ling-3-0-flash",
+      "label": "Ling 3.0 Flash",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/inclusionai/ling-3.0-flash",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-minimax-m2-5",
+      "label": "MiniMax M2.5",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/minimax/minimax-m2.5",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-minimax-m2-1",
+      "label": "MiniMax M2.1",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/minimax/minimax-m2.1",
+      "reasoning_variant": "provider_default"
+    },
+    {
+      "id": "or-glm-4-7",
+      "label": "GLM-4.7",
+      "agent": "opencode",
+      "runtime": "opencode",
+      "provider": "openrouter",
+      "model": "openrouter/z-ai/glm-4.7",
+      "reasoning_variant": "provider_default"
+    }
+  ],
+  "judges": [],
+  "criteria": [
+    "functional_correctness",
+    "reliability_edge_cases",
+    "maintainability_clarity",
+    "scope_discipline"
+  ]
+}
+
