@@ -17,6 +17,12 @@ reference. The website repository keeps a matching `TABLE_FORMATS.md`.
 - Put a human-readable run status below the rank. Supported labels include
   `completed`, `tests_failed`, `objective_failed`, `forbidden_changes`,
   `agent_failure`, and `unavailable`.
+- Every failed or unavailable row must expose a model-specific explanation
+  behind its status badge (for example, an accessible `i` popover). Derive it
+  from the sanitized public artifact: identify the stage that failed, the
+  observable event, and whether the model received the task, produced a patch,
+  and passed the public checks. A raw code such as `process_failure`, `1`, or
+  `timeout` is supporting metadata, never the whole reader-facing explanation.
 - Keep deterministic `Public` and `Objective` checks separate from review
   scores. Historical pages may call the objective column `Hidden`.
 - Review criteria are integer values from 0 to 10. `Overall` is their
@@ -118,9 +124,14 @@ Before publication:
 2. Compare heading order with that format.
 3. Verify every body row has the header's cell count.
 4. Verify status is descriptive text, not `0`, `1`, `true`, or `false`.
-5. Verify criterion scores are integers and only `Overall` is averaged.
-6. Verify time and cost units and preserve unknown values.
-7. Verify provider names are not duplicated in Model and Channel.
-8. Execute page JavaScript and test sorting, including `N/A` rows.
-9. Check the deployed DOM, not only local source files.
-
+5. For Format A, verify the complete column order is: `Rank / status`, `Model`,
+   `Public`, `Objective` (or historical `Hidden`), `Functional`, `Reliability`,
+   `Maintainability`, `Scope`, `Overall`, `Time (s)`, `Cost`, `Channel`.
+   An intentional format exception must be documented before publication.
+6. Verify criterion scores are integers and only `Overall` is averaged.
+7. Verify time and cost units and preserve unknown values.
+8. Verify provider names are not duplicated in Model and Channel.
+9. Execute page JavaScript and test sorting, including `N/A` rows.
+10. Check the deployed DOM, not only local source files.
+11. Open every failure/unavailable explanation and verify that it is specific
+    to that model's sanitized evidence and contains no raw logs or secrets.

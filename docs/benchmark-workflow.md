@@ -252,6 +252,16 @@ Review all new files for:
 
 Only then create a deliberate commit in `models-test`.
 
+When turning sanitized artifacts into a website table, preserve a concise
+per-model failure explanation as well as the taxonomy label. For every failed
+or unavailable candidate, state: (1) the stage at which it stopped (preflight,
+agent run, public test, objective evaluation, or change-policy check), (2) the
+observable event, and (3) what evidence remains (no task, no patch, partial
+patch, or tested patch). Do not publish raw provider output, private paths,
+credentials, or a bare process code as the explanation. Render the explanation
+in an accessible status popover so it remains attached to the relevant model
+row.
+
 ## Operational checklist
 
 Before a release:
@@ -270,7 +280,13 @@ After a release:
 - [ ] Every selected model has a preflight and run outcome.
 - [ ] Completed candidates have a real diff or an intentionally empty solution.
 - [ ] Public and objective results were interpreted separately.
+- [ ] Published single-task table uses the complete documented column set and
+  order: Rank / status, Model, Public, Objective/Hidden, Functional,
+  Reliability, Maintainability, Scope, Overall, Time (s), Cost, Channel.
+  Any intentional exception is documented.
 - [ ] Timing and price fields follow the reporting policy.
 - [ ] Aggregate files regenerate successfully.
 - [ ] Manual or blind reviews are stored separately.
 - [ ] Public artifacts passed secret and path review.
+- [ ] Every failed or unavailable website row has a specific sanitized failure
+  explanation, not only a taxonomy label or process code.
