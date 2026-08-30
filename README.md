@@ -134,6 +134,8 @@ workspace, not the candidate workspace or identity.
 9. Freeze candidate evidence, timing, and known solution cost.
 10. Optionally run identity-blind judging through a separate explicit command.
 11. Generate derived aggregate files and review them before publication.
+12. Validate website tables against [`docs/table-formats.md`](docs/table-formats.md),
+    including column order, human-readable statuses, units, and deployed DOM.
 
 An attempt is append-only. `--resume` verifies and skips compatible completed
 artifacts; it does not overwrite them. A corrected prompt, evaluator, runtime
