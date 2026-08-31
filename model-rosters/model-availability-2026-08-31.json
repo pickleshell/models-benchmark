@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "release": "model-availability-2026-08-31-r3-alternatives",
-  "generated_at": "2026-08-31T13:03:47.551Z",
+  "generated_at": "2026-08-31T13:21:01.539Z",
   "probe": {
     "kind": "clean_room_model_preflight",
     "prompt": "Reply with exactly: hi. Do not modify files.",
@@ -3089,7 +3089,8 @@
   ],
   "source_configs": [
     "config/model-availability-2026-08-31-r2.json",
-    "config/model-availability-2026-08-31-r3-alternatives.json"
+    "config/model-availability-2026-08-31-r3-alternatives.json",
+    "config/model-availability-2026-08-31-r4-zen-requested.json"
   ],
   "catalog_check": {
     "command": "opencode models",
@@ -3101,5 +3102,362 @@
       "OpenRouter"
     ],
     "checked_at": "2026-08-31T13:03:47.551Z"
+  },
+  "provider_audits": {
+    "zen_requested_2026_08_31": {
+      "release": "model-availability-2026-08-31-r4-zen-requested",
+      "probe": "Reply with exactly: hi. Do not modify files.",
+      "summary": {
+        "total": 31,
+        "available": 0,
+        "unavailable": 31,
+        "account_blocked": 28,
+        "provider_server_error": 3,
+        "not_listed_in_current_zen_catalog": 2
+      },
+      "models": [
+        {
+          "id": "zen-01-gemini-3-flash",
+          "model": "opencode/gemini-3-flash",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:11.634Z",
+          "duration_ms": 2536,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-01-gemini-3-flash/preflight.json"
+        },
+        {
+          "id": "zen-02-gemini-3-1-pro",
+          "model": "opencode/gemini-3.1-pro",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:14.386Z",
+          "duration_ms": 2513,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-02-gemini-3-1-pro/preflight.json"
+        },
+        {
+          "id": "zen-03-gemini-3-5-flash",
+          "model": "opencode/gemini-3.5-flash",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:16.932Z",
+          "duration_ms": 2314,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-03-gemini-3-5-flash/preflight.json"
+        },
+        {
+          "id": "zen-04-gemini-3-5-flash-lite",
+          "model": "opencode/gemini-3.5-flash-lite",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:19.630Z",
+          "duration_ms": 2459,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-04-gemini-3-5-flash-lite/preflight.json"
+        },
+        {
+          "id": "zen-05-gemini-3-6-flash",
+          "model": "opencode/gemini-3.6-flash",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:22.294Z",
+          "duration_ms": 2422,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-05-gemini-3-6-flash/preflight.json"
+        },
+        {
+          "id": "zen-06-gemini-3-7-flash",
+          "model": "opencode/gemini-3.7-flash",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:24.906Z",
+          "duration_ms": 2371,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-06-gemini-3-7-flash/preflight.json"
+        },
+        {
+          "id": "zen-07-deepseek-v4-flash",
+          "model": "opencode/deepseek-v4-flash",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:27.457Z",
+          "duration_ms": 2313,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-07-deepseek-v4-flash/preflight.json"
+        },
+        {
+          "id": "zen-08-deepseek-v4-flash-free",
+          "model": "opencode/deepseek-v4-flash-free",
+          "listed_in_current_zen_catalog": false,
+          "available": false,
+          "reason": "provider_server_error",
+          "detail": "Zen returned an unexpected server error during the exact hi probe.",
+          "checked_at": "2026-08-31T13:19:29.243Z",
+          "duration_ms": 1549,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-08-deepseek-v4-flash-free/preflight.json"
+        },
+        {
+          "id": "zen-09-deepseek-v4-pro",
+          "model": "opencode/deepseek-v4-pro",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:31.789Z",
+          "duration_ms": 2312,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-09-deepseek-v4-pro/preflight.json"
+        },
+        {
+          "id": "zen-10-glm-5",
+          "model": "opencode/glm-5",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:34.466Z",
+          "duration_ms": 2438,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-10-glm-5/preflight.json"
+        },
+        {
+          "id": "zen-11-glm-5-1",
+          "model": "opencode/glm-5.1",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:36.999Z",
+          "duration_ms": 2292,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-11-glm-5-1/preflight.json"
+        },
+        {
+          "id": "zen-12-glm-5-2",
+          "model": "opencode/glm-5.2",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:39.518Z",
+          "duration_ms": 2283,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-12-glm-5-2/preflight.json"
+        },
+        {
+          "id": "zen-13-kimi-k2-5",
+          "model": "opencode/kimi-k2.5",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:42.096Z",
+          "duration_ms": 2340,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-13-kimi-k2-5/preflight.json"
+        },
+        {
+          "id": "zen-14-kimi-k2-6",
+          "model": "opencode/kimi-k2.6",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:44.687Z",
+          "duration_ms": 2349,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-14-kimi-k2-6/preflight.json"
+        },
+        {
+          "id": "zen-15-kimi-k2-7-code",
+          "model": "opencode/kimi-k2.7-code",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:47.388Z",
+          "duration_ms": 2460,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-15-kimi-k2-7-code/preflight.json"
+        },
+        {
+          "id": "zen-16-kimi-k3",
+          "model": "opencode/kimi-k3",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:49.982Z",
+          "duration_ms": 2355,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-16-kimi-k3/preflight.json"
+        },
+        {
+          "id": "zen-17-qwen3-5-plus",
+          "model": "opencode/qwen3.5-plus",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:52.676Z",
+          "duration_ms": 2453,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-17-qwen3-5-plus/preflight.json"
+        },
+        {
+          "id": "zen-18-qwen3-6-plus",
+          "model": "opencode/qwen3.6-plus",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:55.359Z",
+          "duration_ms": 2444,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-18-qwen3-6-plus/preflight.json"
+        },
+        {
+          "id": "zen-19-grok-4-5",
+          "model": "opencode/grok-4.5",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:19:57.925Z",
+          "duration_ms": 2325,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-19-grok-4-5/preflight.json"
+        },
+        {
+          "id": "zen-20-grok-4-6",
+          "model": "opencode/grok-4.6",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "provider_server_error",
+          "detail": "Zen returned an unexpected server error during the exact hi probe.",
+          "checked_at": "2026-08-31T13:19:59.672Z",
+          "duration_ms": 1510,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-20-grok-4-6/preflight.json"
+        },
+        {
+          "id": "zen-21-grok-build-0-1",
+          "model": "opencode/grok-build-0.1",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:02.219Z",
+          "duration_ms": 2315,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-21-grok-build-0-1/preflight.json"
+        },
+        {
+          "id": "zen-22-minimax-m2-5",
+          "model": "opencode/minimax-m2.5",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:04.784Z",
+          "duration_ms": 2331,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-22-minimax-m2-5/preflight.json"
+        },
+        {
+          "id": "zen-23-minimax-m2-7",
+          "model": "opencode/minimax-m2.7",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:07.416Z",
+          "duration_ms": 2395,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-23-minimax-m2-7/preflight.json"
+        },
+        {
+          "id": "zen-24-minimax-m3",
+          "model": "opencode/minimax-m3",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:10.157Z",
+          "duration_ms": 2505,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-24-minimax-m3/preflight.json"
+        },
+        {
+          "id": "zen-25-mimo-v2-5-free",
+          "model": "opencode/mimo-v2.5-free",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:12.724Z",
+          "duration_ms": 2324,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-25-mimo-v2-5-free/preflight.json"
+        },
+        {
+          "id": "zen-26-laguna-s-2-1-free",
+          "model": "opencode/laguna-s-2.1-free",
+          "listed_in_current_zen_catalog": false,
+          "available": false,
+          "reason": "provider_server_error",
+          "detail": "Zen returned an unexpected server error during the exact hi probe.",
+          "checked_at": "2026-08-31T13:20:14.523Z",
+          "duration_ms": 1563,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-26-laguna-s-2-1-free/preflight.json"
+        },
+        {
+          "id": "zen-27-ling-3-0-flash-fin-free",
+          "model": "opencode/ling-3.0-flash-fin-free",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:17.064Z",
+          "duration_ms": 2309,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-27-ling-3-0-flash-fin-free/preflight.json"
+        },
+        {
+          "id": "zen-28-muse-spark-1-2",
+          "model": "opencode/muse-spark-1.2",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:19.813Z",
+          "duration_ms": 2510,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-28-muse-spark-1-2/preflight.json"
+        },
+        {
+          "id": "zen-29-muse-spark-1-2-contributor-free",
+          "model": "opencode/muse-spark-1.2-contributor-free",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:22.435Z",
+          "duration_ms": 2385,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-29-muse-spark-1-2-contributor-free/preflight.json"
+        },
+        {
+          "id": "zen-30-nemotron-3-ultra-free",
+          "model": "opencode/nemotron-3-ultra-free",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:25.183Z",
+          "duration_ms": 2514,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-30-nemotron-3-ultra-free/preflight.json"
+        },
+        {
+          "id": "zen-31-nemotron-3-5-lightning-free",
+          "model": "opencode/nemotron-3.5-lightning-free",
+          "listed_in_current_zen_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Zen returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T13:20:27.743Z",
+          "duration_ms": 2321,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-31-nemotron-3-5-lightning-free/preflight.json"
+        }
+      ]
+    }
   }
 }
