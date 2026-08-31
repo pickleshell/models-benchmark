@@ -1,8 +1,7 @@
 {
   "schema_version": 1,
-  "release": "model-availability-2026-08-31-r2",
-  "generated_at": "2026-08-31T12:47:43.135Z",
-  "source_config": "config/model-availability-2026-08-31-r2.json",
+  "release": "model-availability-2026-08-31-r3-alternatives",
+  "generated_at": "2026-08-31T13:03:47.551Z",
   "probe": {
     "kind": "clean_room_model_preflight",
     "prompt": "Reply with exactly: hi. Do not modify files.",
@@ -12,29 +11,27 @@
   },
   "policy": {
     "selection": "Future benchmark configs must select only models where available and eligible_for_benchmarks are both true.",
-    "gpt_routes": "GPT models are eligible only through OpenAI endpoints. Technical availability and benchmark eligibility are recorded separately."
+    "gpt_routes": "GPT models are eligible only through OpenAI endpoints. Technical availability and benchmark eligibility are recorded separately.",
+    "provider_fallback": "When an OpenCode Zen/Go route fails, a matching OpenRouter route is selected only after its own hi preflight succeeds.",
+    "failure_history": "Every attempted provider route and its refusal reason is retained in checked_routes."
   },
   "summary": {
     "total": 83,
-    "available": 26,
-    "unavailable": 57,
-    "eligible_for_benchmarks": 26,
-    "by_endpoint": {
+    "available": 80,
+    "unavailable": 3,
+    "eligible_for_benchmarks": 80,
+    "by_selected_endpoint": {
       "openai": {
-        "total": 16,
-        "available": 16
-      },
-      "opencode-go": {
-        "total": 23,
-        "available": 0
+        "total": 17,
+        "available": 17
       },
       "opencode-zen": {
-        "total": 34,
+        "total": 1,
         "available": 0
       },
       "openrouter": {
-        "total": 10,
-        "available": 10
+        "total": 65,
+        "available": 63
       }
     }
   },
@@ -47,23 +44,67 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:41:33.337Z",
       "duration_ms": 3096,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/54-inkling-openrouter/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/54-inkling-openrouter/preflight.json",
+      "requested_model": "openrouter/thinkingmachines/inkling",
+      "checked_routes": [
+        {
+          "model": "openrouter/thinkingmachines/inkling",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:41:33.337Z",
+          "duration_ms": 3096,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/54-inkling-openrouter/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "27-hy3-free",
       "agent": "opencode",
-      "model": "opencode/hy3-free",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "provider_server_error",
-      "availability_detail": "Provider returned an unexpected server error during the hi probe.",
-      "checked_at": "2026-08-31T12:41:35.158Z",
-      "duration_ms": 1554,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/27-hy3-free/preflight.json"
+      "model": "openrouter/tencent/hy3",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:05.099Z",
+      "duration_ms": 4890,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-27-hy3-free/preflight.json",
+      "requested_model": "opencode/hy3-free",
+      "checked_routes": [
+        {
+          "model": "opencode/hy3-free",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "provider_server_error",
+          "detail": "Provider returned an unexpected server error during the hi probe.",
+          "checked_at": "2026-08-31T12:41:35.158Z",
+          "duration_ms": 1554,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/27-hy3-free/preflight.json"
+        },
+        {
+          "model": "openrouter/tencent/hy3",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:05.099Z",
+          "duration_ms": 4890,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-27-hy3-free/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/tencent/hy3",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "18-gpt-5-3-codex-spark",
@@ -73,10 +114,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:41:41.641Z",
       "duration_ms": 6234,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/18-gpt-5-3-codex-spark/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/18-gpt-5-3-codex-spark/preflight.json",
+      "requested_model": "gpt-5.3-codex-spark",
+      "checked_routes": [
+        {
+          "model": "gpt-5.3-codex-spark",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:41:41.641Z",
+          "duration_ms": 6234,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/18-gpt-5-3-codex-spark/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "49-gpt-5-4",
@@ -86,10 +144,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:41:49.335Z",
       "duration_ms": 7430,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/49-gpt-5-4/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/49-gpt-5-4/preflight.json",
+      "requested_model": "gpt-5.4",
+      "checked_routes": [
+        {
+          "model": "gpt-5.4",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:41:49.335Z",
+          "duration_ms": 7430,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/49-gpt-5-4/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "50-gpt-5-4-mini",
@@ -99,10 +174,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:41:55.727Z",
       "duration_ms": 6128,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/50-gpt-5-4-mini/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/50-gpt-5-4-mini/preflight.json",
+      "requested_model": "gpt-5.4-mini",
+      "checked_routes": [
+        {
+          "model": "gpt-5.4-mini",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:41:55.727Z",
+          "duration_ms": 6128,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/50-gpt-5-4-mini/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "46-gpt-5-6-luna",
@@ -112,10 +204,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:42:01.456Z",
       "duration_ms": 5462,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/46-gpt-5-6-luna/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/46-gpt-5-6-luna/preflight.json",
+      "requested_model": "gpt-5.6-luna",
+      "checked_routes": [
+        {
+          "model": "gpt-5.6-luna",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:42:01.456Z",
+          "duration_ms": 5462,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/46-gpt-5-6-luna/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "47-gpt-5-6-sol",
@@ -125,10 +234,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:42:08.928Z",
       "duration_ms": 7211,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/47-gpt-5-6-sol/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/47-gpt-5-6-sol/preflight.json",
+      "requested_model": "gpt-5.6-sol",
+      "checked_routes": [
+        {
+          "model": "gpt-5.6-sol",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:42:08.928Z",
+          "duration_ms": 7211,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/47-gpt-5-6-sol/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "48-gpt-5-6-terra",
@@ -138,296 +264,907 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:42:15.188Z",
       "duration_ms": 6000,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/48-gpt-5-6-terra/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/48-gpt-5-6-terra/preflight.json",
+      "requested_model": "gpt-5.6-terra",
+      "checked_routes": [
+        {
+          "model": "gpt-5.6-terra",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:42:15.188Z",
+          "duration_ms": 6000,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/48-gpt-5-6-terra/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "55-glm-5-3-go",
       "agent": "opencode",
-      "model": "opencode-go/glm-5.3",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:17.706Z",
-      "duration_ms": 2257,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/55-glm-5-3-go/preflight.json"
+      "model": "openrouter/z-ai/glm-5.3",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:09.009Z",
+      "duration_ms": 3611,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-55-glm-5-3-go/preflight.json",
+      "requested_model": "opencode-go/glm-5.3",
+      "checked_routes": [
+        {
+          "model": "opencode-go/glm-5.3",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:17.706Z",
+          "duration_ms": 2257,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/55-glm-5-3-go/preflight.json"
+        },
+        {
+          "model": "openrouter/z-ai/glm-5.3",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:09.009Z",
+          "duration_ms": 3611,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-55-glm-5-3-go/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/z-ai/glm-5.3",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "150-claude-fable-5",
       "agent": "opencode",
-      "model": "opencode/claude-fable-5",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:20.304Z",
-      "duration_ms": 2341,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/150-claude-fable-5/preflight.json"
+      "model": "openrouter/anthropic/claude-fable-5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:15.050Z",
+      "duration_ms": 5797,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-150-claude-fable-5/preflight.json",
+      "requested_model": "opencode/claude-fable-5",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-fable-5",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:20.304Z",
+          "duration_ms": 2341,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/150-claude-fable-5/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-fable-5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:15.050Z",
+          "duration_ms": 5797,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-150-claude-fable-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-fable-5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "151-claude-opus-4-5",
       "agent": "opencode",
-      "model": "opencode/claude-opus-4-5",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:22.894Z",
-      "duration_ms": 2333,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/151-claude-opus-4-5/preflight.json"
+      "model": "openrouter/anthropic/claude-opus-4.5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:19.115Z",
+      "duration_ms": 3764,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-151-claude-opus-4-5/preflight.json",
+      "requested_model": "opencode/claude-opus-4-5",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-opus-4-5",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:22.894Z",
+          "duration_ms": 2333,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/151-claude-opus-4-5/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-opus-4.5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:19.115Z",
+          "duration_ms": 3764,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-151-claude-opus-4-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-opus-4.5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "152-claude-opus-4-7",
       "agent": "opencode",
-      "model": "opencode/claude-opus-4-7",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:25.474Z",
-      "duration_ms": 2316,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/152-claude-opus-4-7/preflight.json"
+      "model": "openrouter/anthropic/claude-opus-4.7",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:22.794Z",
+      "duration_ms": 3432,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-152-claude-opus-4-7/preflight.json",
+      "requested_model": "opencode/claude-opus-4-7",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-opus-4-7",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:25.474Z",
+          "duration_ms": 2316,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/152-claude-opus-4-7/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-opus-4.7",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:22.794Z",
+          "duration_ms": 3432,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-152-claude-opus-4-7/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-opus-4.7",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "153-claude-opus-4-8",
       "agent": "opencode",
-      "model": "opencode/claude-opus-4-8",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:28.183Z",
-      "duration_ms": 2452,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/153-claude-opus-4-8/preflight.json"
+      "model": "openrouter/anthropic/claude-opus-4.8",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:26.386Z",
+      "duration_ms": 3356,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-153-claude-opus-4-8/preflight.json",
+      "requested_model": "opencode/claude-opus-4-8",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-opus-4-8",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:28.183Z",
+          "duration_ms": 2452,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/153-claude-opus-4-8/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-opus-4.8",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:26.386Z",
+          "duration_ms": 3356,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-153-claude-opus-4-8/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-opus-4.8",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "154-claude-sonnet-4-5",
       "agent": "opencode",
-      "model": "opencode/claude-sonnet-4-5",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:30.923Z",
-      "duration_ms": 2470,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/154-claude-sonnet-4-5/preflight.json"
+      "model": "openrouter/anthropic/claude-sonnet-4.5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:30.652Z",
+      "duration_ms": 4026,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-154-claude-sonnet-4-5/preflight.json",
+      "requested_model": "opencode/claude-sonnet-4-5",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-sonnet-4-5",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:30.923Z",
+          "duration_ms": 2470,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/154-claude-sonnet-4-5/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-sonnet-4.5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:30.652Z",
+          "duration_ms": 4026,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-154-claude-sonnet-4-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-sonnet-4.5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "155-claude-sonnet-4-6",
       "agent": "opencode",
-      "model": "opencode/claude-sonnet-4-6",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:33.500Z",
-      "duration_ms": 2321,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/155-claude-sonnet-4-6/preflight.json"
+      "model": "openrouter/anthropic/claude-sonnet-4.6",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:34.342Z",
+      "duration_ms": 3428,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-155-claude-sonnet-4-6/preflight.json",
+      "requested_model": "opencode/claude-sonnet-4-6",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-sonnet-4-6",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:33.500Z",
+          "duration_ms": 2321,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/155-claude-sonnet-4-6/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-sonnet-4.6",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:34.342Z",
+          "duration_ms": 3428,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-155-claude-sonnet-4-6/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-sonnet-4.6",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "156-gemini-3-5-flash-lite",
       "agent": "opencode",
-      "model": "opencode/gemini-3.5-flash-lite",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:36.070Z",
-      "duration_ms": 2315,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/156-gemini-3-5-flash-lite/preflight.json"
+      "model": "openrouter/google/gemini-3.5-flash-lite",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:38.618Z",
+      "duration_ms": 4034,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-156-gemini-3-5-flash-lite/preflight.json",
+      "requested_model": "opencode/gemini-3.5-flash-lite",
+      "checked_routes": [
+        {
+          "model": "opencode/gemini-3.5-flash-lite",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:36.070Z",
+          "duration_ms": 2315,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/156-gemini-3-5-flash-lite/preflight.json"
+        },
+        {
+          "model": "openrouter/google/gemini-3.5-flash-lite",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:38.618Z",
+          "duration_ms": 4034,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-156-gemini-3-5-flash-lite/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/google/gemini-3.5-flash-lite",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "157-gemini-3-7-flash",
       "agent": "opencode",
-      "model": "opencode/gemini-3.7-flash",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:38.675Z",
-      "duration_ms": 2341,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/157-gemini-3-7-flash/preflight.json"
+      "model": "openrouter/google/gemini-3.7-flash",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:43.260Z",
+      "duration_ms": 4388,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-157-gemini-3-7-flash/preflight.json",
+      "requested_model": "opencode/gemini-3.7-flash",
+      "checked_routes": [
+        {
+          "model": "opencode/gemini-3.7-flash",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:38.675Z",
+          "duration_ms": 2341,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/157-gemini-3-7-flash/preflight.json"
+        },
+        {
+          "model": "openrouter/google/gemini-3.7-flash",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:43.260Z",
+          "duration_ms": 4388,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-157-gemini-3-7-flash/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/google/gemini-3.7-flash",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "158-glm-5",
       "agent": "opencode",
-      "model": "opencode/glm-5",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:41.399Z",
-      "duration_ms": 2465,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/158-glm-5/preflight.json"
+      "model": "openrouter/z-ai/glm-5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:49.698Z",
+      "duration_ms": 6164,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-158-glm-5/preflight.json",
+      "requested_model": "opencode/glm-5",
+      "checked_routes": [
+        {
+          "model": "opencode/glm-5",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:41.399Z",
+          "duration_ms": 2465,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/158-glm-5/preflight.json"
+        },
+        {
+          "model": "openrouter/z-ai/glm-5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:49.698Z",
+          "duration_ms": 6164,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-158-glm-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/z-ai/glm-5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "159-glm-5-1",
       "agent": "opencode",
-      "model": "opencode/glm-5.1",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:44.008Z",
-      "duration_ms": 2348,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/159-glm-5-1/preflight.json"
+      "model": "openrouter/z-ai/glm-5.1",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:56:53.902Z",
+      "duration_ms": 3900,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-159-glm-5-1/preflight.json",
+      "requested_model": "opencode/glm-5.1",
+      "checked_routes": [
+        {
+          "model": "opencode/glm-5.1",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:44.008Z",
+          "duration_ms": 2348,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/159-glm-5-1/preflight.json"
+        },
+        {
+          "model": "openrouter/z-ai/glm-5.1",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:56:53.902Z",
+          "duration_ms": 3900,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-159-glm-5-1/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/z-ai/glm-5.1",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "160-glm-5-2",
       "agent": "opencode",
-      "model": "opencode/glm-5.2",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:46.594Z",
-      "duration_ms": 2327,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/160-glm-5-2/preflight.json"
+      "model": "openrouter/z-ai/glm-5.2",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:05.756Z",
+      "duration_ms": 11613,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-160-glm-5-2/preflight.json",
+      "requested_model": "opencode/glm-5.2",
+      "checked_routes": [
+        {
+          "model": "opencode/glm-5.2",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:46.594Z",
+          "duration_ms": 2327,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/160-glm-5-2/preflight.json"
+        },
+        {
+          "model": "openrouter/z-ai/glm-5.2",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:05.756Z",
+          "duration_ms": 11613,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-160-glm-5-2/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/z-ai/glm-5.2",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "167-grok-4-6",
       "agent": "opencode",
-      "model": "opencode/grok-4.6",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:49.330Z",
-      "duration_ms": 2476,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/167-grok-4-6/preflight.json"
+      "model": "openrouter/x-ai/grok-4.6",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:09.937Z",
+      "duration_ms": 3872,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-167-grok-4-6/preflight.json",
+      "requested_model": "opencode/grok-4.6",
+      "checked_routes": [
+        {
+          "model": "opencode/grok-4.6",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:49.330Z",
+          "duration_ms": 2476,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/167-grok-4-6/preflight.json"
+        },
+        {
+          "model": "openrouter/x-ai/grok-4.6",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:09.937Z",
+          "duration_ms": 3872,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-167-grok-4-6/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/x-ai/grok-4.6",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "169-mimo-v2-5-free",
       "agent": "opencode",
-      "model": "opencode/mimo-v2.5-free",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:51.991Z",
-      "duration_ms": 2405,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/169-mimo-v2-5-free/preflight.json"
+      "model": "openrouter/xiaomi/mimo-v2.5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:14.114Z",
+      "duration_ms": 3934,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-169-mimo-v2-5-free/preflight.json",
+      "requested_model": "opencode/mimo-v2.5-free",
+      "checked_routes": [
+        {
+          "model": "opencode/mimo-v2.5-free",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:51.991Z",
+          "duration_ms": 2405,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/169-mimo-v2-5-free/preflight.json"
+        },
+        {
+          "model": "openrouter/xiaomi/mimo-v2.5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:14.114Z",
+          "duration_ms": 3934,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-169-mimo-v2-5-free/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/xiaomi/mimo-v2.5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "177-deepseek-v4-flash-vision-exp",
       "agent": "opencode",
-      "model": "opencode-go/deepseek-v4-flash-vision-exp",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:54.606Z",
-      "duration_ms": 2352,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/177-deepseek-v4-flash-vision-exp/preflight.json"
+      "model": "openrouter/deepseek/deepseek-v4-flash-vision-exp",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:17.479Z",
+      "duration_ms": 3127,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-177-deepseek-v4-flash-vision-exp/preflight.json",
+      "requested_model": "opencode-go/deepseek-v4-flash-vision-exp",
+      "checked_routes": [
+        {
+          "model": "opencode-go/deepseek-v4-flash-vision-exp",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:54.606Z",
+          "duration_ms": 2352,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/177-deepseek-v4-flash-vision-exp/preflight.json"
+        },
+        {
+          "model": "openrouter/deepseek/deepseek-v4-flash-vision-exp",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:17.479Z",
+          "duration_ms": 3127,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-177-deepseek-v4-flash-vision-exp/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/deepseek/deepseek-v4-flash-vision-exp",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "178-glm-5-3-flash",
       "agent": "opencode",
-      "model": "opencode-go/glm-5.3-flash",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:42:57.282Z",
-      "duration_ms": 2416,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/178-glm-5-3-flash/preflight.json"
+      "model": "openrouter/z-ai/glm-5.3-flash",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:21.920Z",
+      "duration_ms": 4203,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-178-glm-5-3-flash/preflight.json",
+      "requested_model": "opencode-go/glm-5.3-flash",
+      "checked_routes": [
+        {
+          "model": "opencode-go/glm-5.3-flash",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:42:57.282Z",
+          "duration_ms": 2416,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/178-glm-5-3-flash/preflight.json"
+        },
+        {
+          "model": "openrouter/z-ai/glm-5.3-flash",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:21.920Z",
+          "duration_ms": 4203,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-178-glm-5-3-flash/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/z-ai/glm-5.3-flash",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "179-hy4-preview",
       "agent": "opencode",
-      "model": "opencode-go/hy4-preview",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:43:00.125Z",
-      "duration_ms": 2583,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/179-hy4-preview/preflight.json"
+      "model": "openrouter/tencent/hy4-preview",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:27.373Z",
+      "duration_ms": 5215,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-179-hy4-preview/preflight.json",
+      "requested_model": "opencode-go/hy4-preview",
+      "checked_routes": [
+        {
+          "model": "opencode-go/hy4-preview",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:43:00.125Z",
+          "duration_ms": 2583,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/179-hy4-preview/preflight.json"
+        },
+        {
+          "model": "openrouter/tencent/hy4-preview",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:27.373Z",
+          "duration_ms": 5215,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-179-hy4-preview/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/tencent/hy4-preview",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "180-mimo-v2-5",
       "agent": "opencode",
-      "model": "opencode-go/mimo-v2.5",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:43:02.872Z",
-      "duration_ms": 2489,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/180-mimo-v2-5/preflight.json"
+      "model": "openrouter/xiaomi/mimo-v2.5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:31.605Z",
+      "duration_ms": 3945,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-180-mimo-v2-5/preflight.json",
+      "requested_model": "opencode-go/mimo-v2.5",
+      "checked_routes": [
+        {
+          "model": "opencode-go/mimo-v2.5",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:43:02.872Z",
+          "duration_ms": 2489,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/180-mimo-v2-5/preflight.json"
+        },
+        {
+          "model": "openrouter/xiaomi/mimo-v2.5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:31.605Z",
+          "duration_ms": 3945,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-180-mimo-v2-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/xiaomi/mimo-v2.5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "181-minimax-m2-7",
       "agent": "opencode",
-      "model": "opencode-go/minimax-m2.7",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:43:05.591Z",
-      "duration_ms": 2457,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/181-minimax-m2-7/preflight.json"
+      "model": "openrouter/minimax/minimax-m2.7",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:36.605Z",
+      "duration_ms": 4750,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-181-minimax-m2-7/preflight.json",
+      "requested_model": "opencode-go/minimax-m2.7",
+      "checked_routes": [
+        {
+          "model": "opencode-go/minimax-m2.7",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:43:05.591Z",
+          "duration_ms": 2457,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/181-minimax-m2-7/preflight.json"
+        },
+        {
+          "model": "openrouter/minimax/minimax-m2.7",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:36.605Z",
+          "duration_ms": 4750,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-181-minimax-m2-7/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/minimax/minimax-m2.7",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "182-qwen3-6-plus",
       "agent": "opencode",
-      "model": "opencode-go/qwen3.6-plus",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:43:08.167Z",
-      "duration_ms": 2313,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/182-qwen3-6-plus/preflight.json"
+      "model": "openrouter/qwen/qwen3.6-plus",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:40.153Z",
+      "duration_ms": 3264,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-182-qwen3-6-plus/preflight.json",
+      "requested_model": "opencode-go/qwen3.6-plus",
+      "checked_routes": [
+        {
+          "model": "opencode-go/qwen3.6-plus",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:43:08.167Z",
+          "duration_ms": 2313,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/182-qwen3-6-plus/preflight.json"
+        },
+        {
+          "model": "openrouter/qwen/qwen3.6-plus",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:40.153Z",
+          "duration_ms": 3264,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-182-qwen3-6-plus/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/qwen/qwen3.6-plus",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "183-qwen3-7-max",
       "agent": "opencode",
-      "model": "opencode-go/qwen3.7-max",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:43:10.870Z",
-      "duration_ms": 2443,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/183-qwen3-7-max/preflight.json"
+      "model": "openrouter/qwen/qwen3.7-max",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:57:44.218Z",
+      "duration_ms": 3825,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-183-qwen3-7-max/preflight.json",
+      "requested_model": "opencode-go/qwen3.7-max",
+      "checked_routes": [
+        {
+          "model": "opencode-go/qwen3.7-max",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:43:10.870Z",
+          "duration_ms": 2443,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/183-qwen3-7-max/preflight.json"
+        },
+        {
+          "model": "openrouter/qwen/qwen3.7-max",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:57:44.218Z",
+          "duration_ms": 3825,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-183-qwen3-7-max/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/qwen/qwen3.7-max",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "184-qwen3-8-flash",
       "agent": "opencode",
-      "model": "opencode-go/qwen3.8-flash",
-      "endpoint": "opencode-go",
+      "model": "openrouter/qwen/qwen3.8-flash",
+      "endpoint": "openrouter",
       "available": false,
       "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
+      "availability_reason": "timeout",
+      "availability_detail": "Neither the original OpenCode route nor the mapped OpenRouter alternative completed the hi preflight.",
       "checked_at": "2026-08-31T12:43:13.407Z",
       "duration_ms": 2281,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/184-qwen3-8-flash/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/184-qwen3-8-flash/preflight.json",
+      "requested_model": "opencode-go/qwen3.8-flash",
+      "checked_routes": [
+        {
+          "model": "opencode-go/qwen3.8-flash",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:43:13.407Z",
+          "duration_ms": 2281,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/184-qwen3-8-flash/preflight.json"
+        },
+        {
+          "model": "openrouter/qwen/qwen3.8-flash",
+          "endpoint": "openrouter",
+          "available": false,
+          "reason": "timeout",
+          "detail": "The alternative provider route did not return a valid model response within the 60-second preflight limit.",
+          "checked_at": "2026-08-31T12:58:49.568Z",
+          "duration_ms": 65108,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-184-qwen3-8-flash/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/qwen/qwen3.8-flash",
+        "selection_reason": "The matching OpenRouter route was tested but did not pass preflight."
+      }
     },
     {
       "id": "185-gpt-5-4",
@@ -437,10 +1174,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:43:17.372Z",
       "duration_ms": 3704,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/185-gpt-5-4/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/185-gpt-5-4/preflight.json",
+      "requested_model": "openai/gpt-5.4",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.4",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:43:17.372Z",
+          "duration_ms": 3704,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/185-gpt-5-4/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "186-gpt-5-4-fast",
@@ -450,10 +1204,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:43:21.049Z",
       "duration_ms": 3420,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/186-gpt-5-4-fast/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/186-gpt-5-4-fast/preflight.json",
+      "requested_model": "openai/gpt-5.4-fast",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.4-fast",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:43:21.049Z",
+          "duration_ms": 3420,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/186-gpt-5-4-fast/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "187-gpt-5-5",
@@ -463,10 +1234,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:43:25.641Z",
       "duration_ms": 4328,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/187-gpt-5-5/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/187-gpt-5-5/preflight.json",
+      "requested_model": "openai/gpt-5.5",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.5",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:43:25.641Z",
+          "duration_ms": 4328,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/187-gpt-5-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "188-gpt-5-5-fast",
@@ -476,10 +1264,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:43:31.242Z",
       "duration_ms": 5321,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/188-gpt-5-5-fast/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/188-gpt-5-5-fast/preflight.json",
+      "requested_model": "openai/gpt-5.5-fast",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.5-fast",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:43:31.242Z",
+          "duration_ms": 5321,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/188-gpt-5-5-fast/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "189-gpt-5-6-luna",
@@ -489,10 +1294,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:43:39.499Z",
       "duration_ms": 7938,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/189-gpt-5-6-luna/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/189-gpt-5-6-luna/preflight.json",
+      "requested_model": "openai/gpt-5.6-luna",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.6-luna",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:43:39.499Z",
+          "duration_ms": 7938,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/189-gpt-5-6-luna/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "190-gpt-5-6-luna-fast",
@@ -502,10 +1324,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:43:44.073Z",
       "duration_ms": 4245,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/190-gpt-5-6-luna-fast/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/190-gpt-5-6-luna-fast/preflight.json",
+      "requested_model": "openai/gpt-5.6-luna-fast",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.6-luna-fast",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:43:44.073Z",
+          "duration_ms": 4245,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/190-gpt-5-6-luna-fast/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "191-gpt-5-6-sol",
@@ -515,10 +1354,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:43:49.837Z",
       "duration_ms": 5471,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/191-gpt-5-6-sol/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/191-gpt-5-6-sol/preflight.json",
+      "requested_model": "openai/gpt-5.6-sol",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.6-sol",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:43:49.837Z",
+          "duration_ms": 5471,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/191-gpt-5-6-sol/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "192-gpt-5-6-sol-fast",
@@ -528,10 +1384,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:43:54.679Z",
       "duration_ms": 4523,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/192-gpt-5-6-sol-fast/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/192-gpt-5-6-sol-fast/preflight.json",
+      "requested_model": "openai/gpt-5.6-sol-fast",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.6-sol-fast",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:43:54.679Z",
+          "duration_ms": 4523,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/192-gpt-5-6-sol-fast/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "193-gpt-5-6-terra",
@@ -541,10 +1414,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:44:00.371Z",
       "duration_ms": 5412,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/193-gpt-5-6-terra/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/193-gpt-5-6-terra/preflight.json",
+      "requested_model": "openai/gpt-5.6-terra",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.6-terra",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:44:00.371Z",
+          "duration_ms": 5412,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/193-gpt-5-6-terra/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "194-gpt-5-6-terra-fast",
@@ -554,10 +1444,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:44:04.850Z",
       "duration_ms": 4160,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/194-gpt-5-6-terra-fast/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/194-gpt-5-6-terra-fast/preflight.json",
+      "requested_model": "openai/gpt-5.6-terra-fast",
+      "checked_routes": [
+        {
+          "model": "openai/gpt-5.6-terra-fast",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:44:04.850Z",
+          "duration_ms": 4160,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/194-gpt-5-6-terra-fast/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "195-meta-muse-spark-1-2",
@@ -567,10 +1474,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:44:08.867Z",
       "duration_ms": 3726,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/195-meta-muse-spark-1-2/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/195-meta-muse-spark-1-2/preflight.json",
+      "requested_model": "openrouter/meta/muse-spark-1.2",
+      "checked_routes": [
+        {
+          "model": "openrouter/meta/muse-spark-1.2",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:44:08.867Z",
+          "duration_ms": 3726,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/195-meta-muse-spark-1-2/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "196-minimax-minimax-m2-5",
@@ -580,10 +1504,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:44:12.711Z",
       "duration_ms": 3576,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/196-minimax-minimax-m2-5/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/196-minimax-minimax-m2-5/preflight.json",
+      "requested_model": "openrouter/minimax/minimax-m2.5",
+      "checked_routes": [
+        {
+          "model": "openrouter/minimax/minimax-m2.5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:44:12.711Z",
+          "duration_ms": 3576,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/196-minimax-minimax-m2-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "197-minimax-minimax-m2-7",
@@ -593,10 +1534,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:44:17.353Z",
       "duration_ms": 4380,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/197-minimax-minimax-m2-7/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/197-minimax-minimax-m2-7/preflight.json",
+      "requested_model": "openrouter/minimax/minimax-m2.7",
+      "checked_routes": [
+        {
+          "model": "openrouter/minimax/minimax-m2.7",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:44:17.353Z",
+          "duration_ms": 4380,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/197-minimax-minimax-m2-7/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "200-nvidia-nemotron-3-ultra-550b-a55b",
@@ -606,10 +1564,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:44:29.630Z",
       "duration_ms": 12001,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/200-nvidia-nemotron-3-ultra-550b-a55b/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/200-nvidia-nemotron-3-ultra-550b-a55b/preflight.json",
+      "requested_model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b",
+      "checked_routes": [
+        {
+          "model": "openrouter/nvidia/nemotron-3-ultra-550b-a55b",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:44:29.630Z",
+          "duration_ms": 12001,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/200-nvidia-nemotron-3-ultra-550b-a55b/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "202-qwen-qwen3-5-plus-02-15",
@@ -619,10 +1594,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:44:34.318Z",
       "duration_ms": 4365,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/202-qwen-qwen3-5-plus-02-15/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/202-qwen-qwen3-5-plus-02-15/preflight.json",
+      "requested_model": "openrouter/qwen/qwen3.5-plus-02-15",
+      "checked_routes": [
+        {
+          "model": "openrouter/qwen/qwen3.5-plus-02-15",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:44:34.318Z",
+          "duration_ms": 4365,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/202-qwen-qwen3-5-plus-02-15/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "203-qwen-qwen3-5-plus-20260420",
@@ -632,10 +1624,27 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:45:20.429Z",
       "duration_ms": 45822,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/203-qwen-qwen3-5-plus-20260420/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/203-qwen-qwen3-5-plus-20260420/preflight.json",
+      "requested_model": "openrouter/qwen/qwen3.5-plus-20260420",
+      "checked_routes": [
+        {
+          "model": "openrouter/qwen/qwen3.5-plus-20260420",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:45:20.429Z",
+          "duration_ms": 45822,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/203-qwen-qwen3-5-plus-20260420/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "204-qwen-qwen3-6-plus",
@@ -645,114 +1654,347 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:45:24.363Z",
       "duration_ms": 3602,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/204-qwen-qwen3-6-plus/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/204-qwen-qwen3-6-plus/preflight.json",
+      "requested_model": "openrouter/qwen/qwen3.6-plus",
+      "checked_routes": [
+        {
+          "model": "openrouter/qwen/qwen3.6-plus",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:45:24.363Z",
+          "duration_ms": 3602,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/204-qwen-qwen3-6-plus/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "205-claude-haiku-4-5",
       "agent": "opencode",
-      "model": "opencode/claude-haiku-4-5",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:26.930Z",
-      "duration_ms": 2305,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/205-claude-haiku-4-5/preflight.json"
+      "model": "openrouter/anthropic/claude-haiku-4.5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:58:54.079Z",
+      "duration_ms": 4210,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-205-claude-haiku-4-5/preflight.json",
+      "requested_model": "opencode/claude-haiku-4-5",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-haiku-4-5",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:26.930Z",
+          "duration_ms": 2305,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/205-claude-haiku-4-5/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-haiku-4.5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:58:54.079Z",
+          "duration_ms": 4210,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-205-claude-haiku-4-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-haiku-4.5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "206-claude-sonnet-5",
       "agent": "opencode",
-      "model": "opencode/claude-sonnet-5",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:29.484Z",
-      "duration_ms": 2297,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/206-claude-sonnet-5/preflight.json"
+      "model": "openrouter/anthropic/claude-sonnet-5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:58:59.463Z",
+      "duration_ms": 5146,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-206-claude-sonnet-5/preflight.json",
+      "requested_model": "opencode/claude-sonnet-5",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-sonnet-5",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:29.484Z",
+          "duration_ms": 2297,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/206-claude-sonnet-5/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-sonnet-5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:58:59.463Z",
+          "duration_ms": 5146,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-206-claude-sonnet-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-sonnet-5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "207-claude-opus-5",
       "agent": "opencode",
-      "model": "opencode/claude-opus-5",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:32.078Z",
-      "duration_ms": 2334,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/207-claude-opus-5/preflight.json"
+      "model": "openrouter/anthropic/claude-opus-5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:04.119Z",
+      "duration_ms": 4356,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-207-claude-opus-5/preflight.json",
+      "requested_model": "opencode/claude-opus-5",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-opus-5",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:32.078Z",
+          "duration_ms": 2334,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/207-claude-opus-5/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-opus-5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:04.119Z",
+          "duration_ms": 4356,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-207-claude-opus-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-opus-5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "208-kimi-k3",
       "agent": "opencode",
-      "model": "opencode/kimi-k3",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:34.632Z",
-      "duration_ms": 2295,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/208-kimi-k3/preflight.json"
+      "model": "openrouter/moonshotai/kimi-k3",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:09.472Z",
+      "duration_ms": 5091,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-208-kimi-k3/preflight.json",
+      "requested_model": "opencode/kimi-k3",
+      "checked_routes": [
+        {
+          "model": "opencode/kimi-k3",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:34.632Z",
+          "duration_ms": 2295,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/208-kimi-k3/preflight.json"
+        },
+        {
+          "model": "openrouter/moonshotai/kimi-k3",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:09.472Z",
+          "duration_ms": 5091,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-208-kimi-k3/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/moonshotai/kimi-k3",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "03-kimi-k2-7-code",
       "agent": "opencode",
-      "model": "opencode-go/kimi-k2.7-code",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:37.188Z",
-      "duration_ms": 2301,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/03-kimi-k2-7-code/preflight.json"
+      "model": "openrouter/moonshotai/kimi-k2.7-code",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:19.052Z",
+      "duration_ms": 9289,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-03-kimi-k2-7-code/preflight.json",
+      "requested_model": "opencode-go/kimi-k2.7-code",
+      "checked_routes": [
+        {
+          "model": "opencode-go/kimi-k2.7-code",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:37.188Z",
+          "duration_ms": 2301,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/03-kimi-k2-7-code/preflight.json"
+        },
+        {
+          "model": "openrouter/moonshotai/kimi-k2.7-code",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:19.052Z",
+          "duration_ms": 9289,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-03-kimi-k2-7-code/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/moonshotai/kimi-k2.7-code",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "06-minimax-m3",
       "agent": "opencode",
-      "model": "opencode-go/minimax-m3",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:39.955Z",
-      "duration_ms": 2509,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/06-minimax-m3/preflight.json"
+      "model": "openrouter/minimax/minimax-m3",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:23.174Z",
+      "duration_ms": 3819,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-06-minimax-m3/preflight.json",
+      "requested_model": "opencode-go/minimax-m3",
+      "checked_routes": [
+        {
+          "model": "opencode-go/minimax-m3",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:39.955Z",
+          "duration_ms": 2509,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/06-minimax-m3/preflight.json"
+        },
+        {
+          "model": "openrouter/minimax/minimax-m3",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:23.174Z",
+          "duration_ms": 3819,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-06-minimax-m3/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/minimax/minimax-m3",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "07-mimo-v2-5-pro",
       "agent": "opencode",
-      "model": "opencode-go/mimo-v2.5-pro",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:42.527Z",
-      "duration_ms": 2310,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/07-mimo-v2-5-pro/preflight.json"
+      "model": "openrouter/xiaomi/mimo-v2.5-pro",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:28.789Z",
+      "duration_ms": 5371,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-07-mimo-v2-5-pro/preflight.json",
+      "requested_model": "opencode-go/mimo-v2.5-pro",
+      "checked_routes": [
+        {
+          "model": "opencode-go/mimo-v2.5-pro",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:42.527Z",
+          "duration_ms": 2310,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/07-mimo-v2-5-pro/preflight.json"
+        },
+        {
+          "model": "openrouter/xiaomi/mimo-v2.5-pro",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:28.789Z",
+          "duration_ms": 5371,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-07-mimo-v2-5-pro/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/xiaomi/mimo-v2.5-pro",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "11-deepseek-v4-flash",
       "agent": "opencode",
-      "model": "opencode-go/deepseek-v4-flash",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:45.264Z",
-      "duration_ms": 2475,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/11-deepseek-v4-flash/preflight.json"
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:32.612Z",
+      "duration_ms": 3523,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-11-deepseek-v4-flash/preflight.json",
+      "requested_model": "opencode-go/deepseek-v4-flash",
+      "checked_routes": [
+        {
+          "model": "opencode-go/deepseek-v4-flash",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:45.264Z",
+          "duration_ms": 2475,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/11-deepseek-v4-flash/preflight.json"
+        },
+        {
+          "model": "openrouter/deepseek/deepseek-v4-flash",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:32.612Z",
+          "duration_ms": 3523,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-11-deepseek-v4-flash/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/deepseek/deepseek-v4-flash",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "58-grok-4-5-openrouter",
@@ -762,36 +2004,107 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:45:49.278Z",
       "duration_ms": 3756,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/58-grok-4-5-openrouter/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/58-grok-4-5-openrouter/preflight.json",
+      "requested_model": "openrouter/x-ai/grok-4.5",
+      "checked_routes": [
+        {
+          "model": "openrouter/x-ai/grok-4.5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:45:49.278Z",
+          "duration_ms": 3756,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/58-grok-4-5-openrouter/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "14-hy3",
       "agent": "opencode",
-      "model": "opencode-go/hy3",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:51.875Z",
-      "duration_ms": 2336,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/14-hy3/preflight.json"
+      "model": "openrouter/tencent/hy3",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:37.382Z",
+      "duration_ms": 4524,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-14-hy3/preflight.json",
+      "requested_model": "opencode-go/hy3",
+      "checked_routes": [
+        {
+          "model": "opencode-go/hy3",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:51.875Z",
+          "duration_ms": 2336,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/14-hy3/preflight.json"
+        },
+        {
+          "model": "openrouter/tencent/hy3",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:37.382Z",
+          "duration_ms": 4524,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-14-hy3/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/tencent/hy3",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "15-glm-5-1",
       "agent": "opencode",
-      "model": "opencode-go/glm-5.1",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:54.636Z",
-      "duration_ms": 2503,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/15-glm-5-1/preflight.json"
+      "model": "openrouter/z-ai/glm-5.1",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:40.914Z",
+      "duration_ms": 3260,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-15-glm-5-1/preflight.json",
+      "requested_model": "opencode-go/glm-5.1",
+      "checked_routes": [
+        {
+          "model": "opencode-go/glm-5.1",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:54.636Z",
+          "duration_ms": 2503,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/15-glm-5-1/preflight.json"
+        },
+        {
+          "model": "openrouter/z-ai/glm-5.1",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:40.914Z",
+          "duration_ms": 3260,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-15-glm-5-1/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/z-ai/glm-5.1",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "19-big-pickle",
@@ -801,114 +2114,347 @@
       "available": false,
       "eligible_for_benchmarks": false,
       "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
+      "availability_detail": "The OpenCode route failed because the configured account is blocked; no matching OpenRouter model ID exists in the current catalog.",
       "checked_at": "2026-08-31T12:45:57.246Z",
       "duration_ms": 2345,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/19-big-pickle/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/19-big-pickle/preflight.json",
+      "requested_model": "opencode/big-pickle",
+      "checked_routes": [
+        {
+          "model": "opencode/big-pickle",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:57.246Z",
+          "duration_ms": 2345,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/19-big-pickle/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "16-kimi-k2-6",
       "agent": "opencode",
-      "model": "opencode-go/kimi-k2.6",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:45:59.792Z",
-      "duration_ms": 2286,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/16-kimi-k2-6/preflight.json"
+      "model": "openrouter/moonshotai/kimi-k2.6",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:44.267Z",
+      "duration_ms": 3114,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-16-kimi-k2-6/preflight.json",
+      "requested_model": "opencode-go/kimi-k2.6",
+      "checked_routes": [
+        {
+          "model": "opencode-go/kimi-k2.6",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:45:59.792Z",
+          "duration_ms": 2286,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/16-kimi-k2-6/preflight.json"
+        },
+        {
+          "model": "openrouter/moonshotai/kimi-k2.6",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:44.267Z",
+          "duration_ms": 3114,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-16-kimi-k2-6/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/moonshotai/kimi-k2.6",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "01-gpt-5-6-luna",
       "agent": "opencode",
-      "model": "opencode-go/gpt-5.6-luna",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:02.357Z",
-      "duration_ms": 2300,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/01-gpt-5-6-luna/preflight.json"
+      "model": "openai/gpt-5.6-luna",
+      "endpoint": "openai",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openai route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:48.916Z",
+      "duration_ms": 4403,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-01-gpt-5-6-luna/preflight.json",
+      "requested_model": "opencode-go/gpt-5.6-luna",
+      "checked_routes": [
+        {
+          "model": "opencode-go/gpt-5.6-luna",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:02.357Z",
+          "duration_ms": 2300,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/01-gpt-5-6-luna/preflight.json"
+        },
+        {
+          "model": "openai/gpt-5.6-luna",
+          "endpoint": "openai",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:48.916Z",
+          "duration_ms": 4403,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-01-gpt-5-6-luna/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openai/gpt-5.6-luna",
+        "selection_reason": "The policy-compliant OpenAI route passed preflight."
+      }
     },
     {
       "id": "05-glm-5-2",
       "agent": "opencode",
-      "model": "opencode-go/glm-5.2",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:04.965Z",
-      "duration_ms": 2351,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/05-glm-5-2/preflight.json"
+      "model": "openrouter/z-ai/glm-5.2",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:54.125Z",
+      "duration_ms": 4940,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-05-glm-5-2/preflight.json",
+      "requested_model": "opencode-go/glm-5.2",
+      "checked_routes": [
+        {
+          "model": "opencode-go/glm-5.2",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:04.965Z",
+          "duration_ms": 2351,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/05-glm-5-2/preflight.json"
+        },
+        {
+          "model": "openrouter/z-ai/glm-5.2",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:54.125Z",
+          "duration_ms": 4940,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-05-glm-5-2/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/z-ai/glm-5.2",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "65-grok-4-6-go",
       "agent": "opencode",
-      "model": "opencode-go/grok-4.6",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:07.690Z",
-      "duration_ms": 2469,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/65-grok-4-6-go/preflight.json"
+      "model": "openrouter/x-ai/grok-4.6",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T12:59:57.977Z",
+      "duration_ms": 3558,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-65-grok-4-6-go/preflight.json",
+      "requested_model": "opencode-go/grok-4.6",
+      "checked_routes": [
+        {
+          "model": "opencode-go/grok-4.6",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:07.690Z",
+          "duration_ms": 2469,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/65-grok-4-6-go/preflight.json"
+        },
+        {
+          "model": "openrouter/x-ai/grok-4.6",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:59:57.977Z",
+          "duration_ms": 3558,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-65-grok-4-6-go/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/x-ai/grok-4.6",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "67-qwen3-8-max-go",
       "agent": "opencode",
-      "model": "opencode-go/qwen3.8-max",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:10.259Z",
-      "duration_ms": 2304,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/67-qwen3-8-max-go/preflight.json"
+      "model": "openrouter/qwen/qwen3.8-max",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:00:02.471Z",
+      "duration_ms": 4249,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-67-qwen3-8-max-go/preflight.json",
+      "requested_model": "opencode-go/qwen3.8-max",
+      "checked_routes": [
+        {
+          "model": "opencode-go/qwen3.8-max",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:10.259Z",
+          "duration_ms": 2304,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/67-qwen3-8-max-go/preflight.json"
+        },
+        {
+          "model": "openrouter/qwen/qwen3.8-max",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:00:02.471Z",
+          "duration_ms": 4249,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-67-qwen3-8-max-go/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/qwen/qwen3.8-max",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "68-kimi-k3-go",
       "agent": "opencode",
-      "model": "opencode-go/kimi-k3",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:12.828Z",
-      "duration_ms": 2309,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/68-kimi-k3-go/preflight.json"
+      "model": "openrouter/moonshotai/kimi-k3",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:00:31.714Z",
+      "duration_ms": 28991,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-68-kimi-k3-go/preflight.json",
+      "requested_model": "opencode-go/kimi-k3",
+      "checked_routes": [
+        {
+          "model": "opencode-go/kimi-k3",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:12.828Z",
+          "duration_ms": 2309,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/68-kimi-k3-go/preflight.json"
+        },
+        {
+          "model": "openrouter/moonshotai/kimi-k3",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:00:31.714Z",
+          "duration_ms": 28991,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-68-kimi-k3-go/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/moonshotai/kimi-k3",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "02-qwen3-7-plus",
       "agent": "opencode",
-      "model": "opencode-go/qwen3.7-plus",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:15.439Z",
-      "duration_ms": 2349,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/02-qwen3-7-plus/preflight.json"
+      "model": "openrouter/qwen/qwen3.7-plus",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:00:36.083Z",
+      "duration_ms": 4063,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-02-qwen3-7-plus/preflight.json",
+      "requested_model": "opencode-go/qwen3.7-plus",
+      "checked_routes": [
+        {
+          "model": "opencode-go/qwen3.7-plus",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:15.439Z",
+          "duration_ms": 2349,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/02-qwen3-7-plus/preflight.json"
+        },
+        {
+          "model": "openrouter/qwen/qwen3.7-plus",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:00:36.083Z",
+          "duration_ms": 4063,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-02-qwen3-7-plus/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/qwen/qwen3.7-plus",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "04-deepseek-v4-pro",
       "agent": "opencode",
-      "model": "opencode-go/deepseek-v4-pro",
-      "endpoint": "opencode-go",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:18.162Z",
-      "duration_ms": 2467,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/04-deepseek-v4-pro/preflight.json"
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:00:49.435Z",
+      "duration_ms": 13111,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-04-deepseek-v4-pro/preflight.json",
+      "requested_model": "opencode-go/deepseek-v4-pro",
+      "checked_routes": [
+        {
+          "model": "opencode-go/deepseek-v4-pro",
+          "endpoint": "opencode-go",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:18.162Z",
+          "duration_ms": 2467,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/04-deepseek-v4-pro/preflight.json"
+        },
+        {
+          "model": "openrouter/deepseek/deepseek-v4-pro",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:00:49.435Z",
+          "duration_ms": 13111,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-04-deepseek-v4-pro/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/deepseek/deepseek-v4-pro",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "57-qwen3-8-27b-openrouter",
@@ -918,205 +2464,642 @@
       "available": true,
       "eligible_for_benchmarks": true,
       "availability_reason": null,
-      "availability_detail": "The model returned a valid response to the exact hi preflight.",
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
       "checked_at": "2026-08-31T12:46:27.685Z",
       "duration_ms": 9259,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/57-qwen3-8-27b-openrouter/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/57-qwen3-8-27b-openrouter/preflight.json",
+      "requested_model": "openrouter/qwen/qwen3.8-27b",
+      "checked_routes": [
+        {
+          "model": "openrouter/qwen/qwen3.8-27b",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T12:46:27.685Z",
+          "duration_ms": 9259,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/57-qwen3-8-27b-openrouter/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": null,
+        "selection_reason": "No matching OpenRouter model ID was found in the current catalog."
+      }
     },
     {
       "id": "209-claude-opus-4-6",
       "agent": "opencode",
-      "model": "opencode/claude-opus-4-6",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:30.320Z",
-      "duration_ms": 2306,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/209-claude-opus-4-6/preflight.json"
+      "model": "openrouter/anthropic/claude-opus-4.6",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:00:53.414Z",
+      "duration_ms": 3670,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-209-claude-opus-4-6/preflight.json",
+      "requested_model": "opencode/claude-opus-4-6",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-opus-4-6",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:30.320Z",
+          "duration_ms": 2306,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/209-claude-opus-4-6/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-opus-4.6",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:00:53.414Z",
+          "duration_ms": 3670,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-209-claude-opus-4-6/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-opus-4.6",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "210-claude-sonnet-4",
       "agent": "opencode",
-      "model": "opencode/claude-sonnet-4",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:32.871Z",
-      "duration_ms": 2287,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/210-claude-sonnet-4/preflight.json"
+      "model": "openrouter/anthropic/claude-sonnet-4",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:00:56.919Z",
+      "duration_ms": 3265,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-210-claude-sonnet-4/preflight.json",
+      "requested_model": "opencode/claude-sonnet-4",
+      "checked_routes": [
+        {
+          "model": "opencode/claude-sonnet-4",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:32.871Z",
+          "duration_ms": 2287,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/210-claude-sonnet-4/preflight.json"
+        },
+        {
+          "model": "openrouter/anthropic/claude-sonnet-4",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:00:56.919Z",
+          "duration_ms": 3265,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-210-claude-sonnet-4/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/anthropic/claude-sonnet-4",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "211-gemini-3-flash",
       "agent": "opencode",
-      "model": "opencode/gemini-3-flash",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:35.469Z",
-      "duration_ms": 2337,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/211-gemini-3-flash/preflight.json"
+      "model": "openrouter/google/gemini-3-flash-preview",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:00.448Z",
+      "duration_ms": 3289,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-211-gemini-3-flash/preflight.json",
+      "requested_model": "opencode/gemini-3-flash",
+      "checked_routes": [
+        {
+          "model": "opencode/gemini-3-flash",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:35.469Z",
+          "duration_ms": 2337,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/211-gemini-3-flash/preflight.json"
+        },
+        {
+          "model": "openrouter/google/gemini-3-flash-preview",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:00.448Z",
+          "duration_ms": 3289,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-211-gemini-3-flash/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/google/gemini-3-flash-preview",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "212-gemini-3-1-pro",
       "agent": "opencode",
-      "model": "opencode/gemini-3.1-pro",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:37.994Z",
-      "duration_ms": 2264,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/212-gemini-3-1-pro/preflight.json"
+      "model": "openrouter/google/gemini-3.1-pro-preview",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:05.486Z",
+      "duration_ms": 4797,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-212-gemini-3-1-pro/preflight.json",
+      "requested_model": "opencode/gemini-3.1-pro",
+      "checked_routes": [
+        {
+          "model": "opencode/gemini-3.1-pro",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:37.994Z",
+          "duration_ms": 2264,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/212-gemini-3-1-pro/preflight.json"
+        },
+        {
+          "model": "openrouter/google/gemini-3.1-pro-preview",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:05.486Z",
+          "duration_ms": 4797,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-212-gemini-3-1-pro/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/google/gemini-3.1-pro-preview",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "213-gemini-3-5-flash",
       "agent": "opencode",
-      "model": "opencode/gemini-3.5-flash",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:40.554Z",
-      "duration_ms": 2305,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/213-gemini-3-5-flash/preflight.json"
+      "model": "openrouter/google/gemini-3.5-flash",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:09.612Z",
+      "duration_ms": 3842,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-213-gemini-3-5-flash/preflight.json",
+      "requested_model": "opencode/gemini-3.5-flash",
+      "checked_routes": [
+        {
+          "model": "opencode/gemini-3.5-flash",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:40.554Z",
+          "duration_ms": 2305,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/213-gemini-3-5-flash/preflight.json"
+        },
+        {
+          "model": "openrouter/google/gemini-3.5-flash",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:09.612Z",
+          "duration_ms": 3842,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-213-gemini-3-5-flash/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/google/gemini-3.5-flash",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "214-gemini-3-6-flash",
       "agent": "opencode",
-      "model": "opencode/gemini-3.6-flash",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:43.117Z",
-      "duration_ms": 2305,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/214-gemini-3-6-flash/preflight.json"
+      "model": "openrouter/google/gemini-3.6-flash",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:13.490Z",
+      "duration_ms": 3637,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-214-gemini-3-6-flash/preflight.json",
+      "requested_model": "opencode/gemini-3.6-flash",
+      "checked_routes": [
+        {
+          "model": "opencode/gemini-3.6-flash",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:43.117Z",
+          "duration_ms": 2305,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/214-gemini-3-6-flash/preflight.json"
+        },
+        {
+          "model": "openrouter/google/gemini-3.6-flash",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:13.490Z",
+          "duration_ms": 3637,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-214-gemini-3-6-flash/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/google/gemini-3.6-flash",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "215-deepseek-v4-flash",
       "agent": "opencode",
-      "model": "opencode/deepseek-v4-flash",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:45.680Z",
-      "duration_ms": 2309,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/215-deepseek-v4-flash/preflight.json"
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:16.773Z",
+      "duration_ms": 3038,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-215-deepseek-v4-flash/preflight.json",
+      "requested_model": "opencode/deepseek-v4-flash",
+      "checked_routes": [
+        {
+          "model": "opencode/deepseek-v4-flash",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:45.680Z",
+          "duration_ms": 2309,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/215-deepseek-v4-flash/preflight.json"
+        },
+        {
+          "model": "openrouter/deepseek/deepseek-v4-flash",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:16.773Z",
+          "duration_ms": 3038,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-215-deepseek-v4-flash/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/deepseek/deepseek-v4-flash",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "216-deepseek-v4-flash-free",
       "agent": "opencode",
-      "model": "opencode/deepseek-v4-flash-free",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "provider_server_error",
-      "availability_detail": "Provider returned an unexpected server error during the hi probe.",
-      "checked_at": "2026-08-31T12:46:47.494Z",
-      "duration_ms": 1548,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/216-deepseek-v4-flash-free/preflight.json"
+      "model": "openrouter/deepseek/deepseek-v4-flash",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:26.673Z",
+      "duration_ms": 9657,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-216-deepseek-v4-flash-free/preflight.json",
+      "requested_model": "opencode/deepseek-v4-flash-free",
+      "checked_routes": [
+        {
+          "model": "opencode/deepseek-v4-flash-free",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "provider_server_error",
+          "detail": "Provider returned an unexpected server error during the hi probe.",
+          "checked_at": "2026-08-31T12:46:47.494Z",
+          "duration_ms": 1548,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/216-deepseek-v4-flash-free/preflight.json"
+        },
+        {
+          "model": "openrouter/deepseek/deepseek-v4-flash",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:26.673Z",
+          "duration_ms": 9657,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-216-deepseek-v4-flash-free/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/deepseek/deepseek-v4-flash",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "217-deepseek-v4-pro",
       "agent": "opencode",
-      "model": "opencode/deepseek-v4-pro",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:50.251Z",
-      "duration_ms": 2504,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/217-deepseek-v4-pro/preflight.json"
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:30.835Z",
+      "duration_ms": 3858,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-217-deepseek-v4-pro/preflight.json",
+      "requested_model": "opencode/deepseek-v4-pro",
+      "checked_routes": [
+        {
+          "model": "opencode/deepseek-v4-pro",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:50.251Z",
+          "duration_ms": 2504,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/217-deepseek-v4-pro/preflight.json"
+        },
+        {
+          "model": "openrouter/deepseek/deepseek-v4-pro",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:30.835Z",
+          "duration_ms": 3858,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-217-deepseek-v4-pro/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/deepseek/deepseek-v4-pro",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "218-kimi-k2-5",
       "agent": "opencode",
-      "model": "opencode/kimi-k2.5",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:53.032Z",
-      "duration_ms": 2521,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/218-kimi-k2-5/preflight.json"
+      "model": "openrouter/moonshotai/kimi-k2.5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:35.874Z",
+      "duration_ms": 4801,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-218-kimi-k2-5/preflight.json",
+      "requested_model": "opencode/kimi-k2.5",
+      "checked_routes": [
+        {
+          "model": "opencode/kimi-k2.5",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:53.032Z",
+          "duration_ms": 2521,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/218-kimi-k2-5/preflight.json"
+        },
+        {
+          "model": "openrouter/moonshotai/kimi-k2.5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:35.874Z",
+          "duration_ms": 4801,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-218-kimi-k2-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/moonshotai/kimi-k2.5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "219-qwen3-5-plus",
       "agent": "opencode",
-      "model": "opencode/qwen3.5-plus",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:55.649Z",
-      "duration_ms": 2350,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/219-qwen3-5-plus/preflight.json"
+      "model": "openrouter/qwen/qwen3.5-plus-02-15",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:39.899Z",
+      "duration_ms": 3735,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-219-qwen3-5-plus/preflight.json",
+      "requested_model": "opencode/qwen3.5-plus",
+      "checked_routes": [
+        {
+          "model": "opencode/qwen3.5-plus",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:55.649Z",
+          "duration_ms": 2350,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/219-qwen3-5-plus/preflight.json"
+        },
+        {
+          "model": "openrouter/qwen/qwen3.5-plus-02-15",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:39.899Z",
+          "duration_ms": 3735,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-219-qwen3-5-plus/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/qwen/qwen3.5-plus-02-15",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "220-grok-build-0-1",
       "agent": "opencode",
-      "model": "opencode/grok-build-0.1",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:46:58.244Z",
-      "duration_ms": 2330,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/220-grok-build-0-1/preflight.json"
+      "model": "openrouter/x-ai/grok-build-0.1",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:47.121Z",
+      "duration_ms": 6978,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-220-grok-build-0-1/preflight.json",
+      "requested_model": "opencode/grok-build-0.1",
+      "checked_routes": [
+        {
+          "model": "opencode/grok-build-0.1",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:46:58.244Z",
+          "duration_ms": 2330,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/220-grok-build-0-1/preflight.json"
+        },
+        {
+          "model": "openrouter/x-ai/grok-build-0.1",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:47.121Z",
+          "duration_ms": 6978,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-220-grok-build-0-1/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/x-ai/grok-build-0.1",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "221-minimax-m2-5",
       "agent": "opencode",
-      "model": "opencode/minimax-m2.5",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:47:00.828Z",
-      "duration_ms": 2324,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/221-minimax-m2-5/preflight.json"
+      "model": "openrouter/minimax/minimax-m2.5",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:01:51.158Z",
+      "duration_ms": 3735,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-221-minimax-m2-5/preflight.json",
+      "requested_model": "opencode/minimax-m2.5",
+      "checked_routes": [
+        {
+          "model": "opencode/minimax-m2.5",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:47:00.828Z",
+          "duration_ms": 2324,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/221-minimax-m2-5/preflight.json"
+        },
+        {
+          "model": "openrouter/minimax/minimax-m2.5",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:01:51.158Z",
+          "duration_ms": 3735,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-221-minimax-m2-5/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/minimax/minimax-m2.5",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     },
     {
       "id": "222-laguna-s-2-1-free",
       "agent": "opencode",
-      "model": "opencode/laguna-s-2.1-free",
-      "endpoint": "opencode-zen",
+      "model": "openrouter/poolside/laguna-s-2.1:free",
+      "endpoint": "openrouter",
       "available": false,
       "eligible_for_benchmarks": false,
-      "availability_reason": "provider_server_error",
-      "availability_detail": "Provider returned an unexpected server error during the hi probe.",
+      "availability_reason": "timeout",
+      "availability_detail": "Neither the original OpenCode route nor the mapped OpenRouter alternative completed the hi preflight.",
       "checked_at": "2026-08-31T12:47:02.651Z",
       "duration_ms": 1563,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/222-laguna-s-2-1-free/preflight.json"
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/222-laguna-s-2-1-free/preflight.json",
+      "requested_model": "opencode/laguna-s-2.1-free",
+      "checked_routes": [
+        {
+          "model": "opencode/laguna-s-2.1-free",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "provider_server_error",
+          "detail": "Provider returned an unexpected server error during the hi probe.",
+          "checked_at": "2026-08-31T12:47:02.651Z",
+          "duration_ms": 1563,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/222-laguna-s-2-1-free/preflight.json"
+        },
+        {
+          "model": "openrouter/poolside/laguna-s-2.1:free",
+          "endpoint": "openrouter",
+          "available": false,
+          "reason": "timeout",
+          "detail": "The alternative provider route did not return a valid model response within the 60-second preflight limit.",
+          "checked_at": "2026-08-31T13:02:56.503Z",
+          "duration_ms": 65104,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-222-laguna-s-2-1-free/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/poolside/laguna-s-2.1:free",
+        "selection_reason": "The matching OpenRouter route was tested but did not pass preflight."
+      }
     },
     {
       "id": "224-nemotron-3-5-lightning-free",
       "agent": "opencode",
-      "model": "opencode/nemotron-3.5-lightning-free",
-      "endpoint": "opencode-zen",
-      "available": false,
-      "eligible_for_benchmarks": false,
-      "availability_reason": "account_blocked",
-      "availability_detail": "Provider returned HTTP 401: the configured account is blocked.",
-      "checked_at": "2026-08-31T12:47:05.351Z",
-      "duration_ms": 2445,
-      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/224-nemotron-3-5-lightning-free/preflight.json"
+      "model": "openrouter/nvidia/nemotron-3.5-lightning:free",
+      "endpoint": "openrouter",
+      "available": true,
+      "eligible_for_benchmarks": true,
+      "availability_reason": null,
+      "availability_detail": "Selected openrouter route passed the exact hi preflight.",
+      "checked_at": "2026-08-31T13:03:17.569Z",
+      "duration_ms": 20760,
+      "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-224-nemotron-3-5-lightning-free/preflight.json",
+      "requested_model": "opencode/nemotron-3.5-lightning-free",
+      "checked_routes": [
+        {
+          "model": "opencode/nemotron-3.5-lightning-free",
+          "endpoint": "opencode-zen",
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "Provider returned HTTP 401: the configured account is blocked.",
+          "checked_at": "2026-08-31T12:47:05.351Z",
+          "duration_ms": 2445,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r2/224-nemotron-3-5-lightning-free/preflight.json"
+        },
+        {
+          "model": "openrouter/nvidia/nemotron-3.5-lightning:free",
+          "endpoint": "openrouter",
+          "available": true,
+          "reason": null,
+          "detail": "The model returned a valid response to the exact hi preflight.",
+          "checked_at": "2026-08-31T13:03:17.569Z",
+          "duration_ms": 20760,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r3-alternatives/alt-224-nemotron-3-5-lightning-free/preflight.json"
+        }
+      ],
+      "provider_selection": {
+        "openrouter_catalog_match": "openrouter/nvidia/nemotron-3.5-lightning:free",
+        "selection_reason": "Original OpenCode route failed; the matching OpenRouter route passed preflight."
+      }
     }
-  ]
+  ],
+  "source_configs": [
+    "config/model-availability-2026-08-31-r2.json",
+    "config/model-availability-2026-08-31-r3-alternatives.json"
+  ],
+  "catalog_check": {
+    "command": "opencode models",
+    "catalog_entries": 561,
+    "checked_providers": [
+      "OpenCode Zen",
+      "OpenCode Go",
+      "OpenAI",
+      "OpenRouter"
+    ],
+    "checked_at": "2026-08-31T13:03:47.551Z"
+  }
 }
