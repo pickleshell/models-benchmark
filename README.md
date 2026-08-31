@@ -1,7 +1,5 @@
 # Models Benchmark
 
-## From a Reddit discussion
-
 *This is an excerpt from a discussion about the benchmark on Reddit.*
 
 > **RogerAI-fm asked:**
