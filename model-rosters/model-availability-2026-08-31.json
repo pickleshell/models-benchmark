@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "release": "model-availability-2026-08-31-r3-alternatives",
-  "generated_at": "2026-08-31T13:21:01.539Z",
+  "generated_at": "2026-08-31T14:11:11.225Z",
   "probe": {
     "kind": "clean_room_model_preflight",
     "prompt": "Reply with exactly: hi. Do not modify files.",
@@ -3090,7 +3090,8 @@
   "source_configs": [
     "config/model-availability-2026-08-31-r2.json",
     "config/model-availability-2026-08-31-r3-alternatives.json",
-    "config/model-availability-2026-08-31-r4-zen-requested.json"
+    "config/model-availability-2026-08-31-r4-zen-requested.json",
+    "config/model-availability-2026-08-31-r5-go-catalog.json"
   ],
   "catalog_check": {
     "command": "opencode models",
@@ -3456,6 +3457,271 @@
           "checked_at": "2026-08-31T13:20:27.743Z",
           "duration_ms": 2321,
           "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r4-zen-requested/zen-31-nemotron-3-5-lightning-free/preflight.json"
+        }
+      ]
+    },
+    "go_catalog_2026_08_31_r5": {
+      "release": "model-availability-2026-08-31-r5-go-catalog",
+      "execution_mode": "isolated_temporary_opencode_profile",
+      "credential_source": "/home/gpt/.local/share/opencode/auth.json",
+      "credential_observation": "The auth file SHA-256 was unchanged from the preceding provider checks.",
+      "probe": "Reply with exactly: hi. Do not modify files.",
+      "summary": {
+        "total": 25,
+        "available": 0,
+        "unavailable": 25,
+        "account_blocked": 25
+      },
+      "models": [
+        {
+          "model": "opencode-go/deepseek-v4-flash",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2072,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/deepseek-v4-flash-vision-exp",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2121,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/deepseek-v4-pro",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2096,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/glm-5.1",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2070,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/glm-5.2",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2115,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/glm-5.3",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2122,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/glm-5.3-flash",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2086,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/gpt-5.6-luna",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2079,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/grok-4.6",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2089,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/hy3",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2122,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/hy4-preview",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2136,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/kimi-k2.6",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2092,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/kimi-k2.7-code",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2239,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/kimi-k3",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2120,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/longcat-2.0",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2073,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/mimo-v2.5",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2068,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/mimo-v2.5-pro",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2118,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/minimax-m2.7",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2103,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/minimax-m3",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2136,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/muse-spark-1.2-contributor",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2130,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/qwen3.6-plus",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2093,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/qwen3.7-max",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2489,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/qwen3.7-plus",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2065,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/qwen3.8-flash",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2184,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
+        },
+        {
+          "model": "opencode-go/qwen3.8-max",
+          "listed_in_current_go_catalog": true,
+          "available": false,
+          "reason": "account_blocked",
+          "detail": "OpenCode Go returned an account-blocked refusal before the model could answer.",
+          "checked_at": "2026-08-31T14:11:11.225Z",
+          "duration_ms": 2076,
+          "preflight_artifact": "results/model-availability/model-availability-2026-08-31-r5-go-catalog/direct-preflight.json"
         }
       ]
     }

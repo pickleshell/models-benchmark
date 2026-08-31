@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "release": "model-availability-2026-08-31-r5-go-catalog",
+  "retry_policy": {
+    "canonical_attempt": 1,
+    "allow_retries": false
+  },
+  "models_test": "/home/gpt/models-test",
+  "results_dir": "results/model-availability",
+  "private_artifacts_dir": "~/.models-benchmark/runs",
+  "private_evaluators_dir": "/home/gpt/models-benchmark/evaluators",
+  "artifact_schemas": {
+    "run": 1,
+    "judge": 1,
+    "preflight": 1,
+    "aggregate": 2,
+    "test_result": 1,
+    "candidate_diff": 1,
+    "objective_evaluator": 1
+  },
+  "clean_room": {
+    "user": "test",
+    "home": "/home/test/.models-benchmark",
+    "opencode_root": "/home/test/.opencode",
+    "lock_path": "~/.models-benchmark/clean-room.lock",
+    "reset_script": "/home/test/.models-benchmark/reset-room.mjs",
+    "workspace": "/home/test/.models-benchmark/workspace",
+    "agent_home": "/home/test/.models-benchmark/agent-home",
+    "codex_root": "/home/test/.codex-runtime",
+    "codex_auth_file": "~/.codex/auth.json"
+  },
+  "nominations": [
+    {
+      "id": "repository-navigation",
+      "fixture": "fixtures/phase2-v2/repository-navigation",
+      "prompt": "benchmarks/phase2-v2/prompts/repository-navigation.md",
+      "test_command": [
+        "npm",
+        "test",
+        "--prefix",
+        "fixtures/phase2-v2/repository-navigation"
+      ],
+      "allowed_changes": [
+        "fixtures/phase2-v2/repository-navigation/src/labels/statusLabel.js"
+      ],
+      "objective_evaluator": {
+        "id": "phase2-v2-repository-navigation-v1",
+        "path": "phase2-v2/repository-navigation.mjs",
+        "source": "fixtures/phase2-v2/repository-navigation/src/labels/statusLabel.js"
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "id": "go-01-deepseek-v4-flash",
+      "agent": "opencode",
+      "model": "opencode-go/deepseek-v4-flash"
+    },
+    {
+      "id": "go-02-deepseek-v4-flash-vision-exp",
+      "agent": "opencode",
+      "model": "opencode-go/deepseek-v4-flash-vision-exp"
+    },
+    {
+      "id": "go-03-deepseek-v4-pro",
+      "agent": "opencode",
+      "model": "opencode-go/deepseek-v4-pro"
+    },
+    {
+      "id": "go-04-glm-5-1",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.1"
+    },
+    {
+      "id": "go-05-glm-5-2",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.2"
+    },
+    {
+      "id": "go-06-glm-5-3",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.3"
+    },
+    {
+      "id": "go-07-glm-5-3-flash",
+      "agent": "opencode",
+      "model": "opencode-go/glm-5.3-flash"
+    },
+    {
+      "id": "go-08-gpt-5-6-luna",
+      "agent": "opencode",
+      "model": "opencode-go/gpt-5.6-luna"
+    },
+    {
+      "id": "go-09-grok-4-6",
+      "agent": "opencode",
+      "model": "opencode-go/grok-4.6"
+    },
+    {
+      "id": "go-10-hy3",
+      "agent": "opencode",
+      "model": "opencode-go/hy3"
+    },
+    {
+      "id": "go-11-hy4-preview",
+      "agent": "opencode",
+      "model": "opencode-go/hy4-preview"
+    },
+    {
+      "id": "go-12-kimi-k2-6",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k2.6"
+    },
+    {
+      "id": "go-13-kimi-k2-7-code",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k2.7-code"
+    },
+    {
+      "id": "go-14-kimi-k3",
+      "agent": "opencode",
+      "model": "opencode-go/kimi-k3"
+    },
+    {
+      "id": "go-15-longcat-2-0",
+      "agent": "opencode",
+      "model": "opencode-go/longcat-2.0"
+    },
+    {
+      "id": "go-16-mimo-v2-5",
+      "agent": "opencode",
+      "model": "opencode-go/mimo-v2.5"
+    },
+    {
+      "id": "go-17-mimo-v2-5-pro",
+      "agent": "opencode",
+      "model": "opencode-go/mimo-v2.5-pro"
+    },
+    {
+      "id": "go-18-minimax-m2-7",
+      "agent": "opencode",
+      "model": "opencode-go/minimax-m2.7"
+    },
+    {
+      "id": "go-19-minimax-m3",
+      "agent": "opencode",
+      "model": "opencode-go/minimax-m3"
+    },
+    {
+      "id": "go-20-muse-spark-1-2-contributor",
+      "agent": "opencode",
+      "model": "opencode-go/muse-spark-1.2-contributor"
+    },
+    {
+      "id": "go-21-qwen3-6-plus",
+      "agent": "opencode",
+      "model": "opencode-go/qwen3.6-plus"
+    },
+    {
+      "id": "go-22-qwen3-7-max",
+      "agent": "opencode",
+      "model": "opencode-go/qwen3.7-max"
+    },
+    {
+      "id": "go-23-qwen3-7-plus",
+      "agent": "opencode",
+      "model": "opencode-go/qwen3.7-plus"
+    },
+    {
+      "id": "go-24-qwen3-8-flash",
+      "agent": "opencode",
+      "model": "opencode-go/qwen3.8-flash"
+    },
+    {
+      "id": "go-25-qwen3-8-max",
+      "agent": "opencode",
+      "model": "opencode-go/qwen3.8-max"
+    }
+  ],
+  "judges": [],
+  "criteria": [
+    "functional_correctness",
+    "reliability_edge_cases",
+    "maintainability_clarity",
+    "scope_discipline"
+  ]
+}
