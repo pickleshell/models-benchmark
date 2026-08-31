@@ -36,8 +36,6 @@
 >
 > At this point, probably 50% of the project grows from Reddit feedback, including yours. When I finish this comment, I will add a section to the README with the same explanation.
 >
-> As for me, I am an experienced software engineer. I love computers and my work, and I want to see progress faster because life is too short.
->
 > **PS:** These tests have already cost me more than $40 in paid-model usage. That is why there is usually only one judge. Gemini was good enough and produced scores very close to GPT. Claude was expensive, missed model faults several times, and was disqualified. So I thanked Gemini for its good work and continued with GPT only. GPT-only results are sufficient for my own purposes.
 >
 > I hope it helps. Have a nice time!
