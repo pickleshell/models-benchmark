@@ -1,5 +1,37 @@
 # Models Benchmark
 
+## From a Reddit discussion
+
+*This is an excerpt from a discussion about the benchmark on Reddit.*
+
+> **RogerAI-fm asked:**
+>
+> I think I get this. Anyone can use these? Could you talk more about what it’s meant for?
+>
+> **My answer:**
+>
+> Sure. It runs different coding models on the same real repository tasks and compares the results, time, and cost.
+>
+> At the moment, I use this pipeline in autonomous mode. I give Codex a list of models I want to test. It verifies them with a simple `hi` prompt to make sure they are accessible, then starts the test runs and manages them in the background if the list is long.
+>
+> When testing is complete, I ask Codex to review the results using several parameters. The judging can also be done by several independent judges. There is a separate list for them.
+>
+> You can test your own models, reproduce my results, or add new tasks. For example, select five models and test them on several repository tasks. Then you can see which model performs better and which one is cheaper. Everything is open.
+>
+> Honestly, I originally created this benchmark for my own purposes in a much simpler form. The results surprised me, so I posted them in the OpenCode community on Reddit. I received useful feedback about blind testing, improved the pipeline, and added clean rooms so models could not cheat.
+>
+> That was already more than I needed for my personal purposes, but I remembered how Big Pickle once cheated me, so I took these security recommendations seriously.
+>
+> After that, I searched for other model comparisons and was surprised that I could not find honest and fully open tests of this kind. That gave me one more reason to continue developing the benchmark.
+>
+> At this point, probably 50% of the project grows from Reddit feedback, including yours. When I finish this comment, I will add a section to the README with the same explanation.
+>
+> As for me, I am an experienced software engineer. I love computers and my work, and I want to see progress faster because life is too short.
+>
+> **PS:** These tests have already cost me more than $40 in paid-model usage. That is why there is usually only one judge. Gemini was good enough and produced scores very close to GPT. Claude was expensive, missed model faults several times, and was disqualified. So I thanked Gemini for its good work and continued with GPT only. GPT-only results are sufficient for my own purposes.
+>
+> I hope it helps. Have a nice time!
+
 <p align="center"><strong>Reproducible coding-agent evaluation in an isolated clean room</strong></p>
 
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=nodedotjs&logoColor=white)](#requirements)
