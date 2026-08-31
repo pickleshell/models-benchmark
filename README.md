@@ -14,11 +14,11 @@
 
 *From a discussion about the benchmark on Reddit.*
 
-> **RogerAI-fm asked:**
+> **RogerAI-fm:**
 >
 > I think I get this. Anyone can use these? Could you talk more about what it’s meant for?
 >
-> **Answer:**
+> **Me:**
 >
 > Sure. It runs different coding models on the same real repository tasks and compares the results, time, and cost.
 >
