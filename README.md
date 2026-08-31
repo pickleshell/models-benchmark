@@ -1,5 +1,17 @@
 # Models Benchmark
 
+<p align="center"><strong>Reproducible coding-agent evaluation in an isolated clean room</strong></p>
+
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=nodedotjs&logoColor=white)](#requirements)
+[![Platform](https://img.shields.io/badge/platform-Linux-FCC624?logo=linux&logoColor=black)](#requirements)
+[![Runtimes](https://img.shields.io/badge/runtimes-OpenCode%20%7C%20Codex-6f42c1)](#agent-runtimes)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+> [!NOTE]
+> This is an independent open-source benchmark created and maintained by an individual developer for personal purposes and shared with the public. It is not an official test suite from OpenAI, OpenCode, or any model provider. Anyone can use it, run tests, and share it.
+>
+> Results produced by this benchmark are published on the [interactive benchmark website](https://pickleshell.github.io/model-benchmarks.html) and in the [models-test repository](https://github.com/pickleshell/models-test), which contains the public fixtures, patches, execution records, and sanitized results.
+
 *From a discussion about the benchmark on Reddit.*
 
 > **RogerAI-fm asked:**
@@ -29,18 +41,6 @@
 > **PS:** These tests have already cost me more than $40 in paid-model usage. That is why there is usually only one judge. Gemini was good enough and produced scores very close to GPT. Claude was expensive, missed model faults several times, and was disqualified. So I thanked Gemini for its good work and continued with GPT only. GPT-only results are sufficient for my own purposes.
 >
 > I hope it helps. Have a nice time!
-
-<p align="center"><strong>Reproducible coding-agent evaluation in an isolated clean room</strong></p>
-
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=nodedotjs&logoColor=white)](#requirements)
-[![Platform](https://img.shields.io/badge/platform-Linux-FCC624?logo=linux&logoColor=black)](#requirements)
-[![Runtimes](https://img.shields.io/badge/runtimes-OpenCode%20%7C%20Codex-6f42c1)](#agent-runtimes)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-> [!NOTE]
-> This is an independent open-source benchmark created and maintained by an individual developer for personal purposes and shared with the public. It is not an official test suite from OpenAI, OpenCode, or any model provider. Anyone can use it, run tests, and share it.
->
-> Results produced by this benchmark are published on the [interactive benchmark website](https://pickleshell.github.io/model-benchmarks.html) and in the [models-test repository](https://github.com/pickleshell/models-test), which contains the public fixtures, patches, execution records, and sanitized results.
 
 Models Benchmark compares coding models on the same repository tasks under the
 same execution contract. Each candidate receives a clean workspace, a fresh
